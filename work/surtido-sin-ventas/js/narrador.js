@@ -375,10 +375,55 @@
     synth.speak(u);
   }
 
+  /* BUG REAL, reportado sobre "Uso de Sucursales 3 - NOA": "en la
+     locución me aparece como un bloqueo cuando quiero repetir o
+     adelantar". El primer `speak()` de toda la página —el de la
+     primera diapositiva— corre en el `slidechange` inicial que
+     dispara `new Motor()`, ANTES de que el alumno haya tocado nada.
+     Algunos navegadores (Safari/iOS, sobre todo) exigen que la
+     PRIMERA llamada a `speechSynthesis.speak()` de la página ocurra
+     dentro de un gesto real — si no, la DESCARTAN EN SILENCIO, sin
+     ningún error ni evento. `estadoActual` se queda en `null` para
+     siempre, y el panel de "Locución" (`initNarrateTimeline`,
+     coto-player.js) lee `progreso()` para decidir si habilita
+     "Repetir" y la barra — con `estadoActual` en null, da `null`, y
+     los dos quedan deshabilitados.
+
+     Mismo problema, mismo origen, que ya resolvió el kit para el
+     whoosh de fx.js/coto-ui.js (`huboGesto`/AudioContext, kit-base
+     v1.9.52) — pero acá NO alcanza con diferir la narración hasta el
+     gesto: la locución es contenido, tiene que sonar apenas aparece
+     la diapositiva, no recién cuando el alumno toca algo (a
+     diferencia del whoosh, un efecto de transición que nadie espera
+     escuchar ANTES de interactuar). El intento se hace SIEMPRE de
+     inmediato — nunca se retiene — y solo si sigue sin arrancar para
+     cuando llega el primer gesto (la prueba real de que el intento
+     de recién se perdió en silencio) se reintenta ahí, una única vez.
+     Si el intento inmediato funcionó (la inmensa mayoría de
+     navegadores), `estadoActual` ya está poblado en ese momento y no
+     se vuelve a narrar. */
+  var huboGestoNarrador = false;
+  var ultimoIntentoNarrador = null;
+  if (global.document) {
+    ['pointerdown', 'keydown', 'touchstart'].forEach(function (ev) {
+      document.addEventListener(ev, function () {
+        huboGestoNarrador = true;
+        if (ultimoIntentoNarrador && !estadoActual) {
+          var pendiente = ultimoIntentoNarrador;
+          ultimoIntentoNarrador = null;
+          speak(pendiente.text, pendiente.kind);
+        } else {
+          ultimoIntentoNarrador = null;
+        }
+      }, { capture: true, once: true });
+    });
+  }
+
   function speak(text, kind) {
     var synth = global.speechSynthesis; if (!synth) return;
     cancel();
     estadoActual = null;
+    if (!huboGestoNarrador) ultimoIntentoNarrador = { text: text, kind: kind };
     if (!narrating || !text) { emitirProgreso(); return; }
     var v = pickVoice();
     // 1.15x SOLO con una voz de calidad conocida (ver isHighQualityVoice)

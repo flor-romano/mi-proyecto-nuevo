@@ -201,10 +201,24 @@
    tenía nada que ver con el iPad (§6.14 punto 4). En cuanto carga
    un video real, el navegador prioriza su relación de aspecto
    intrínseca y esta regla deja de aplicar sola.
+   `object-fit:cover` es igual de obligatorio (kit v1.9.57): sin él,
+   el valor inicial de object-fit es 'fill', así que un video real
+   que el cliente sube y que NO es exactamente 16:9 se estira/deforma
+   para llenar la caja en vez de recortarse prolijo. Se reportó como
+   "el video se ve corrido/con el marco roto al darle play" — con el
+   placeholder de 0 bytes nunca se nota porque no hay frame real que
+   deformar.
+   Nota de especificidad para quien tenga que pisar esta regla desde
+   un curso: el selector de acá es `[data-popup] video` (0,1,1). Una
+   clase sola en el curso (ej. `.mi-video`, (0,1,0)) NO le gana — hace
+   falta calificarla con el mismo contexto, ej. `[data-popup] .mi-video`
+   o `.d-rep-video-wrap .d-rep-video`, para que la especificidad sea
+   pareja o mayor.
    ============================================================ */
 [data-popup] video{
   width:100%; height:auto; display:block;
   aspect-ratio:16/9;
+  object-fit:cover;
   background:#0d1420;
   border-radius:var(--r-lg);
   box-shadow:var(--shadow-card);

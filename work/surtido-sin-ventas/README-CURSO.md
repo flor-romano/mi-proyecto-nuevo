@@ -571,6 +571,64 @@ más amplia). Suite completa (7/7), `check-css-duplicates`/
 `check-image-weight` en verde, sin overflow horizontal en viewport
 móvil real. Baseline de `visual-regress.mjs` regenerada.
 
+## Ronda 14 — kit-base v1.9.60: confirmado que absorbió casi todo el lote de 5 parches, más 2 parches nuevos que sí aplicaban acá
+
+El cliente mandó `kitbasev1.9.60.zip` y una versión ampliada de
+`parcheskitv1.9.56.zip` (ahora con 9 parches, no 5 — los 4 nuevos
+salieron de trabajar el curso NOA) y preguntó si algo de eso servía
+para este curso. Antes de tocar nada se verificó cada cosa contra el
+código real de v1.9.60 (regla de §0.1, de nuevo: nunca aplicar a
+ciegas ni asumir por el número de versión):
+
+- **Ya absorbidos en v1.9.60** (verificado leyendo el código, no
+  asumido): los 5 de la Ronda de "Parches de kit aplicados" más abajo
+  (0001 Esc, 0002 ids duplicados, 0003 doc boilerplate, 0004 guard de
+  video, 0005 gate al cerrar con Esc), más dos nuevos del lote de 9:
+  0007 (`object-fit` en `[data-popup] video`) y 0008 (doc de cómo
+  apagar la animación de entrada). Nada que hacer con estos — el kit
+  ya los tiene.
+- **0006 — sí aplicaba y no estaba**: bug real de `narrador.js` en
+  Safari/iOS. El primer `speechSynthesis.speak()` de toda la página
+  (el de la primera diapositiva, que dispara solo al construirse
+  `Motor`, sin gesto del alumno todavía) puede ser descartado EN
+  SILENCIO por el navegador si no vino de un gesto real — sin error,
+  sin evento. `estadoActual` queda en `null` para siempre y el panel
+  de Locución nunca habilita "Repetir"/la barra. Mismo patrón que ya
+  resolvió el kit para el whoosh de `coto-ui.js` (`huboGesto`,
+  v1.9.52), aplicado ahora a `narrador.js`: el intento SIEMPRE se hace
+  de inmediato (la locución tiene que sonar apenas entra la diapo, no
+  recién al primer toque), y solo si seguía sin arrancar para cuando
+  llega el primer gesto del alumno (la prueba de que se perdió en
+  silencio) se reintenta ahí, una única vez. Aplicado como parche
+  puente en `js/narrador.js` de este curso.
+- **0007 — aplicado, pero sin efecto visible en este curso hoy**: este
+  curso no usa el patrón genérico `[data-popup] video` que corrige el
+  parche (`initPopupVideos`) — usa el reproductor compartido en pop-up
+  (`initVideoPlayer`, selector por id `#d-video-player`), que ya traía
+  su propio `object-fit:contain` desde el arranque en v1.9.57. Se
+  aplicó igual en `css/coto-media.css` para que la copia local no
+  quede atrasada respecto al kit si el curso llegara a sumar ese otro
+  patrón más adelante — pero hoy no cambia nada en pantalla.
+- **El resto del lote (0009 y la sección B de patrones nuevos de
+  `PROMPT-KIT.md`: pips A/B/C de objetivos, minijuego de memoria con
+  remediación, `mj-repaso` reusable, video real como 4to patrón)** son
+  contenido/documentación específicos del curso NOA o decisiones de
+  diseño en discusión — no hay nada de eso que aplique a este curso.
+
+Suite completa (7/7) y `check-image-weight`/`check-css-duplicates`
+corridos de nuevo después de aplicar — todo en verde. Verificado
+también que `Narrador` sigue existiendo y respondiendo sin errores de
+consola tras el cambio (la diferencia de comportamiento real solo se
+puede probar en un motor de voz real de Safari/iOS, no en Chromium
+headless — se validó que el código no rompe nada, no el escenario
+exacto del bug).
+
+**Este es un parche puente de esta sesión de curso, no la fuente de
+verdad** (CLAUDE.md §0.1): el 0006 queda pendiente de relayar al chat
+de `kit-base/` igual que los 5 anteriores — no está en v1.9.60
+todavía, así que el próximo curso que arranque desde ahí sigue
+expuesto al mismo bug de Safari/iOS hasta que se suba ahí.
+
 ## Decisiones de esta migración
 
 - **Reencuadre 2:1**: en vez de editar las capturas (proporción real
@@ -660,11 +718,11 @@ Suite completa (7/7) y `check-image-weight`/`check-css-duplicates`/
 verde.
 
 **Esto es un parche puente de esta sesión de curso, no la fuente de
-verdad** (CLAUDE.md §0.1): los 5 parches (ya verificados acá contra el
-código real de v1.9.57) tienen que llevarse, en un prompt, al chat
-dedicado a `kit-base/` para aplicarse ahí de forma definitiva y salir en
-el próximo `kit-base.zip` — si no, el próximo curso vuelve a arrancar
-con estos mismos 5 bugs.
+verdad** (CLAUDE.md §0.1): los 5 parches se relayaron al chat dedicado
+a `kit-base/` (prompt + `.patch` armados en esta misma sesión) y,
+confirmado en la Ronda 14 contra el código real de **v1.9.60**, los 5
+ya están adentro del kit — el próximo curso que arranque desde ahí ya
+no los necesita.
 
 ## Hallazgos genéricos a relayar al chat de `kit-base/` (CLAUDE.md §0.1)
 

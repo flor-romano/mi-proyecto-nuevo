@@ -535,6 +535,42 @@ imágenes cargan con los nuevos nombres, suite completa (7/7),
 `check-css-duplicates`/`check-image-weight` en verde. Baseline de
 `visual-regress.mjs` regenerada.
 
+## Ronda 13 — faltaban las manchas decorativas de fondo en portada y pantallas finales
+
+Con las ilustraciones de pregunta ya resueltas (Ronda 12), el cliente
+pidió mejorar puntualmente la portada sin tocar el resto. Comparando
+de nuevo contra el PDF a resolución completa, la diferencia real: las
+2 manchas cálidas grandes que el PDF pone en las esquinas (arriba a la
+derecha y abajo a la izquierda) no estaban — la portada quedaba sobre
+blanco liso.
+
+Se recortaron ambas manchas directo del PDF (formas orgánicas tipo
+blob; más simple recortarlas que calcarlas a mano en CSS) y se
+armaron transparentes (son de un solo color plano, sin riesgo de
+"agujerear" nada al pasar el blanco a alfa, a diferencia de las
+mascotas). Se agregan como fondo de `[data-mj-panel="intro"]`,
+`[data-mj-panel="fin-ok"]` y `[data-mj-panel="fin-fail"]` — las 3
+pantallas que en el PDF comparten este mismo lenguaje visual de
+"personaje + tarjeta" (las 5 de pregunta NO las llevan: ya tienen su
+propia decoración, más chica, dentro de la tarjeta).
+
+**Bug real encontrado al implementar**: `z-index:-1` en el pseudo-
+elemento de la mancha la mandaba detrás de TODO, incluido el fondo
+blanco del panel — no se veía nada. La causa: `.d-mj-panel` tenía
+`position:relative` pero ningún `z-index` propio, así que no armaba
+su propio contexto de apilamiento y el `z-index:-1` de la mancha se
+resolvía contra un ancestro mucho más arriba en el árbol, quedando
+detrás del fondo blanco de `.d-mj`. Se agregó `z-index:0` a
+`.d-mj-panel` para que sí arme su propio contexto — con eso, la
+mancha (z-index:-1 LOCAL) queda por encima del fondo del panel pero
+por debajo de todo su contenido real, que es lo que se buscaba.
+
+Verificado que las manchas NO aparecen en las 5 pantallas de pregunta
+(selector por `[data-mj-panel]` explícito, no una clase compartida
+más amplia). Suite completa (7/7), `check-css-duplicates`/
+`check-image-weight` en verde, sin overflow horizontal en viewport
+móvil real. Baseline de `visual-regress.mjs` regenerada.
+
 ## Decisiones de esta migración
 
 - **Reencuadre 2:1**: en vez de editar las capturas (proporción real

@@ -398,6 +398,41 @@ Suite completa (7/7), `check-css-duplicates`/`check-image-weight`
 en verde. Baseline de `visual-regress.mjs` regenerada (portada y las
 5 pantallas de pregunta cambiaron visualmente).
 
+## Ronda 10 — la portada seguía sin calcar el PDF: mascotas chicas, con hueco hasta el piso, sobre fondo celeste
+
+El cliente mandó la captura de su propia prueba al lado de la del PDF:
+comparadas una al lado de la otra, en la mía las mascotas quedaban
+chicas y lejos de la tarjeta, con un hueco entre los pies y la guarda
+gris (no "paradas" sobre el piso como en el PDF), y el fondo general
+era el celeste (`--bg`) del resto del curso en vez del blanco liso que
+usa el PDF en las 7 pantallas del juego. Ajustes sobre lo ya recortado
+en la Ronda 9 (no hubo que volver a tocar los assets, era 100% layout):
+
+- `[data-slide="minijuego"] .d-mj { background: var(--surface); }` —
+  fondo blanco en las 7 pantallas del juego, pisando el celeste del
+  resto del curso (curso propio, no toca `kit-base/`).
+- Mascotas más grandes (`clamp(110px, 15cqw, 195px)`, antes tope
+  168px) y con menos separación de la tarjeta central (`gap: .6rem`,
+  antes `1.2rem`) — más cerca del recorte real del PDF sin llegar a
+  taparle texto a la tarjeta (probado un primer intento con margen
+  negativo que sí superponía el brazo de la mascota sobre el título;
+  se descartó por ilegible y se volvió a un gap chico pero positivo).
+- `.d-mj-intro-floor` con `margin-top: -14px` (antes `1.8rem` de
+  hueco): los pies de las mascotas ahora pisan la guarda gris, como
+  en el PDF, en vez de flotar arriba de ella.
+- El rótulo "¡Jugá con nosotros!" pasó de estar centrado dentro del
+  bloque de texto a `position: absolute` pegado a la esquina superior
+  izquierda real del panel — mismo criterio que ya se había usado para
+  las 5 pantallas de pregunta en la Ronda 9, ahora también en la
+  intro.
+
+Verificado de nuevo en desktop y en viewport móvil real (iPhone 12):
+sin overflow horizontal, la guarda con margen negativo no rompe nada
+porque las mascotas se ocultan en mobile (`display:none` por debajo de
+760px, ya existía desde la Ronda 9). Suite completa (7/7) y los 2
+checks de CSS/imágenes en verde. Baseline de `visual-regress.mjs`
+regenerada.
+
 ## Decisiones de esta migración
 
 - **Reencuadre 2:1**: en vez de editar las capturas (proporción real

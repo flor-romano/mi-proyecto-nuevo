@@ -72,25 +72,31 @@
    ============================================================ */
 [data-slide="minijuego"] { align-items: stretch; justify-content: stretch; }
 [data-slide="minijuego"] .d-mj { height: 100%; display: flex; }
+/* El PDF real usa fondo blanco liso en las 7 pantallas del juego, no
+   el celeste (--bg) del resto del curso — se pisa acá nomás, curso
+   propio, sin tocar kit-base. */
+[data-slide="minijuego"] .d-mj { background: var(--surface); }
 .d-mj-panel { display: flex; align-items: center; justify-content: center;
   overflow-y: auto; padding: 1.5rem 0; width: 100%; }
 
 /* ---- Intro ---- */
-.d-mj-intro { max-width: 1020px; margin: 0 auto; text-align: center; padding: 0 1.5rem;
+.d-mj-intro { max-width: 1020px; margin: 0 auto; text-align: center; padding: 3.4rem 1.5rem 0;
   width: 100%; position: relative; }
+/* ---- "Jugá con nosotros": franja fija arriba a la izquierda en las
+   7 pantallas del juego (intro incluida) — calca el PDF, que la repite
+   en cada una, siempre pegada a la esquina superior izquierda real. */
 .d-mj-intro-kicker { display: inline-flex; align-items: center; gap: .5rem;
   padding: .5rem 1.1rem; border-radius: var(--r-pill); background: var(--cat-grad);
-  color: #fff; font-weight: 800; font-size: .85rem; margin-bottom: 1.3rem; }
+  color: #fff; font-weight: 800; font-size: .85rem; margin: 0;
+  position: absolute; top: 0; left: 1.5rem; z-index: 1; }
 .d-mj-intro-kicker svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
-/* ---- "Jugá con nosotros": franja fija arriba a la izquierda en las
-   5 pantallas de pregunta del PDF real — no solo en la intro. ---- */
 .d-mj-play-kicker { position: absolute; top: 0; left: 1.5rem; margin: 0; z-index: 1; }
 
 .d-mj-intro-main { display: flex; align-items: flex-end; justify-content: center;
-  gap: 1.2rem; }
-.d-mj-intro-mascot { width: clamp(90px, 13cqw, 168px); height: auto; flex: none;
+  gap: .6rem; }
+.d-mj-intro-mascot { width: clamp(110px, 15cqw, 195px); height: auto; flex: none;
   align-self: flex-end; }
-.d-mj-intro-mid { flex: 1 1 480px; max-width: 560px; }
+.d-mj-intro-mid { flex: 1 1 460px; max-width: 500px; }
 .d-mj-intro-tit { font-family: var(--font-title); font-weight: 900;
   font-size: clamp(1.5rem, 2.6cqw, 2.1rem); margin: 0 0 1.1rem; line-height: 1.2; }
 .d-mj-intro-tit-line { position: relative; display: inline-flex; align-items: center;
@@ -104,9 +110,12 @@
 .d-mj-intro-body { font-size: .96rem; color: var(--text); line-height: 1.5; margin: 0; }
 .d-mj-intro-cta { margin: 0 0 .5rem; }
 
-.d-mj-intro-floor { margin-top: 1.8rem; width: 100vw; margin-left: calc(50% - 50vw);
+/* Los pies de las mascotas pisan la guarda gris (calco del PDF: no
+   hay hueco entre el personaje y el piso) — margen negativo a
+   propósito, no un error de spacing. */
+.d-mj-intro-floor { margin-top: -14px; width: 100vw; margin-left: calc(50% - 50vw);
   padding: 1.3rem 1.5rem .9rem; border-radius: 48% 48% 0 0 / 60px 60px 0 0;
-  background: linear-gradient(180deg, #9199a6, #767f8d); }
+  background: linear-gradient(180deg, #9199a6, #767f8d); position: relative; z-index: 2; }
 .d-mj-intro-tips { list-style: none; margin: 0; padding: 0; display: flex;
   justify-content: center; gap: 2rem; flex-wrap: wrap; }
 .d-mj-intro-tips li { display: flex; flex-direction: column; align-items: center;

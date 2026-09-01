@@ -327,6 +327,77 @@ Suite completa (7/7), `check-css-duplicates`/`check-image-weight`
 siguen en verde. Baseline de `visual-regress.mjs` regenerada (el panel
 del mini juego cambió por completo).
 
+## Ronda 9 — el mini juego de la Ronda 8 no calcaba el diseño del PDF: portada sin arte, 3 de 5 ilustraciones mal recortadas, chips con un estilo propio
+
+El cliente mandó capturas reales de su propia prueba (portada, Q1, Q2)
+comparadas con el PDF de referencia: la portada no tenía el arte de los
+2 mascotas ni la guarda gris de abajo, y en la Q2 ("Control de surtido
+sin venta") la tarjeta se veía sin ilustración. Reabrí el PDF de la
+Ronda 8 a resolución completa (no solo el recorte que había usado para
+cada pregunta) y encontré el problema real:
+
+1. **3 de las 5 ilustraciones recortadas en la Ronda 8 estaban mal
+   encuadradas** — `mj-plu-ean.webp` cortaba el globo con el número
+   "574027" grande a la mitad; `mj-mejorar-venta.webp` y
+   `mj-rotacion.webp` estaban recortadas tan de cerca que solo se veía
+   una esquina del carrito/gráfico de barras real (de ahí el reporte
+   de "faltan las ilustraciones": no faltaban, estaban ahí pero
+   ilegibles). Re-recortadas las 3 desde el PDF a resolución completa,
+   con margen generoso alrededor del elemento real (verificadas contra
+   el render de cada página, una por una). Las otras 2 (`mj-reporte.
+   webp`, `mj-ean.webp`) ya estaban bien encuadradas — no se tocaron.
+2. **La portada no reconstruía el diseño del PDF** — la Ronda 8 solo
+   había traducido el TEXTO de la intro (kicker, título, tips), no el
+   arte: 2 mascotas de COTO a los costados, guirnaldas junto a "mini
+   juego", el globo de instrucción como tarjeta blanca, y la guarda
+   gris curva de abajo con los 3 íconos. Recorté las 2 mascotas y la
+   guirnalda directo del PDF (páginas a resolución completa vía
+   PyMuPDF): son arte vectorial plano sobre fondo blanco liso (a
+   diferencia de las mascotas de las pantallas finales de la Ronda 8,
+   que SÍ se habían descartado por venir aplanadas sobre una tarjeta
+   con textura), así que el recorte rectangular con márgenes generosos
+   funciona limpio — sin necesidad de una máscara de silueta. Un
+   detalle real encontrado al recortar: el PNG de la página trae una
+   sombra suave del globo de texto detrás del brazo de cada mascota;
+   se filtró con un pase que blanquea cualquier píxel cercano a gris
+   puro (`abs(r-g)≤6` etc.) antes de recortar, así la sombra desaparece
+   sin tocar los colores reales del dibujo (rojo/piel/azul no son
+   grises). La guirnalda si se dejó con canal alfa real (a diferencia
+   de las mascotas): no tiene ninguna zona blanca propia que pueda
+   confundirse con fondo, así que se pudo pasar a transparencia total
+   sin ese riesgo.
+3. **Los chips (Concepto/Puntos/Vidas/Reglas) tenían un estilo propio
+   de esta sesión, no el del PDF** — la Ronda 8 le había dejado al
+   chip de Puntos el fondo dorado que trae `coto-minijuego.css` por
+   default (`.d-mj-stat--pts`); el PDF real muestra los 4 chips con el
+   mismo fondo gris liso, sin resaltar ninguno. Se dejó de usar esa
+   clase modificadora (el chip de Puntos ahora es un `.d-mj-stat` más,
+   igual que los otros 3). También se sumó el rótulo "¡Jugá con
+   nosotros!" arriba a la izquierda de las 5 pantallas de pregunta —
+   en la Ronda 8 solo estaba en la intro, pero el PDF lo repite en
+   cada pantalla del juego.
+
+**No se tocó** la lógica de puntaje/vidas/guarda anti-farming de la
+Ronda 8 (sigue en 120 pts totales, 3 vidas, reintentos ilimitados) —
+este pedido era 100% visual, sobre una mecánica que ya estaba
+verificada y funcionando.
+
+**Viewport móvil real** (iPhone 12, regla de CLAUDE.md §7.3/§6.10.1):
+el recorte de la guirnalda, hecho por error con fondo blanco opaco en
+un primer intento, se veía como un cuadrado blanco feo contra el fondo
+celeste de la app en mobile (mucho más notorio ahí que en desktop, por
+el contraste con el texto pegado al lado) — se corrigió pasándola a
+canal alfa real. La guarda gris de la portada, al ser ahora ancho
+completo (`100vw`), dejaba la 3ª pastilla ("Aprendé") tapada por el
+fab-stack fijo del kit en ≤480px — corregido con el mismo criterio que
+ya se había aplicado a las píldoras de respuesta en la Ronda 8
+(reservar hueco a la derecha), más un achique de gap/ícono/tipografía
+para que las 3 pastillas sigan entrando en una sola fila con ese hueco.
+
+Suite completa (7/7), `check-css-duplicates`/`check-image-weight`
+en verde. Baseline de `visual-regress.mjs` regenerada (portada y las
+5 pantallas de pregunta cambiaron visualmente).
+
 ## Decisiones de esta migración
 
 - **Reencuadre 2:1**: en vez de editar las capturas (proporción real

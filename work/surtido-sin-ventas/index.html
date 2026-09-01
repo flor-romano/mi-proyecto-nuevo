@@ -354,33 +354,46 @@
     <div class="d-mj-panel" data-mj-panel="intro">
       <div class="d-mj-intro">
         <span class="d-mj-intro-kicker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11.5V6a2 2 0 1 1 4 0v5"/><path d="M13 6a2 2 0 1 1 4 0v6"/><path d="M17 8a2 2 0 1 1 4 0v6a7 7 0 0 1-7 7h-2a7 7 0 0 1-6-3.4L3.3 13a1.8 1.8 0 0 1 2.8-2.2L9 13.5"/></svg> ¡Jugá con nosotros!</span>
-        <h2 class="d-mj-intro-tit" data-slide-title>¡Bienvenido a este <span>mini juego</span>!</h2>
-        <p class="d-mj-intro-body">En este juego se te van a presentar distintos conceptos y, dentro de varias respuestas, tenés que seleccionar la correcta.</p>
-        <button type="button" class="btn btn-cat d-mj-intro-cta" data-mj-start>¡Empecemos!</button>
-        <ul class="d-mj-intro-tips">
-          <li><span class="d-mj-intro-tip-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/></svg></span><b>Observá</b> cada situación</li>
-          <li><span class="d-mj-intro-tip-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3 11.2c.5.4.8 1 .8 1.8h4.4c0-.8.3-1.4.8-1.8A6 6 0 0 0 12 3z"/></svg></span><b>Pensá</b> antes de elegir</li>
-          <li><span class="d-mj-intro-tip-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="15" width="16" height="3" rx="1"/><rect x="5" y="11" width="14" height="3" rx="1"/><rect x="6" y="7" width="12" height="3" rx="1"/></svg></span><b>Aprendé</b> mientras jugás</li>
-        </ul>
+        <div class="d-mj-intro-main">
+          <img class="d-mj-intro-mascot d-mj-intro-mascot--l" src="img/mj-mascota-1.webp" alt="" aria-hidden="true" width="550" height="1410">
+          <div class="d-mj-intro-mid">
+            <h2 class="d-mj-intro-tit" data-slide-title>¡Bienvenido a<br>
+              <span class="d-mj-intro-tit-line"><img class="d-mj-wreath d-mj-wreath--l" src="img/mj-wreath.webp" alt="" aria-hidden="true">este <span>mini juego</span>!<img class="d-mj-wreath d-mj-wreath--r" src="img/mj-wreath.webp" alt="" aria-hidden="true"></span>
+            </h2>
+            <div class="d-mj-intro-bubble">
+              <p class="d-mj-intro-body">En este juego se te van a presentar distintos conceptos y, dentro de varias respuestas, tenés que seleccionar la correcta.</p>
+            </div>
+            <button type="button" class="btn btn-cat d-mj-intro-cta" data-mj-start>¡Empecemos!</button>
+          </div>
+          <img class="d-mj-intro-mascot d-mj-intro-mascot--r" src="img/mj-mascota-2.webp" alt="" aria-hidden="true" width="550" height="1410">
+        </div>
+        <div class="d-mj-intro-floor">
+          <ul class="d-mj-intro-tips">
+            <li><span class="d-mj-intro-tip-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/></svg></span><b>Observá</b> cada situación</li>
+            <li><span class="d-mj-intro-tip-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3 11.2c.5.4.8 1 .8 1.8h4.4c0-.8.3-1.4.8-1.8A6 6 0 0 0 12 3z"/></svg></span><b>Pensá</b> antes de elegir</li>
+            <li><span class="d-mj-intro-tip-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="15" width="16" height="3" rx="1"/><rect x="5" y="11" width="14" height="3" rx="1"/><rect x="6" y="7" width="12" height="3" rx="1"/></svg></span><b>Aprendé</b> mientras jugás</li>
+          </ul>
+        </div>
       </div>
     </div>
     <div class="d-mj-panel" data-mj-panel="play" hidden>
       <div class="d-mj-play">
+        <span class="d-mj-intro-kicker d-mj-play-kicker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11.5V6a2 2 0 1 1 4 0v5"/><path d="M13 6a2 2 0 1 1 4 0v6"/><path d="M17 8a2 2 0 1 1 4 0v6a7 7 0 0 1-7 7h-2a7 7 0 0 1-6-3.4L3.3 13a1.8 1.8 0 0 1 2.8-2.2L9 13.5"/></svg> ¡Jugá con nosotros!</span>
         <div class="d-mj-stats">
           <div class="d-mj-stat">
             <span class="d-mj-stat-lbl">Concepto</span>
             <b><span data-mj-idx>1</span>/<span data-mj-total>5</span></b>
           </div>
-          <div class="d-mj-stat d-mj-stat--pts">
+          <div class="d-mj-stat">
             <span class="d-mj-stat-lbl">Puntos</span>
-            <b><span class="d-mj-trophy" aria-hidden="true">🏆</span><span data-mj-puntos-juego>0</span></b>
+            <b><span class="d-mj-trophy" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 3h12v2h2.5a1 1 0 0 1 1 1.1c-.2 2.1-1.2 4-3.5 4.7-.6 1.5-1.8 2.6-3.5 3v2.2h2.4a1 1 0 0 1 1 1V19H8v-2a1 1 0 0 1 1-1h2.4v-2.2c-1.7-.4-2.9-1.5-3.5-3-2.3-.7-3.3-2.6-3.5-4.7A1 1 0 0 1 5.4 5H8V3zM6 7H4.9c.2 1.1.7 2 1.6 2.5A9 9 0 0 1 6 7zm12 0a9 9 0 0 1-.5 2.5c.9-.5 1.4-1.4 1.6-2.5H18z"/></svg></span><span data-mj-puntos-juego>0</span></b>
           </div>
           <div class="d-mj-stat">
             <span class="d-mj-stat-lbl">Vidas</span>
             <span class="d-mj-lives" data-mj-lives>
-              <svg class="d-mj-heart" data-mj-heart viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-6.7-4.35-9.75-8.5C.4 9.4 2 6 5.6 6c2 0 3.6 1.2 4.6 2.7C11.2 7.2 12.8 6 15.1 6 18.4 6 20 9.5 18.05 12.5 15 16.65 12 21 12 21z"/></svg>
-              <svg class="d-mj-heart" data-mj-heart viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-6.7-4.35-9.75-8.5C.4 9.4 2 6 5.6 6c2 0 3.6 1.2 4.6 2.7C11.2 7.2 12.8 6 15.1 6 18.4 6 20 9.5 18.05 12.5 15 16.65 12 21 12 21z"/></svg>
-              <svg class="d-mj-heart" data-mj-heart viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-6.7-4.35-9.75-8.5C.4 9.4 2 6 5.6 6c2 0 3.6 1.2 4.6 2.7C11.2 7.2 12.8 6 15.1 6 18.4 6 20 9.5 18.05 12.5 15 16.65 12 21 12 21z"/></svg>
+              <svg class="d-mj-heart" data-mj-heart viewBox="0 0 8 7" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><rect x="1" y="0" width="2" height="1"/><rect x="5" y="0" width="2" height="1"/><rect x="0" y="1" width="8" height="1"/><rect x="0" y="2" width="8" height="1"/><rect x="0" y="3" width="8" height="1"/><rect x="1" y="4" width="6" height="1"/><rect x="2" y="5" width="4" height="1"/><rect x="3" y="6" width="2" height="1"/></svg>
+              <svg class="d-mj-heart" data-mj-heart viewBox="0 0 8 7" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><rect x="1" y="0" width="2" height="1"/><rect x="5" y="0" width="2" height="1"/><rect x="0" y="1" width="8" height="1"/><rect x="0" y="2" width="8" height="1"/><rect x="0" y="3" width="8" height="1"/><rect x="1" y="4" width="6" height="1"/><rect x="2" y="5" width="4" height="1"/><rect x="3" y="6" width="2" height="1"/></svg>
+              <svg class="d-mj-heart" data-mj-heart viewBox="0 0 8 7" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><rect x="1" y="0" width="2" height="1"/><rect x="5" y="0" width="2" height="1"/><rect x="0" y="1" width="8" height="1"/><rect x="0" y="2" width="8" height="1"/><rect x="0" y="3" width="8" height="1"/><rect x="1" y="4" width="6" height="1"/><rect x="2" y="5" width="4" height="1"/><rect x="3" y="6" width="2" height="1"/></svg>
             </span>
           </div>
           <button type="button" class="d-mj-stat d-mj-rules" data-popup-trigger="minijuego-reglas">

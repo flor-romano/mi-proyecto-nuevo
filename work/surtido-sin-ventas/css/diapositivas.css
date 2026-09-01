@@ -76,32 +76,88 @@
   overflow-y: auto; padding: 1.5rem 0; width: 100%; }
 
 /* ---- Intro ---- */
-.d-mj-intro { max-width: 720px; margin: 0 auto; text-align: center; padding: 0 1.5rem; }
+.d-mj-intro { max-width: 1020px; margin: 0 auto; text-align: center; padding: 0 1.5rem;
+  width: 100%; position: relative; }
 .d-mj-intro-kicker { display: inline-flex; align-items: center; gap: .5rem;
   padding: .5rem 1.1rem; border-radius: var(--r-pill); background: var(--cat-grad);
   color: #fff; font-weight: 800; font-size: .85rem; margin-bottom: 1.3rem; }
 .d-mj-intro-kicker svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
+/* ---- "Jugá con nosotros": franja fija arriba a la izquierda en las
+   5 pantallas de pregunta del PDF real — no solo en la intro. ---- */
+.d-mj-play-kicker { position: absolute; top: 0; left: 1.5rem; margin: 0; z-index: 1; }
+
+.d-mj-intro-main { display: flex; align-items: flex-end; justify-content: center;
+  gap: 1.2rem; }
+.d-mj-intro-mascot { width: clamp(90px, 13cqw, 168px); height: auto; flex: none;
+  align-self: flex-end; }
+.d-mj-intro-mid { flex: 1 1 480px; max-width: 560px; }
 .d-mj-intro-tit { font-family: var(--font-title); font-weight: 900;
-  font-size: clamp(1.6rem, 3cqw, 2.3rem); margin: 0 0 1rem; line-height: 1.15; }
-.d-mj-intro-tit span { color: var(--cat-ink); }
-.d-mj-intro-body { font-size: 1rem; color: var(--text); line-height: 1.5; margin: 0 0 1.5rem; }
-.d-mj-intro-cta { margin-bottom: 2rem; }
+  font-size: clamp(1.5rem, 2.6cqw, 2.1rem); margin: 0 0 1.1rem; line-height: 1.2; }
+.d-mj-intro-tit-line { position: relative; display: inline-flex; align-items: center;
+  gap: .5rem; }
+.d-mj-intro-tit span:not(.d-mj-wreath):not(.d-mj-intro-tit-line) { color: var(--cat-ink); }
+.d-mj-wreath { width: 40px; height: auto; flex: none; opacity: .95; align-self: center; }
+.d-mj-wreath--r { transform: scaleX(-1); }
+.d-mj-intro-bubble { background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-xl); box-shadow: var(--shadow-card); padding: 1.2rem 1.4rem;
+  margin: 0 0 1.1rem; }
+.d-mj-intro-body { font-size: .96rem; color: var(--text); line-height: 1.5; margin: 0; }
+.d-mj-intro-cta { margin: 0 0 .5rem; }
+
+.d-mj-intro-floor { margin-top: 1.8rem; width: 100vw; margin-left: calc(50% - 50vw);
+  padding: 1.3rem 1.5rem .9rem; border-radius: 48% 48% 0 0 / 60px 60px 0 0;
+  background: linear-gradient(180deg, #9199a6, #767f8d); }
 .d-mj-intro-tips { list-style: none; margin: 0; padding: 0; display: flex;
   justify-content: center; gap: 2rem; flex-wrap: wrap; }
 .d-mj-intro-tips li { display: flex; flex-direction: column; align-items: center;
-  gap: .4rem; font-size: .85rem; color: var(--text-soft); max-width: 140px; }
-.d-mj-intro-tips b { color: var(--text); font-family: var(--font-title); }
-.d-mj-intro-tip-ic { width: 44px; height: 44px; border-radius: 50%; display: grid;
-  place-items: center; background: var(--cat-wash); color: var(--cat-ink); }
-.d-mj-intro-tip-ic svg { width: 24px; height: 24px; fill: none; stroke: currentColor;
+  gap: .3rem; font-size: .82rem; color: #eef0f4; max-width: 140px; }
+.d-mj-intro-tips b { color: #fff; font-family: var(--font-title); }
+.d-mj-intro-tip-ic { width: 40px; height: 40px; border-radius: 50%; display: grid;
+  place-items: center; background: rgba(255,255,255,.16); color: #ffbd59; }
+.d-mj-intro-tip-ic svg { width: 22px; height: 22px; fill: none; stroke: currentColor;
   stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+@media (max-width: 760px) {
+  .d-mj-intro-mascot { display: none; }
+}
+@media (max-width: 480px) {
+  /* Mismo motivo que el padding-bottom de .d-mj-play más abajo: la
+     franja de tips es la última fila del panel y el fab-stack
+     (engranaje/ayuda, fijo del kit) le tapa el 3er ítem si no le
+     dejamos hueco a la derecha. Achicamos gap/ícono/texto para que
+     los 3 ítems sigan entrando en una sola fila con ese hueco. */
+  .d-mj-intro-floor { padding: 1rem 1.5rem .8rem; padding-right: 70px; }
+  .d-mj-intro-tips { gap: .6rem; flex-wrap: nowrap; }
+  .d-mj-intro-tips li { font-size: .68rem; max-width: none; }
+  .d-mj-intro-tip-ic { width: 32px; height: 32px; }
+  .d-mj-intro-tip-ic svg { width: 18px; height: 18px; }
+}
 
 /* ---- Tarjeta de pregunta ---- */
 .d-mj-play { display: flex; flex-direction: column; gap: 1.1rem; width: 100%;
-  max-width: 900px; margin: 0 auto; padding: 0 1.5rem; }
-.d-mj-card { display: flex; align-items: center; gap: 1.5rem;
-  background: linear-gradient(160deg, #fff8ea, #fdf1da); border: 1px solid #f0dcae;
+  max-width: 900px; margin: 0 auto; padding: 3.4rem 1.5rem 0; position: relative; }
+.d-mj-trophy svg { width: 1.1em; height: 1.1em; vertical-align: -.15em; color: #e0a52e; }
+/* Fondo decorativo de la tarjeta calcado del PDF: puntos en grilla
+   arriba a la izquierda + 2 manchas cálidas en las esquinas —
+   100% CSS (gradientes/radial), no un recorte del PDF, para que
+   escale con cualquier alto de tarjeta sin pixelarse. */
+.d-mj-card { position: relative; overflow: hidden; display: flex; align-items: center;
+  gap: 1.5rem; background: linear-gradient(160deg, #fff8ea, #fdf1da); border: 1px solid #f0dcae;
   border-radius: var(--r-xl); padding: 1.6rem 1.8rem; min-height: 210px; }
+.d-mj-card::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(circle at 92% -6%, #f6dfae 0%, #f6dfae 22%, transparent 23%),
+    radial-gradient(circle at 100% 78%, #fbe8c4 0%, #fbe8c4 26%, transparent 27%),
+    radial-gradient(circle 1.5px at 8% 16%, #ecd39c 96%, transparent 100%),
+    radial-gradient(circle 1.5px at 14% 16%, #ecd39c 96%, transparent 100%),
+    radial-gradient(circle 1.5px at 8% 22%, #ecd39c 96%, transparent 100%),
+    radial-gradient(circle 1.5px at 14% 22%, #ecd39c 96%, transparent 100%),
+    radial-gradient(circle 1.5px at 20% 22%, #ecd39c 96%, transparent 100%),
+    radial-gradient(circle 1.5px at 8% 28%, #ecd39c 96%, transparent 100%),
+    radial-gradient(circle 1.5px at 14% 28%, #ecd39c 96%, transparent 100%),
+    radial-gradient(circle 1.5px at 20% 28%, #ecd39c 96%, transparent 100%);
+  opacity: .8; }
+.d-mj-card > * { position: relative; }
 .d-mj-card-text { flex: 1 1 55%; font-size: 1.02rem; line-height: 1.5; color: var(--text); }
 .d-mj-card-text b { color: var(--cat-ink); }
 .d-mj-card-img { flex: 1 1 40%; display: flex; align-items: center; justify-content: center; }

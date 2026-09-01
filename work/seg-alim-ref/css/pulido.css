@@ -1,0 +1,31 @@
+/* ============================================================
+   pulido.css · "Seguridad alimentaria"
+   Ajustes finales de coherencia de ESTE curso. Nada de acá es
+   genérico: si algo de este archivo sirviera para otro curso, va al
+   kit (CLAUDE.md §1), no acá.
+   ============================================================ */
+
+/* La diapositiva del mini juego no es una captura a pantalla completa
+   sino un layout propio: necesita ser flex para que `.slide-inner`
+   pueda ocupar todo el alto disponible. */
+.slide-minijuego { display: flex; }
+
+/* La imagen de la escena del mini juego es un webp plano SIN alfa
+   (fondo horneado). Con la caja a la proporción exacta del archivo
+   (`--mj-escena-ratio`, kit) no sobra aire en ningún eje, así que no
+   queda ese "recuadro blanco de más" alrededor del dibujo — mismo bug
+   que el iPad del curso anterior (CLAUDE.md §6.39 punto 3). */
+
+/* Los pop-ups del diseñador vienen con su sombra en el alfa. En
+   pantallas bajas, `.modal-card--art` (kit) ya limita el alto con
+   `84vh × ratio`; acá solo se le da aire para que la ✕ dibujada nunca
+   quede pegada al borde del viewport. */
+@media (max-height: 700px) {
+  .modal-card--art { width: min(92vw, calc(80vh * var(--shot-card-ratio))); }
+}
+
+/* El texto accesible de los pasos (`[data-swap-body]`) es `sr-only`:
+   lo lee el lector de pantalla y lo narra el sintetizador, pero no se
+   dibuja — el texto visible ya está en la captura del diseñador, y
+   escribirlo otra vez encima rompería la regla "texto + imagen, nunca
+   texto sobre texto" (CLAUDE.md §6.5). */

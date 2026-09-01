@@ -1,0 +1,233 @@
+/* ============================================================
+   coto-media.css · Los 3 patrones de video sobre una diapositiva
+   kit-base v1.7 · Área Aprendizaje (COTO) — genérico, sin contenido
+   de curso. Copiar tal cual a cada curso nuevo, sin editar.
+   ------------------------------------------------------------
+   Pareja CSS de `coto-media.js`. Se extrajo junto con él: el JS solo
+   no alcanza — sin estas reglas el video de fondo no cubre el lienzo,
+   el círculo no es un círculo y el botón de play no aparece en ningún
+   lado. Es el mismo hueco que ya se tapó dos veces antes (v1.4 con
+   `coto-player-bottom.css`, v1.6 con `coto-fx.css`): un módulo del kit
+   cuyo CSS se había quedado en el `diapositivas.css` del curso.
+
+   Requiere `coto-shot-stage.css` (define `.d-shot` y `.d-shot-hit`).
+   ============================================================ */
+
+/* ---- 1. Video de fondo, diapositiva completa ----
+   `cover` + `center`: el video ocupa el lienzo entero igual que la
+   captura .webp que hace de `poster`, así la transición
+   poster→reproducción no salta. `max-width/height:none` es necesario
+   porque el CSS base achica los media al contenedor. */
+.d-shot-slide--bg-video .d-shot-video {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  max-width: none; max-height: none;
+  object-fit: cover; object-position: center; display: block;
+}
+
+/* Botón de gesto: aparece SOLO si el navegador rechazó el autoplay con
+   audio (pasa siempre en la portada — ver coto-media.js). Nace oculto
+   con [hidden] en el marcado; lo muestra el JS. */
+.d-shot-video-tap {
+  position: absolute; z-index: 2; inset: 0; margin: auto;
+  width: 76px; height: 76px; border-radius: 50%; border: none;
+  cursor: pointer; display: grid; place-items: center;
+  background: color-mix(in srgb, var(--brand-navy) 60%, transparent);
+  box-shadow: 0 10px 30px color-mix(in srgb, #000 30%, transparent);
+}
+.d-shot-video-tap svg { width: 30px; height: 30px; fill: #fff; margin-left: 4px; }
+.d-shot-video-tap:hover { background: color-mix(in srgb, var(--brand-navy) 78%, transparent); }
+
+/* ---- 2. Video rectangular en pop-up ----
+   Sin barra superior (`.modal-hd`): pedido real de cliente, ver
+   CLAUDE.md §6.12 punto 5 — solo se ve el video con sus controles
+   nativos, el título accesible queda en el DOM como `sr-only`, y el
+   cierre pasa a un botón flotante (`.modal-x--video`) sobre la esquina
+   con fondo oscuro semitransparente (se lee igual sobre cualquier
+   video, no depende del color de un header).
+   `aspect-ratio:16/9` en el propio `<video>` es la pieza que faltaba:
+   BUG REAL encontrado probando en tablet — con placeholders (archivos
+   de 0 bytes, sin metadata) un `<video>` con `width:100%;height:auto`
+   cae en el alto por default del navegador (150px fijo, sin relación
+   con el ancho) y se ve como una franja "recortada". El `aspect-ratio`
+   reserva una caja 16:9 razonable desde el placeholder; en cuanto carga
+   un video real, el navegador usa SU relación de aspecto intrínseca por
+   sobre este valor de CSS — no hace falta sacarlo al reemplazar los
+   placeholders por los videos finales. */
+.modal-card--video { width: min(760px, 100%); padding: 0; overflow: hidden; }
+.modal-bd--video { padding: 0; }
+.modal-x--video {
+  position: absolute; top: .7rem; right: .7rem; z-index: 2;
+  background: color-mix(in srgb, var(--brand-navy) 65%, transparent); color: #fff;
+}
+.modal-x--video:hover { background: color-mix(in srgb, var(--brand-navy) 82%, transparent); }
+#d-video-player { aspect-ratio: 16/9; background: #000; object-fit: contain; width: 100%; display: block; }
+/* BUG REAL, pedido del cliente ("los botones de play tienen que
+   resaltarse al pasar el mouse"): `initPopupVideos` (arriba) deja
+   TODO el video como un único botón de play mientras está pausado
+   (el poster ya trae el ▶ horneado) — pero sin ningún feedback visual
+   propio, `cursor:pointer` es la única pista de que es clickeable.
+   `:not([controls])` apunta solo al estado PAUSADO/antes de arrancar
+   (JS le saca `controls` al pausar/cerrar) — una vez reproduciendo, el
+   navegador ya dibuja SUS propios controles con SU propio hover, no
+   hace falta pisarlo. */
+[data-popup] video:not([controls]){ transition: filter .15s ease, transform .15s ease; }
+[data-popup] video:not([controls]):hover{ filter: brightness(1.08); }
+@media (prefers-reduced-motion: no-preference) {
+  [data-popup] video:not([controls]):hover{ transform: scale(1.012); }
+}
+
+/* ---- 3. Video circular que se reproduce EN EL LUGAR ---- */
+
+   El hover/fondo se anula a propósito: acá el hitbox NO es una zona
+   invisible sobre el arte, es el video mismo — teñirlo al pasar el
+   mouse se vería como un filtro de color sobre la cara de la persona.
+   El play se achica y desaparece mientras reproduce (`.is-playing`),
+   dejando el video limpio; vuelve al pausar. Tamaño en % con tope en
+   px: el círculo cambia de tamaño con la ventana, el botón lo
+   acompaña pero nunca crece más allá de lo razonable. */
+.d-shot-hit--video { cursor: pointer; background: transparent; }
+.d-shot-hit--video:hover { background: transparent; }
+/* BUG REAL ("Prevención cardiovascular"): este patrón siempre lleva
+   TAMBIÉN la clase `.d-shot-hit--circle` (coto-shot-stage.css), y
+   `.d-shot-hit--circle:hover` trae su propio tinte de color — misma
+   especificidad que la regla de arriba, así que gana el que esté
+   último en el CSS final (orden de archivos, no de este selector).
+   Resultado real: un aro de color de más, superpuesto al botón de
+   play ("queda raro"). El selector combinado tiene más especificidad
+   y gana siempre, sin depender del orden de carga de los 2 archivos. */
+.d-shot-hit--circle.d-shot-hit--video:hover { background: transparent; }
+/* opacity:0 salvo mientras reproduce (BUG REAL, "Prevención
+   cardiovascular"): al terminar el video, `ended` sacaba `.is-playing`
+   pero el <video> seguía encima mostrando su último cuadro — negro en
+   estos clips — en vez de la imagen de base del círculo (la cara de la
+   persona, horneada en la captura). Ocultar el <video> fuera de
+   reproducción deja ver siempre esa imagen, en reposo y al terminar. */
+.d-shot-hit-video {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; display: block;
+  opacity: 0; transition: opacity .15s ease;
+}
+.d-shot-hit--video.is-playing .d-shot-hit-video { opacity: 1; }
+/* BUG REAL ("Seguridad alimentaria"), 2 capas — la 1ª parecía resuelta
+   pero solo tapaba la 2ª:
+   1) El tamaño se daba con `width` y `height` en % del wrapper Y un
+      tope en px POR EJE — sobre un wrapper rectangular (una caja de
+      video, no un círculo) los dos ejes dan valores distintos y, en
+      cuanto uno de los dos topes entra a jugar y el otro no, el botón
+      queda OVALADO. Fix: un solo eje manda y `aspect-ratio:1` deriva
+      el otro — la CAJA queda cuadrada siempre.
+   2) Con la caja ya cuadrada, seguía viéndose ovalado en la variante
+      que dibuja un `<img>` propio adentro al 100%/100% (`--art`,
+      assets.css del curso): es un `<button>` sin `padding:0`, así que
+      hereda el padding por default del navegador (Chrome: `1px 6px`,
+      ASIMÉTRICO) — el contenido de un botón CUADRADO con ese padding
+      ya no es cuadrado (80×80 con 1px/6px de padding → contenido
+      68×78), y una imagen que llena ese hueco al 100%/100% se ve
+      achatada aunque el BOTÓN mida 80×80 perfecto. Nunca se notó con
+      el ícono SVG por defecto (ocupa 40%, centrado, sin llegar a
+      pisar el padding) — solo aparece con contenido que llena la caja
+      entera. `padding:0` acá evita que cualquier variante futura que
+      dibuje su propio ícono a pantalla completa pise este mismo bug. */
+.d-shot-hit-play {
+  position: absolute; z-index: 2; inset: 0; margin: auto; padding: 0;
+  width: 44%; height: auto; aspect-ratio: 1; max-width: 64px;
+  border-radius: 50%; border: none; cursor: pointer;
+  display: grid; place-items: center;
+  background: color-mix(in srgb, var(--brand-navy) 62%, transparent);
+  box-shadow: 0 6px 18px color-mix(in srgb, #000 30%, transparent);
+  transition: opacity .15s, transform .15s;
+}
+.d-shot-hit-play svg { width: 40%; height: 40%; fill: #fff; margin-left: 8%; }
+.d-shot-hit-play:hover {
+  background: color-mix(in srgb, var(--brand-navy) 78%, transparent);
+  transform: scale(1.06);
+}
+.d-shot-hit--video.is-playing .d-shot-hit-play {
+  opacity: 0; pointer-events: none; transform: scale(.8);
+}
+
+/* Variante (b) de initInlineCircleVideos (kit v1.9.21, revisada
+   v1.9.22): el arte ya dibuja el reproductor completo — marco,
+   triángulo de play, barra de progreso — en un mockup.
+   BUG REAL (v1.9.22, ver comentario largo en coto-media.js): confiar
+   en el atributo `poster` nativo del `<video>` para mostrar ese mockup
+   se rompe en cualquier navegador que rechace el códec de la fuente
+   (Safari, sobre todo, y CUALQUIERA con un placeholder de 0 bytes —
+   §3.9, la situación normal de todo curso hasta que llegan los videos
+   reales): el botón de play dibujado desaparece, reemplazado por el
+   ícono de "medio roto" del navegador. Fix: el mockup vive en un
+   `<img class="d-shot-hit-poster-img">` real (inmune a códecs, JS lo
+   inserta solo si hay `poster`), y el `<video>` pasa a comportarse
+   EXACTAMENTE como la variante circular de arriba — oculto en reposo,
+   visible en `.is-playing` — en vez de estar siempre visible.
+   `object-fit:contain` en las dos capas: el mockup tiene su
+   proporción exacta medida contra el arte, recortar desalinearía el
+   video del marco que el diseñador ya dibujó alrededor.
+   El hover propio es requisito de cualquier "toda la superficie es un
+   botón" (CLAUDE.md §7.3 punto 6): `cursor:pointer` solo no alcanza
+   como affordance. Apunta solo al estado pausado — una vez que
+   reproduce, los controles nativos ya traen el suyo. */
+.d-shot-hit-poster-img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: contain; display: block; pointer-events: none;
+}
+[data-inline-video].is-poster .d-shot-hit-video {
+  opacity: 0; object-fit: contain; transition: opacity .15s ease;
+}
+[data-inline-video].is-poster.is-playing .d-shot-hit-video { opacity: 1; }
+[data-inline-video].is-poster video:not([controls]) { cursor: pointer; }
+/* Hover en el WRAPPER, no en el <video>: con el <video> en opacity:0
+   en reposo, es el <img> el que se ve y el que necesita reaccionar —
+   pero el hover tiene que dispararse igual apenas el mouse entra a la
+   superficie clickeable completa. */
+[data-inline-video].is-poster:not(.is-playing):hover .d-shot-hit-poster-img {
+  filter: brightness(1.06); transform: scale(1.008);
+  transition: filter .15s ease, transform .15s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-inline-video].is-poster:not(.is-playing):hover .d-shot-hit-poster-img { transform: none; }
+}
+
+/* ============================================================
+   4 · VIDEO EMBEBIDO EN UN POP-UP DE CONTENIDO   (kit v1.9.4)
+   Pareja CSS de initPopupVideos() — ver coto-media.js §4.
+   A diferencia del patrón 2 (reproductor a pantalla completa, sin
+   texto), acá el video convive con texto dentro de la ficha.
+   `aspect-ratio:16/9` es OBLIGATORIO, no cosmético: con un
+   placeholder de 0 bytes (CLAUDE.md §3.9) el navegador no tiene
+   metadata y cae en su alto fijo por default (150px), así que el
+   reproductor se ve como una franja angosta en CUALQUIER pantalla
+   — el bug que se reportó como "se ve recortado en iPad" y no
+   tenía nada que ver con el iPad (§6.14 punto 4). En cuanto carga
+   un video real, el navegador prioriza su relación de aspecto
+   intrínseca y esta regla deja de aplicar sola.
+   ============================================================ */
+[data-popup] video{
+  width:100%; height:auto; display:block;
+  aspect-ratio:16/9;
+  background:#0d1420;
+  border-radius:var(--r-lg);
+  box-shadow:var(--shadow-card);
+}
+
+/* ============================================================
+   5 · ESTADO DE ERROR — video que no pudo cargar (kit-base v1.9.44)
+   Pareja CSS de mostrarErrorVideo()/ocultarErrorVideo() en
+   coto-media.js. Se inserta como hijo del contenedor del `<video>`
+   (el JS le da `position:relative` si hacía falta) y cubre todo el
+   área — mismo lenguaje visual que `.alert-danger` (coto-base.css)
+   para que se lea como "algo salió mal", no como parte del diseño
+   del curso. Oculto por default; el JS agrega `.is-shown`.
+   ============================================================ */
+.d-video-error {
+  display: none; position: absolute; inset: 0; z-index: 3;
+  flex-direction: column; align-items: center; justify-content: center; gap: .6rem;
+  padding: 1rem; text-align: center;
+  background: color-mix(in srgb, var(--danger) 14%, #0d1420 86%);
+  color: #fff; font-weight: 600; border-radius: inherit;
+}
+.d-video-error.is-shown { display: flex; }
+.d-video-error svg {
+  flex: none; width: 22px; height: 22px; fill: none;
+  stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}

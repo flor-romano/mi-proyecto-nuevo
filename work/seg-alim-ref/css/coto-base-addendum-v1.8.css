@@ -1,0 +1,1041 @@
+/* ============================================================
+   coto-base-addendum-v1.8.css
+   Área Aprendizaje (COTO) — Extensión para piezas "Learning"
+   ------------------------------------------------------------
+   v1.6 suma las secciones 8-10 (índice lateral con íconos+check,
+   pop-up de instrucciones, pop-up de logros) y la entrada escalonada
+   de coto-base.css — todo nacido en "Prevención cardiovascular" y
+   verificado contra el curso real de referencia antes de subirlo acá.
+   ------------------------------------------------------------
+   Este archivo NO reemplaza a coto-base.css v1.1: se carga a
+   continuación de él y depende de sus variables (--brand, --cat,
+   --surface, --line, --shadow-card, --r, etc). No redefine
+   colores, tipografías, radios ni sombras: solo compone layout
+   y comportamiento con los tokens ya existentes.
+
+   Componentes nuevos (detectados al analizar los cursos "Surtido
+   sin venta" y "Medios de pago", curso corto/largo):
+   1. .tabs-v       → tabs verticales de conceptos
+   2. .tabs-h       → tabs horizontales segmentadas (Procedimiento)
+   3. .stepper-h    → stepper horizontal con contenido progresivo
+   4. .carousel     → carrusel de tarjetas con flechas + lista lateral
+   5. .toggle-seg   → selector segmentado de 2 opciones
+   6. .radial       → diagrama radial de consejos finales
+   7. .alert-inline → variante compacta de .alert para dentro de tarjetas
+   (.modal ya existe en coto-base.css v1.1: se reutiliza tal cual
+   para tarjetas expandibles y pop-ups de advertencia — no se
+   duplica acá.)
+   ============================================================ */
+
+/* ============================================================
+   1. TABS VERTICALES  ·  .tabs-v
+   Pills apiladas a la izquierda + panel de contenido a la derecha.
+   Uso: "Algunos conceptos importantes" (PLU/EAN, Stock, etc).
+   ============================================================ */
+.tabs-v{display:grid;grid-template-columns:220px 1fr;gap:1.5rem;align-items:start}
+.tabs-v .tv-list{display:flex;flex-direction:column;gap:.55rem}
+.tabs-v .tv-btn{font-family:var(--font-body);font-weight:600;font-size:.92rem;text-align:left;
+  border:none;cursor:pointer;padding:.75rem 1rem;border-radius:var(--r-pill);
+  background:var(--surface-2);color:var(--text-soft);transition:background .15s,color .15s}
+.tabs-v .tv-btn:hover{background:color-mix(in srgb,var(--cat,var(--brand)) 14%,var(--surface-2))}
+.tabs-v .tv-btn.active{background:var(--cat-strong,var(--brand));color:var(--on-cat,#fff)}
+.tabs-v .tv-btn:focus-visible{outline:3px solid var(--cat,var(--brand));outline-offset:2px}
+.tabs-v .tv-panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:1.4rem 1.6rem;box-shadow:var(--shadow-card);min-height:180px}
+.tabs-v .tv-panel[hidden]{display:none}
+@media (max-width:767px){.tabs-v{grid-template-columns:1fr}
+  .tabs-v .tv-list{flex-direction:row;flex-wrap:wrap}}
+
+/* ============================================================
+   2. TABS HORIZONTALES SEGMENTADAS  ·  .tabs-h
+   Uso: "Procedimiento" (Contactless / Chip / Banda magnética).
+   ============================================================ */
+.tabs-h .th-nav{display:flex;gap:.4rem;background:var(--surface-2);padding:.35rem;
+  border-radius:var(--r-pill);width:max-content;max-width:100%;overflow-x:auto}
+.tabs-h .th-btn{font-family:var(--font-body);font-weight:700;font-size:.88rem;white-space:nowrap;
+  border:none;cursor:pointer;padding:.6rem 1.1rem;border-radius:var(--r-pill);
+  background:transparent;color:var(--text-soft);display:inline-flex;align-items:center;gap:.4rem}
+.tabs-h .th-btn.active{background:var(--cat-strong,var(--brand));color:var(--on-cat,#fff)}
+.tabs-h .th-btn:focus-visible{outline:3px solid var(--cat,var(--brand));outline-offset:2px}
+.tabs-h .th-panel{margin-top:1.1rem;background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r-lg);padding:1.4rem 1.6rem;box-shadow:var(--shadow-card)}
+.tabs-h .th-panel[hidden]{display:none}
+
+/* ============================================================
+   3. STEPPER HORIZONTAL CON CONTENIDO  ·  .stepper-h
+   Uso: "Entrega de vuelto" (1-2-3-4, cada paso revela un bloque).
+   Distinto del .stepper vertical de coto-base (que es navegación
+   de ruta): este es un componente narrativo paso a paso.
+   ============================================================ */
+.stepper-h{display:flex;flex-direction:column;gap:1.4rem}
+.stepper-h .sh-track{display:flex;align-items:center;gap:0}
+.stepper-h .sh-dot{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;
+  font-family:var(--font-title);font-weight:900;font-size:1.05rem;flex:none;cursor:pointer;
+  background:var(--surface-2);color:var(--text-soft);border:2px solid var(--line);
+  transition:background .15s,color .15s,border-color .15s}
+.stepper-h .sh-dot.active,.stepper-h .sh-dot.done{background:var(--cat-strong,var(--brand));
+  color:var(--on-cat,#fff);border-color:var(--cat-strong,var(--brand))}
+.stepper-h .sh-line{flex:1;height:3px;background:var(--line);min-width:24px}
+.stepper-h .sh-line.done{background:var(--cat-strong,var(--brand))}
+.stepper-h .sh-dot:focus-visible{outline:3px solid var(--cat,var(--brand));outline-offset:3px}
+.stepper-h .sh-panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:1.3rem 1.5rem;box-shadow:var(--shadow-card);display:flex;gap:1.2rem;align-items:center}
+.stepper-h .sh-panel[hidden]{display:none}
+.stepper-h .sh-panel img{border-radius:var(--r);flex:none;max-width:180px}
+
+/* ============================================================
+   4. CARRUSEL DE TARJETAS  ·  .carousel
+   Tarjeta central + flechas prev/next + lista lateral de opciones
+   que resalta la activa. Uso: "Descuentos y beneficios",
+   "Billeteras virtuales".
+   ============================================================ */
+.carousel{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:1rem}
+.carousel .cw-arrow{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);
+  background:var(--surface);cursor:pointer;display:grid;place-items:center;box-shadow:var(--shadow-card);
+  color:var(--cat-strong,var(--brand));flex:none}
+.carousel .cw-arrow:hover{background:var(--surface-2)}
+.carousel .cw-arrow:focus-visible{outline:3px solid var(--cat,var(--brand));outline-offset:2px}
+.carousel .cw-slide{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:1.3rem 1.5rem;box-shadow:var(--shadow-card);min-height:160px}
+.carousel .cw-slide[hidden]{display:none}
+.carousel .cw-dots{display:flex;justify-content:center;gap:.4rem;margin-top:.9rem;grid-column:1/-1}
+.carousel .cw-dots button{width:9px;height:9px;border-radius:50%;border:none;background:var(--line);
+  cursor:pointer;padding:0}
+.carousel .cw-dots button.active{background:var(--cat-strong,var(--brand))}
+/* lista lateral opcional (ej. menú GESCOM de opciones) */
+.carousel-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.2rem;
+  font-size:.85rem;color:var(--text-soft);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.carousel-list li{padding:.5rem .8rem}
+.carousel-list li.active{background:var(--cat-soft,var(--brand-tint));color:var(--cat-strong,var(--brand));font-weight:700}
+@media (max-width:767px){.carousel{grid-template-columns:1fr}
+  .carousel .cw-arrow{position:absolute}}
+
+/* ============================================================
+   5. TOGGLE SEGMENTADO DE 2 OPCIONES  ·  .toggle-seg
+   Uso: "Documentos internos" (Ticket de envase / Orden de compra).
+   ============================================================ */
+.toggle-seg{display:inline-flex;background:var(--surface-2);border-radius:var(--r-pill);
+  padding:.3rem;gap:.3rem}
+.toggle-seg button{font-family:var(--font-body);font-weight:700;font-size:.9rem;border:none;
+  cursor:pointer;padding:.55rem 1.3rem;border-radius:var(--r-pill);background:transparent;
+  color:var(--text-soft)}
+.toggle-seg button.active{background:var(--cat-strong,var(--brand));color:var(--on-cat,#fff)}
+.toggle-seg button:focus-visible{outline:3px solid var(--cat,var(--brand));outline-offset:2px}
+
+/* ============================================================
+   6. DIAGRAMA RADIAL DE CONSEJOS  ·  .radial
+   Ilustración/ícono central con etiquetas conectadas por líneas
+   curvas. Coherente con el concepto rector ("camino", conexiones).
+   Uso: "Últimos consejos".
+   ============================================================ */
+.radial{position:relative;display:grid;place-items:center;min-height:340px}
+.radial .rd-center{width:150px;height:150px;border-radius:50%;display:grid;place-items:center;
+  background:var(--cat-grad,var(--grad-brand));box-shadow:var(--shadow-pop);z-index:2}
+.radial .rd-node{position:absolute;background:var(--cat-strong,var(--brand));color:var(--on-cat,#fff);
+  font-family:var(--font-body);font-weight:700;font-size:.85rem;text-align:center;
+  padding:.7rem 1.1rem;border-radius:var(--r-pill);box-shadow:var(--shadow-card);max-width:190px;z-index:2}
+.radial svg.rd-lines{position:absolute;inset:0;z-index:1;stroke:var(--cat,var(--brand));
+  stroke-width:2;fill:none;opacity:.55}
+@media (max-width:767px){.radial{display:flex;flex-direction:column;gap:.8rem;min-height:0}
+  .radial .rd-node{position:static;max-width:none}
+  .radial svg.rd-lines{display:none}}
+
+/* ============================================================
+   7. ALERT INLINE COMPACTA  ·  .alert-inline
+   Variante chica de .alert (coto-base v1.1) para meter dentro de
+   tarjetas/pop-ups sin el padding grande del alert de página.
+   Hereda color por modificador igual que .alert.
+   ============================================================ */
+.alert-inline{display:flex;gap:.5rem;align-items:flex-start;font-size:.85rem;
+  padding:.55rem .75rem;border-radius:var(--r-sm);border-left:4px solid var(--info);
+  background:color-mix(in srgb,var(--info) 10%,var(--surface));color:var(--info-ink)}
+.alert-inline.alert-warning{border-left-color:var(--warning);
+  background:color-mix(in srgb,var(--warning) 12%,var(--surface));color:var(--warning-ink)}
+.alert-inline.alert-danger{border-left-color:var(--danger);
+  background:color-mix(in srgb,var(--danger) 10%,var(--surface));color:var(--danger-ink)}
+.alert-inline svg{width:16px;height:16px;flex:none;margin-top:.15rem;
+  fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* ============================================================
+   NOTA sobre .modal (ya definido en coto-base.css v1.1):
+   se reutiliza sin cambios para:
+   - Tarjeta expandible / pregunta-respuesta ("Lo que vimos en
+     este video"): .modal-card chico, .modal-hd con ícono, .modal-bd
+     con el texto de respuesta.
+   - Pop-up de advertencia ("Acreditación de identidad", "Siempre
+     daremos prioridad a"): mismo .modal, con .modal-bd conteniendo
+     íconos de alerta + botón "Continuar" (usar clase .btn-cat).
+   No se define un componente nuevo para esto: sería duplicar lo
+   que el sistema ya resuelve bien.
+   ============================================================ */
+
+/* ============================================================
+   8. ÍNDICE LATERAL  ·  .d-sidenav
+   kit-base v1.5 — genérico, sin contenido de curso.
+   ------------------------------------------------------------
+   motor-slides.js ya arma el índice clickeable (lee cualquier
+   [data-goto] dentro de un `.d-sidenav-group`, ver spec-motor-slides.md
+   "Índice clickeable") Y las marcas de sección de la barra de progreso
+   (_initProgressSections agrupa por `.d-sidenav-group` — ver
+   coto-player-bottom.css, `.d-progress-mark`), pero el CONTENIDO de
+   ese pop-up (un `.modal` estándar) nunca tuvo estilos propios: cada
+   curso reescribía esta lista a mano. Hueco del mismo tipo que la barra
+   inferior (v1.4) — el motor ya asumía la estructura, faltaba el CSS.
+
+   Confirmado en motor-slides.js línea ~334 antes de escribir esto: la
+   clase que el motor togglea sobre cada `[data-goto]` al cambiar de
+   diapositiva es exactamente `is-active`
+   (`a.classList.toggle('is-active', ...)`) — no `.active` ni `.current`.
+
+   v1.5 — CORRECCIÓN: v1.4 documentaba acá un patrón de "punto" (un
+   `<span class="d-sidenav-item-dot">` decorativo por ítem) inventado sin
+   verificarlo contra el molde real. Al comparar el curso de
+   "Prevención cardiovascular" contra el código real de "Surtido sin
+   venta" (el curso del que sale este kit) apareció el patrón correcto:
+   cada ítem lleva su PROPIO ícono de tema (sprite `<symbol>`/`<use>`,
+   igual que el resto del kit) + un check (`.ix-ck`, la MISMA clase de
+   checkmark flotante que ya usan `.d-shot-hit.is-done` y
+   `.d-concept-tab.is-seen` — ver más abajo en este mismo archivo/
+   coto-base.css — reposicionado en línea acá) que aparece cuando la
+   diapositiva ya se visitó. El elemento raíz pasa de `<a href="#">` a
+   `<button type="button">` (no navega a ningún lado, no necesita href).
+
+   CONTRATO — marcado esperado:
+     <nav class="d-sidenav-list">
+       <span class="d-sidenav-group">Unidad 1 — …</span>
+       <button class="d-sidenav-item" type="button" data-goto="slide-id">
+         <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-algo"/></svg>
+         <span>Título de la sección</span>
+         <svg class="ix-ck" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg>
+       </button>
+       …
+     </nav>
+   El curso trae su propio sprite de íconos (`<svg style="position:absolute"
+   width="0" height="0">` con `<symbol id="i-algo">` por cada ícono usado)
+   al principio del `<body>` — ver "Prevención cardiovascular" para un
+   ejemplo con set completo. `.ix-ck` es puramente visual (aria-hidden):
+   el estado real "visto" lo comunica el propio texto del botón. Cada
+   curso decide qué marca "done" — típicamente que el alumno haya pasado
+   por esa diapositiva, ver `curso.js` de cada curso — el motor no lo
+   togglea, solo `is-active` (diapositiva actual).
+   ============================================================ */
+.d-sidenav{width:100%}
+.d-sidenav-list{display:flex;flex-direction:column;gap:.15rem}
+.d-sidenav-group{display:block;font-family:var(--font-title);font-weight:900;font-size:.82rem;
+  letter-spacing:.3px;text-transform:uppercase;color:var(--cat-strong,var(--brand));
+  margin:1.1rem 0 .5rem;padding-top:.9rem;border-top:1px solid var(--line)}
+.d-sidenav-group:first-child{margin-top:0;padding-top:0;border-top:none}
+
+.d-sidenav-item{position:relative;display:flex;align-items:center;gap:.65rem;width:100%;
+  text-align:left;border:none;background:none;cursor:pointer;padding:.55rem .7rem;
+  border-radius:var(--r-sm);color:var(--text);font-family:var(--font-body);
+  font-size:.92rem;font-weight:500;transition:background .15s,color .15s}
+.d-sidenav-item:hover{background:var(--surface-2)}
+.d-sidenav-item:focus-visible{outline:3px solid var(--cat,var(--brand));outline-offset:2px}
+/* Pedido del cliente: el índice lateral no puede dejar saltear a
+   diapositivas todavía no vistas (ver `marcarVistas()` en curso.js,
+   que ahora pone `disabled` ahí) — acá solo el estilo, para que se LEA
+   como no clickeable: cursor normal, sin hover/focus y semi-apagado
+   (no oculto — sigue diciendo qué viene después). */
+.d-sidenav-item:disabled{cursor:default;opacity:.45}
+.d-sidenav-item:disabled:hover{background:none}
+.d-sidenav-item .ic{width:19px;height:19px;flex:none;fill:none;stroke:currentColor;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round;opacity:.7}
+.d-sidenav-item.is-active .ic{opacity:1}
+.d-sidenav-item span{flex:1;min-width:0}
+
+/* checkmark de "visto": mismo criterio visual que .d-shot-hit.is-done/
+   .d-concept-tab.is-seen (ver coto-base.css), reposicionado EN LÍNEA acá
+   (position:static, no flotante) porque el ítem del índice ya reserva su
+   propio espacio a la derecha, a diferencia de un hitbox sobre la imagen. */
+.ix-ck{flex:none;margin-left:auto;width:20px;height:20px;padding:3px;border-radius:50%;
+  background:var(--surface);fill:none;stroke:var(--success);stroke-width:3;
+  stroke-linecap:round;stroke-linejoin:round;opacity:0;transform:scale(.6);
+  transition:opacity .2s,transform .2s}
+.d-sidenav-item.is-done .ix-ck{opacity:1;transform:scale(1)}
+
+/* diapositiva actual — mismo patrón de fondo tenue que .chip-cat/.badge-soft
+   (color-mix al 16% sobre la categoría) para no introducir un tono nuevo */
+.d-sidenav-item.is-active{background:color-mix(in srgb,var(--cat,var(--brand)) 16%,transparent);
+  color:var(--cat-strong,var(--brand));font-weight:700}
+
+@media (max-width:767px){.d-sidenav-item{padding:.65rem .7rem}}
+
+/* ---- Variante "drawer" — pegado a un borde, no centrado ----
+   BUG REAL corregido (verificado contra "Surtido sin venta"): el índice
+   lateral se abría como cualquier `.modal` centrado (herencia de
+   `align-items:center;justify-content:center` en coto-base.css) — para
+   un panel de navegación tipo "cajón" eso queda flotando suelto en el
+   medio de la pantalla en vez de leerse como una extensión del menú ☰
+   de la barra superior, que es de donde se abre. `.modal--drawer`
+   pisa el centrado con `justify-content:flex-start` (pegado a la
+   izquierda) y `.modal-card.d-sidenav` ocupa el alto completo con
+   borde redondeado solo del lado que da al contenido.
+   Marcado: <div class="modal modal--drawer" data-popup="sidenav">
+              <div class="modal-card d-sidenav">
+                <div class="d-sidenav-hd"><h2>…</h2><button class="modal-x" data-popup-close>✕</button></div>
+                <nav class="d-sidenav-list">…</nav>
+              </div>
+            </div>
+   (mismo contrato de [data-goto]/.d-sidenav-item de más arriba — acá
+   solo cambia el contenedor, no la lista). */
+.modal--drawer{justify-content:flex-start;padding:0}
+.modal--drawer .modal-back{background:color-mix(in srgb,var(--brand-navy) 45%,transparent)}
+.modal-card.d-sidenav{width:min(340px,86vw);max-width:100%;height:100%;max-height:100%;margin:0;
+  border-radius:0 var(--r-xl) var(--r-xl) 0;display:flex;flex-direction:column;overflow:hidden}
+/* mismo azul del header (no el color de categoría): el índice se lee como
+   parte de la barra superior, no como una tarjeta de contenido más. */
+.d-sidenav-hd{display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex:none;
+  padding:1.1rem 1.3rem;background:linear-gradient(100deg,var(--brand-deep),var(--brand));color:#fff}
+/* color:#fff explícito — la regla global h1,h2,h3,h4{color:var(--brand-navy)}
+   de coto-base.css le gana al blanco heredado (un valor heredado SIEMPRE
+   pierde contra cualquier regla explícita, sin importar especificidad). */
+.d-sidenav-hd h2{margin:0;font-family:var(--font-title);font-weight:900;font-size:1.05rem;color:#fff}
+.d-sidenav-hd .modal-x{position:static;flex:none}
+.modal-card.d-sidenav>.d-sidenav-list{flex:1;overflow-y:auto;padding:.6rem}
+
+/* ---- Cajón del lado DERECHO  ·  .modal--drawer-right ----
+   kit-base v1.8. Mismo criterio que .modal--drawer (izquierda, para el
+   índice) pero pegado al otro borde: es para los paneles que se abren
+   desde los botones de la DERECHA de la barra superior — Glosario y
+   Ayuda. Un pop-up centrado no comunica de dónde salió; un cajón que
+   entra por el mismo lado que su botón, sí. También gana altura útil,
+   que es justo lo que un glosario largo necesita.
+   Marcado: <div class="modal modal--drawer-right" data-popup="glosario">
+              <div class="modal-card d-drawer-r"> … */
+.modal--drawer-right{justify-content:flex-end;padding:0}
+.modal--drawer-right .modal-back{background:color-mix(in srgb,var(--brand-navy) 45%,transparent)}
+.modal-card.d-drawer-r{width:min(460px,92vw);max-width:100%;height:100%;max-height:100%;margin:0;
+  border-radius:var(--r-xl) 0 0 var(--r-xl);display:flex;flex-direction:column;overflow:hidden}
+/* El encabezado no scrollea con el contenido y el cuerpo se lleva todo
+   el alto restante — sin esto, en un cajón a pantalla completa el
+   .modal-bd se estira y el scroll queda en la tarjeta entera. */
+.modal-card.d-drawer-r > .modal-hd{flex:none}
+.modal-card.d-drawer-r > .modal-bd{flex:1;overflow-y:auto}
+/* PEDIDO DEL CLIENTE (unificar Índice/Glosario/Ayuda en un solo diseño,
+   ronda siguiente: "todo lo que se desprenda del menú del curso debe
+   tener el mismo diseño... como Mis logros"): el Índice usa su propio
+   encabezado (`.d-sidenav-hd`, degradado `--brand-deep→--brand`)
+   mientras que los cajones de la derecha y "Mis logros" traían
+   `.modal-hd--dark` (navy sólido, sin degradado) — 2 estilos de
+   encabezado distintos a la vista dentro del mismo curso, justo lo que
+   la propia nota de `.modal-hd--dark` en `coto-base.css` pide NO hacer.
+   Este selector (más específico que `.modal-hd--dark` por sumar 2
+   clases del contenedor) lleva Glosario, Ayuda Y Mis logros al mismo
+   degradado, padding y tipografía del Índice sin tocar `.modal-hd--dark`
+   en sí — sigue disponible para un popup futuro que la necesite de
+   verdad, distinto a este contrato de "todo lo del menú, un solo
+   diseño". `.d-wide` (Mis logros, modal centrado) suma acá junto con
+   `.d-drawer-r` (Glosario/Ayuda, cajón) — mismo criterio, 2 formas de
+   contenedor. */
+.modal-card.d-drawer-r > .modal-hd,
+.modal-card.d-wide > .modal-hd{
+  background:linear-gradient(100deg,var(--brand-deep),var(--brand)); color:#fff;
+  padding:1.1rem 1.3rem;
+}
+.modal-card.d-drawer-r > .modal-hd h2,
+.modal-card.d-drawer-r > .modal-hd h3,
+.modal-card.d-wide > .modal-hd h2,
+.modal-card.d-wide > .modal-hd h3{
+  margin:0; font-family:var(--font-title); font-weight:900; font-size:1.05rem; color:#fff;
+}
+@media (max-width:560px){
+  .modal-card.d-drawer-r{width:100%;border-radius:0}
+}
+
+/* ============================================================
+   9. POP-UP "CÓMO RECORRER EL CURSO"  ·  .d-instr-*
+   kit-base v1.5 — genérico, sin contenido de curso.
+   ------------------------------------------------------------
+   Calcado del pop-up "instrucciones" real de "Surtido sin venta" (el
+   cliente pidió expresamente que este sea el estándar para todos los
+   cursos, "un poco más chico y ordenado" en los casos con menos
+   interacciones que enumerar). Es el `data-intro-popup` de la diapo de
+   índice (spec-motor-slides.md) — se abre solo, 1 vez, la primera vez
+   que se llega ahí.
+
+   CONTRATO — marcado esperado:
+     <div class="modal" data-popup="instrucciones" role="dialog" aria-modal="true" aria-label="Cómo recorrer el curso">
+       <div class="modal-back" data-popup-close></div>
+       <div class="modal-card d-wide">
+         <div class="modal-hd"><button class="modal-x" data-popup-close>✕</button><h2>Cómo recorrer el curso</h2></div>
+         <div class="modal-bd">
+           <p class="d-instr-nav">Avanzá con <kbd>←</kbd> <kbd>→</kbd> o los botones…</p>
+           <div class="d-instr-grid">
+             <div class="d-instr-item"><svg class="i" viewBox="0 0 24 24"><use href="#i-algo"/></svg><span>Título<small>ayuda corta</small></span></div>
+             …
+           </div>
+           <p class="d-instr-note">Para verlo más grande…</p>
+           <button class="btn btn-cat" type="button" data-popup-close>Continuar</button>
+         </div>
+       </div>
+     </div>
+   `.d-instr-grid` es `auto-fit`: con 2, 3 o 5 tarjetas se acomoda solo
+   (no hace falta una variante "chica" aparte, min(96px,1fr) ya se ajusta).
+   ============================================================ */
+.d-instr-nav{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;margin:0 0 1rem}
+.d-instr-nav kbd{margin:0 .1rem}
+.d-instr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:.6rem;
+  min-width:0;margin:0 0 1rem}
+.d-instr-item{display:flex;flex-direction:column;align-items:center;text-align:center;gap:.5rem;
+  padding:.9rem .5rem;border-radius:var(--r-lg);background:var(--surface-2);border:1px solid var(--line);
+  transition:transform .15s,box-shadow .15s,border-color .15s}
+.d-instr-item:hover{transform:translateY(-3px);box-shadow:var(--shadow-card-hover,var(--shadow-card));border-color:var(--cat)}
+.d-instr-item .i{width:28px;height:28px;flex:none;color:var(--cat-strong);fill:none;stroke:currentColor}
+.d-instr-item span{font-size:.82rem;font-weight:800;color:var(--text);line-height:1.3;display:flex;flex-direction:column}
+.d-instr-item small{font-weight:500;font-size:.74rem;color:var(--text-soft);margin-top:.1rem}
+.d-instr-note{font-size:.85rem;color:var(--text-soft);margin:0 0 1rem}
+
+/* ============================================================
+   10. POP-UP "MIS LOGROS"  ·  .d-badges-*
+   kit-base v1.5 — genérico, sin contenido de curso.
+   ------------------------------------------------------------
+   Calcado de "Surtido sin venta" (BADGES + renderBadges en curso.js):
+   el cliente pidió que "puntos, logros, ver mis logros" sean iguales en
+   todos los cursos —un poco más chicos y ordenados que el original—, así
+   que las medidas de acá son más compactas que las de la referencia
+   (padding/tarjeta más chicos, mismo criterio visual).
+
+   CONTRATO — marcado esperado (el <div class="d-badges-grid"> lo llena
+   JS por completo, `renderBadges()` del curso — ver contrato de datos
+   en su comentario):
+     <div class="modal-bd">
+       <p class="d-badges-intro">Vas sumando <b>✦ puntos</b>…</p>
+       <div class="d-badges-grid" id="d-badges-list"></div>
+     </div>
+   Cada tarjeta que arma JS:
+     <div class="d-badge earned"> <!-- "earned" solo si ya se desbloqueó -->
+       <span class="i">🏅</span><span class="n">Nombre</span><span class="d">Descripción.</span>
+     </div>
+   ============================================================ */
+.d-badges-intro{margin:0 0 .8rem;font-size:.86rem;color:var(--text-soft);line-height:1.4}
+.d-badges-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.55rem;align-items:stretch}
+.d-badge{text-align:center;border:1px solid var(--line);border-radius:var(--r-lg);padding:.75rem .55rem;
+  background:var(--surface-2);opacity:.55;filter:grayscale(.6);display:flex;flex-direction:column;
+  transition:opacity .15s,filter .15s}
+.d-badge.earned{opacity:1;filter:none;background:color-mix(in srgb,var(--cat) 10%,var(--surface));border-color:var(--cat)}
+.d-badge .i{font-size:1.55rem;display:block}
+/* alto fijo (aunque el nombre entre en 1 línea) para que las tarjetas
+   midan lo mismo sin importar cuántas líneas ocupe cada título */
+.d-badge .n{display:flex;align-items:center;justify-content:center;min-height:2.1em;
+  font-family:var(--font-title);font-weight:900;font-size:.8rem;color:var(--text);margin:.28rem 0 .15rem}
+.d-badge .d{display:block;font-size:.7rem;color:var(--text-soft);margin-top:auto;line-height:1.25}
+
+/* ============================================================
+   11. RESALTADO DE UN ÍCONO DENTRO DE UNA HITBOX  ·  .d-hit-ring
+   kit-base v1.8 — genérico, sin contenido de curso.
+   ------------------------------------------------------------
+   Problema real, reportado dos veces por el cliente: una hitbox que
+   abarca "ícono + etiqueta" resaltada con un fondo/recuadro se ve como
+   una tarjeta gris pegada ENCIMA del arte, porque el recuadro incluye
+   el texto y no coincide con ninguna forma del dibujo.
+   Solución: resaltar SOLO el ícono, con un aro que sigue la forma
+   redonda que ya está dibujada.
+
+   Cómo dimensionarlo (esto es lo que hay que medir en cada curso, no
+   copiar los números): el aro se define contra el eje de la hitbox que
+   sea CONSTANTE entre todos los elementos del grupo.
+     · Si todas las hitboxes tienen el mismo ALTO y distinto ancho
+       (típico: etiquetas de 1, 2 o 3 líneas), dimensionar por alto:
+         --ring-h: 46.9%;   (el círculo mide 158 de los 337px del alto)
+     · Si comparten el ANCHO, dimensionar por ancho con --ring-w.
+   `aspect-ratio:1` completa el otro eje, así que el aro es siempre un
+   círculo perfecto sin importar la forma de la caja.
+
+   Marcado: <button class="d-shot-hit d-hit-ring" data-hit
+                    style="--ring-h:46.9%">…
+   Variante: agregar .d-hit-ring--left si el ícono está pegado al borde
+   izquierdo en vez de centrado arriba. */
+.d-hit-ring{background:transparent}
+.d-hit-ring:hover{background:transparent}
+.d-hit-ring::after{
+  content:"";position:absolute;top:0;left:50%;translate:-50% 0;
+  height:var(--ring-h,100%);width:var(--ring-w,auto);aspect-ratio:1;
+  border-radius:50%;pointer-events:none;
+  box-shadow:0 0 0 0 color-mix(in srgb,var(--cat-strong) 60%,transparent);
+  opacity:0;transition:opacity .16s ease,box-shadow .16s ease,scale .16s ease}
+.d-hit-ring--left::after{left:0;translate:none}
+.d-hit-ring:hover::after,
+.d-hit-ring:focus-visible::after,
+.d-hit-ring.is-active::after{
+  opacity:1;scale:1.06;
+  box-shadow:0 0 0 5px color-mix(in srgb,var(--cat-strong) 55%,transparent),
+             0 8px 22px color-mix(in srgb,#000 22%,transparent)}
+/* El aro ES el indicador de foco: un outline rectangular encima se ve
+   como el recuadro que justamente se quiso evitar. */
+.d-hit-ring:focus-visible{outline:none}
+@media (prefers-reduced-motion:reduce){
+  .d-hit-ring::after{transition:none}
+  .d-hit-ring:hover::after,.d-hit-ring:focus-visible::after,
+  .d-hit-ring.is-active::after{scale:1}
+}
+
+/* ============================================================
+   12. TILDES DE AVANCE DE UNA UNIDAD  ·  .d-ticks
+   kit-base v1.8 — genérico, sin contenido de curso.
+   ------------------------------------------------------------
+   Fila de tildes que marcan cuánto se lleva visto de una serie de
+   diapositivas (los factores de una unidad, los pasos de un proceso).
+   Decisión de producto del cliente, importante: NO son botones y no
+   navegan. Por eso el marcado usa <span> y no <button> — si no se puede
+   accionar, no debe anunciarse como accionable a un lector de pantalla.
+   El estado "hecho" va en verde y no en el color de categoría: es un
+   logro, no un elemento de marca, y es el mismo verde de acierto que
+   usa el resto del kit.
+
+   Marcado:
+     <div class="d-ticks" data-place data-l data-t data-w data-h>
+       <span class="d-ticks-lbl">Factor 2 de 6</span>
+       <span class="d-ticks-row">
+         <span class="d-tick is-done" role="img" aria-label="…: visto">
+           <svg viewBox="0 0 24 24"><polyline points="5 12.5 10 17.5 19 7"/></svg>
+         </span> … */
+.d-ticks{position:absolute;display:flex;align-items:center;justify-content:flex-end;
+  gap:.6rem;pointer-events:none}
+.d-ticks-lbl{font-weight:700;color:var(--text-soft);
+  font-size:clamp(.5rem,.95cqw,.82rem);white-space:nowrap}
+.d-ticks-row{display:flex;align-items:center;gap:clamp(4px,.5cqw,9px)}
+.d-tick{display:grid;place-items:center;
+  width:clamp(14px,1.5cqw,24px);height:clamp(14px,1.5cqw,24px);
+  border-radius:50%;border:2px solid var(--line);background:#fff;
+  transition:background .2s ease,border-color .2s ease,transform .2s ease}
+.d-tick svg{width:70%;height:70%;fill:none;stroke:#c9d3dd;stroke-width:3.2;
+  stroke-linecap:round;stroke-linejoin:round;transition:stroke .2s ease}
+.d-tick.is-done{background:#2e7d32;border-color:#2e7d32}
+.d-tick.is-done svg{stroke:#fff}
+.d-tick.is-here{transform:scale(1.25);border-color:var(--cat-strong)}
+.d-tick.is-here.is-done{border-color:#2e7d32}
+@media (prefers-reduced-motion:reduce){
+  .d-tick{transition:none}.d-tick.is-here{transform:none}
+}
+
+/* ============================================================
+   13. MEDALLA FINAL POR PUNTAJE  ·  .d-medalla*
+   kit-base v1.9.3 — genérico (los umbrales los pone cada curso).
+   Pareja de pintarMedalla() en coto-cierre.js.
+   ------------------------------------------------------------
+   Rediseño real de "Prevención cardiovascular" (CLAUDE.md §6.13 punto
+   3), portado recién ahora — la versión anterior (teñir la CAJA
+   entera con un degradado muy pálido) fue rechazada por el cliente
+   ("quedaba feo", casi gris en pantalla) y quedó documentada pero
+   nunca se había traído de vuelta a este archivo. El color de tier
+   vive en un badge cuadrado-redondeado propio (`.d-medalla-ic`), con
+   degradado real oro/plata/bronce + sombra — la caja (`.d-medalla`)
+   queda neutra para que el badge sea lo que se destaca.
+   Los 3 rangos se listan SIEMPRE, también los no alcanzados: si no se
+   ve qué faltaba, la medalla no motiva nada. */
+.d-medalla{position:relative;display:grid;grid-template-columns:auto 1fr;gap:1.1rem;align-items:center;
+  margin:0 0 1.15rem;padding:1.05rem 1.2rem;border-radius:var(--r-lg);
+  border:2px solid var(--line);background:var(--surface-2)}
+.d-medalla[data-nivel="oro"]{border-color:#d4a017}
+.d-medalla[data-nivel="plata"]{border-color:#9aa5ad}
+.d-medalla[data-nivel="bronce"]{border-color:#b1712c}
+.d-medalla-ic{position:relative;width:72px;height:72px;flex:none;
+  display:grid;place-items:center;font-size:2.1rem;line-height:1;
+  border-radius:var(--r-lg);
+  box-shadow:0 8px 20px color-mix(in srgb,#000 18%,transparent)}
+[data-nivel="oro"] .d-medalla-ic{background:linear-gradient(135deg,#fff3c4,#f0c244)}
+[data-nivel="plata"] .d-medalla-ic{background:linear-gradient(135deg,#eef1f4,#c3cbd3)}
+[data-nivel="bronce"] .d-medalla-ic{background:linear-gradient(135deg,#f3d3b4,#cd8e50)}
+.d-medalla-tit{margin:0;font-family:var(--font-title);font-weight:900;
+  font-size:1.15rem;color:var(--brand-navy)}
+.d-medalla-sub{margin:.2rem 0 0;font-size:.86rem;color:var(--text-soft)}
+
+/* ---- Efecto cinematográfico al revelar la medalla ----
+   Quien llama a pintarMedalla() suma `.is-revealing` al `.d-medalla`
+   en el momento de revelar (mismo momento que el confeti, ver
+   coto-cierre.js): el badge entra con un pop elástico (overshoot +
+   leve rotación, como una medalla real "cayendo" en su lugar) y un
+   destello radial detrás se expande y se apaga. Es una sola vez, no
+   un loop — un brillo permanente se lee como una animación rota, no
+   como un logro. */
+.d-medalla-ic::after{content:"";position:absolute;inset:-45%;z-index:-1;
+  border-radius:50%;pointer-events:none;opacity:0;
+  background:radial-gradient(circle,color-mix(in srgb,#fff 75%,transparent) 0%,transparent 70%)}
+.d-medalla.is-revealing .d-medalla-ic{animation:d-medal-pop .8s cubic-bezier(.34,1.56,.64,1) both}
+.d-medalla.is-revealing .d-medalla-ic::after{animation:d-medal-glow .9s ease-out both}
+@keyframes d-medal-pop{
+  0%{transform:scale(.25) rotate(-30deg);opacity:0}
+  55%{transform:scale(1.18) rotate(9deg);opacity:1}
+  80%{transform:scale(.95) rotate(-3deg)}
+  100%{transform:scale(1) rotate(0)}
+}
+@keyframes d-medal-glow{
+  0%{opacity:0;scale:.35}
+  35%{opacity:1}
+  100%{opacity:0;scale:1.7}
+}
+@media (prefers-reduced-motion:reduce){
+  .d-medalla.is-revealing .d-medalla-ic{animation:none}
+  .d-medalla.is-revealing .d-medalla-ic::after{animation:none;display:none}
+}
+
+.d-medalla-rangos{list-style:none;display:flex;gap:.4rem;margin:0 0 1.2rem;padding:0}
+.d-medalla-rangos li{flex:1;display:flex;flex-direction:column;align-items:center;gap:.1rem;
+  padding:.45rem .3rem;border-radius:var(--r-sm);background:var(--surface-2);
+  text-align:center;opacity:.55}
+.d-medalla-rangos li span{font-size:1.15rem;line-height:1}
+.d-medalla-rangos li b{font-size:.8rem;color:var(--brand-navy)}
+.d-medalla-rangos li i{font-style:normal;font-size:.7rem;color:var(--text-soft)}
+.d-medalla-rangos li.is-logrado{opacity:1;background:var(--cat-soft);
+  box-shadow:inset 0 0 0 2px var(--cat-strong)}
+@media (max-height:800px){
+  .d-medalla{padding:.6rem .8rem;margin-bottom:.5rem}
+  .d-medalla-ic{font-size:1.9rem;width:64px;height:64px}
+  .d-medalla-rangos{margin-bottom:.6rem}
+}
+@media (max-height:860px){
+  .d-medalla-tit{font-size:1rem}
+  .d-medalla-sub{font-size:.76rem}
+  .d-medalla-rangos li{padding:.3rem .2rem}
+  .d-medalla-rangos li span{font-size:.95rem}
+  .d-medalla-rangos li b{font-size:.72rem}
+  .d-medalla-rangos li i{font-size:.62rem}
+}
+
+/* ============================================================
+   14. PANTALLA DE SALIDA DEL CURSO  ·  .d-salida
+   kit-base v1.8 — pareja de salirDelCurso() en coto-cierre.js.
+   ------------------------------------------------------------
+   No es un pop-up: la sesión SCORM ya se cerró, así que no debe quedar
+   nada operable detrás. Por eso cubre la pantalla entera y no usa el
+   sistema de .modal. */
+.d-salida{position:fixed;inset:0;z-index:200;display:grid;place-items:center;
+  background:color-mix(in srgb,var(--brand-navy) 92%,transparent);padding:1.5rem}
+.d-salida[hidden]{display:none}
+.d-salida-card{background:#fff;border-radius:var(--r-lg);padding:2rem 2.2rem;
+  max-width:520px;text-align:center;box-shadow:0 24px 60px color-mix(in srgb,#000 35%,transparent)}
+.d-salida-ic{font-size:3rem;line-height:1;margin-bottom:.6rem}
+.d-salida-card h2{margin:0 0 .6rem;font-family:var(--font-title);font-weight:900;
+  color:var(--brand-navy);font-size:1.5rem}
+.d-salida-card p{margin:0 0 .7rem;color:var(--text-soft);line-height:1.5}
+.d-salida-card .btn{margin-top:.4rem}
+
+/* ============================================================
+   15. BARRA DE PASOS NAVEGABLE DENTRO DE UN POP-UP  ·  .d-steps
+   kit-base v1.8 — genérico.
+   ------------------------------------------------------------
+   Para un pop-up reutilizable que muestra "el paso N de M" de una
+   secuencia: los números son BOTONES y saltan de paso sin cerrar.
+   Al revés que .d-ticks (que no navega y por eso es <span>), acá sí se
+   acciona y por eso es <button>.
+   ⚠️ El cuerpo del pop-up necesita alto reservado (.d-steps-body): si
+   los textos de cada paso tienen largos distintos, la tarjeta cambia de
+   tamaño al saltar y la barra se mueve bajo el dedo. */
+.d-steps{list-style:none;display:grid;gap:.35rem;margin:0 0 1rem;padding:0}
+.d-steps li{border-top:3px solid var(--line);transition:border-color .15s}
+.d-steps button{display:flex;flex-direction:column;align-items:center;gap:.3rem;
+  width:100%;padding:.4rem .2rem .1rem;border:none;background:transparent;cursor:pointer;
+  text-align:center;font:inherit;font-size:.68rem;line-height:1.2;color:var(--text-soft);
+  opacity:.5;transition:opacity .15s,color .15s}
+.d-steps button:hover{opacity:.85}
+.d-steps button:focus-visible{outline:3px solid var(--cat-strong);outline-offset:2px;border-radius:6px}
+.d-steps button span{display:grid;place-items:center;width:26px;height:26px;
+  border-radius:50%;background:var(--line);color:var(--brand-navy);
+  font-weight:700;font-size:.78rem;transition:background .15s,color .15s,transform .15s}
+.d-steps button:hover span{background:var(--cat-soft);color:var(--cat-strong)}
+.d-steps li.is-prev{border-top-color:var(--cat)}
+.d-steps li.is-prev button{opacity:.85}
+.d-steps li.is-prev button span{background:var(--cat-soft);color:var(--cat-strong)}
+.d-steps li.is-cur{border-top-color:var(--cat-strong)}
+.d-steps li.is-cur button{opacity:1;font-weight:700;color:var(--brand-navy);cursor:default}
+.d-steps li.is-cur button span{background:var(--cat-strong);color:#fff;transform:scale(1.15)}
+.d-steps-body{display:flex;flex-direction:column}
+@media (prefers-reduced-motion:reduce){
+  .d-steps button,.d-steps button span{transition:none}
+  .d-steps li.is-cur button span{transform:none}
+}
+
+/* ============================================================
+   16. AVISO DE ENCUADRE  ·  .d-aviso
+   kit-base v1.8 — genérico.
+   ------------------------------------------------------------
+   Bloque destacado para una aclaración que NO puede pasarse por alto —
+   el caso que lo originó: dejar claro que la mini práctica no es la
+   evaluación del curso. Va con el color de INFORMACIÓN, no con el de
+   advertencia: no es un error ni un peligro.
+   Lección de uso: si el aviso importa de verdad, además del bloque en
+   la diapositiva conviene mostrarlo como pop-up ANTES de empezar la
+   actividad — una línea más de bajada se lee en diagonal. */
+.d-aviso{display:grid;grid-template-columns:auto 1fr;gap:.8rem;align-items:start;
+  margin:0 0 1.1rem;padding:.85rem 1rem;border-radius:var(--r-sm);
+  background:var(--cat-soft);border-left:4px solid var(--cat-strong);text-align:left}
+.d-aviso-ic{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;
+  background:var(--cat-strong);flex:none}
+.d-aviso-ic svg{width:19px;height:19px;fill:none;stroke:#fff;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round}
+.d-aviso p{margin:0;font-size:.9rem;line-height:1.45;color:var(--brand-navy)}
+.d-aviso p + p{margin-top:.4rem;color:var(--text-soft)}
+
+/* ============================================================
+   17. CARTEL DE UNA ZONA INTERACTIVA  ·  .d-hotspot-card
+   kit-base v1.8 — pareja de coto-hotspots.js.
+   ------------------------------------------------------------
+   El cartel que aparece al elegir una zona sobre el arte. Dos variantes,
+   y cuál usar NO es estética: depende de si la diapositiva tiene un
+   hueco libre del tamaño necesario.
+     · `.d-hotspot-card` (clara, con borde) — para un hueco REAL, medido
+       barriendo píxeles vacíos del render. Es la mejor opción cuando
+       existe, porque no tapa nada.
+     · `.d-hotspot-card--sobre` (oscura, translúcida) — cuando NO hay
+       hueco: se apoya ENCIMA del arte y desaparece al salir. Es un
+       reveal temporal, no tapa nada de forma permanente.
+   Las dos llevan `pointer-events:none`: el cartel suele desbordar su
+   caja y sin esto le roba el clic a lo que tenga debajo (bug real: la
+   tarjeta de la torta tapaba el botón de play del video de al lado).
+   Y las dos anclan con `align-items:flex-start` para crecer hacia
+   ABAJO: con `center`, una segunda línea las hace crecer también hacia
+   arriba y se meten en lo que tienen encima. */
+.d-hotspot-card{position:absolute;display:flex;align-items:flex-start;pointer-events:none;
+  animation:d-hotspot-in .18s ease both}
+@keyframes d-hotspot-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.d-hotspot-card > *{margin:0;width:100%;
+  background:#fff;border:1px solid var(--line);border-radius:var(--r);
+  padding:.6rem .8rem;text-align:left;
+  font-size:clamp(.55rem,1cqw,.85rem);line-height:1.35;
+  box-shadow:0 12px 30px color-mix(in srgb,#000 16%,transparent)}
+.d-hotspot-card--sobre{align-items:flex-end}
+.d-hotspot-card--sobre > *{
+  background:color-mix(in srgb,var(--brand-navy) 92%,transparent);color:#fff;
+  border:none;box-shadow:0 10px 26px color-mix(in srgb,#000 30%,transparent)}
+.d-hotspot-card b{color:var(--cat)}
+.d-hotspot-card--sobre b{color:#fff}
+/* Las zonas no elegidas se atenúan para que la mirada vaya sola a la
+   que se está leyendo. El contenedor lleva la clase "idle" mientras no
+   hay ninguna activa. */
+.d-shot:not(.is-idle) [data-hotspot]{opacity:.45}
+[data-hotspot].is-active{opacity:1}
+@media (prefers-reduced-motion:reduce){.d-hotspot-card{animation:none}}
+
+/* ============================================================
+   18. RESUMEN IMPRIMIBLE  ·  .d-summary*
+   kit-base v1.8 — pareja de `initSummaryPrint()` (coto-ui.js).
+   ------------------------------------------------------------
+   BUG REAL que este bloque evita: llamar a `window.print()` a secas
+   imprime la app EN VIVO, y como `.d-app` es `position:fixed` y casi
+   todas las diapositivas están `[hidden]`, el resultado es una hoja en
+   blanco o cortada. La clase `printing-summary` en `<body>` oculta la
+   app y muestra ESTE bloque, que es el pensado para el papel.
+   ============================================================ */
+.d-summary{display:none}
+body.printing-summary .d-summary{display:block!important;max-width:720px;margin:0 auto;color:#000}
+body.printing-summary .d-summary-hd{border-bottom:3px solid var(--cat);padding-bottom:.6rem;margin-bottom:1.2rem}
+body.printing-summary .d-summary-hd h1{font-family:var(--font-title);font-weight:900;color:var(--cat-strong);margin:0 0 .2rem}
+body.printing-summary .d-summary-hd p{margin:0;color:var(--text-soft);font-weight:700}
+body.printing-summary .d-summary h2{font-family:var(--font-title);font-size:1.1rem;color:var(--brand-navy);margin:1.3rem 0 .5rem}
+body.printing-summary .d-summary-gloss{display:grid;gap:.1rem;margin:0}
+body.printing-summary .d-summary-gloss > div{display:grid;grid-template-columns:170px 1fr;gap:.8rem;padding:.35rem 0;border-bottom:1px solid var(--line)}
+body.printing-summary .d-summary-gloss dt{font-weight:900;color:var(--cat-strong)}
+body.printing-summary .d-summary-gloss dd{margin:0}
+body.printing-summary .d-summary ul{margin:.3rem 0 0;padding-left:1.2rem}
+body.printing-summary .d-summary li{margin:.25rem 0;line-height:1.5}
+
+/* ============================================================
+   19. POP-UP DE ESTADÍSTICA DESTACADA  ·  .d-stat-pop*
+   kit-base v1.8 — ícono grande + número que cuenta + bajada.
+   Pareja de `initStatPopups()` (coto-ui.js) y del atributo
+   `[data-count-to]`.
+   ⚠️ El `padding-top` generoso no es capricho: con un ícono de 84px y
+   poco aire arriba, el círculo queda pegado al encabezado (reporte real
+   del cliente).
+   ============================================================ */
+.d-stat-pop{position:relative;text-align:center;overflow:hidden;padding-top:1.5rem}
+.d-stat-pop::before,.d-stat-pop::after{content:"";position:absolute;z-index:-1; border-radius:50%;background:var(--cat-grad,var(--grad-brand));opacity:.12}
+.d-stat-pop::before{width:190px;height:190px;top:-90px;left:-90px}
+.d-stat-pop::after{width:230px;height:230px;bottom:-110px;right:-110px}
+.d-stat-pop-icon{width:84px;height:84px;margin:0 auto 1.1rem; box-shadow:0 8px 22px color-mix(in srgb,var(--cat-strong) 35%,transparent), 0 0 0 6px color-mix(in srgb,var(--cat) 14%,transparent)}
+.d-stat-pop-icon svg{width:42px;height:42px}
+.d-stat-pop-lead{margin:0 auto .3rem;max-width:28ch;font-size:.9rem;color:var(--text-soft)}
+.d-stat-pop-num-wrap{margin:.3rem auto 1rem;padding:.5rem 1.4rem;border-radius:var(--r-xl); background:color-mix(in srgb,var(--cat) 10%,var(--surface));display:inline-block}
+.d-stat-pop-num{margin:0;font-family:var(--font-num);font-weight:900; font-size:3.4rem;line-height:1;color:var(--cat-strong)}
+.d-stat-pop-num small{font-size:1.7rem;font-weight:800}
+.d-stat-pop-sub{margin:0 0 1.15rem;font-weight:700;color:var(--text)}
+.d-stat-pop .btn{width:100%;justify-content:center}
+
+/* ============================================================
+   20. PREGUNTA DENTRO DE UN POP-UP  ·  .d-pred*
+   kit-base v1.8 — opción múltiple con feedback inmediato, para una
+   pregunta suelta fuera de la mini-práctica (una predicción antes de un
+   video, un chequeo rápido). Usa los mismos verdes/rojos de acierto y
+   error que `coto-quiz.css`.
+   ============================================================ */
+.d-pred{text-align:center}
+.d-pred-q{margin:0 0 1rem;font-weight:700;color:var(--brand-navy);line-height:1.4}
+.d-pred-opts{display:flex;flex-direction:column;gap:.5rem;margin-bottom:.9rem}
+.d-pred-opt{padding:.7rem .9rem;border-radius:var(--r-sm);border:2px solid var(--line); background:#fff;color:var(--brand-navy);font:inherit;font-weight:600;cursor:pointer; transition:border-color .15s,background .15s}
+.d-pred-opt:hover:not(:disabled){border-color:var(--cat);background:var(--cat-soft)}
+.d-pred-opt:focus-visible{outline:3px solid var(--cat-strong);outline-offset:2px}
+.d-pred-opt:disabled{cursor:default}
+.d-pred-opt.is-ok{border-color:var(--ok,#2e7d32);background:color-mix(in srgb,#2e7d32 12%,#fff)}
+.d-pred-opt.is-no{border-color:var(--err,#c62828);background:color-mix(in srgb,#c62828 10%,#fff)}
+.d-pred-fb{margin:0 0 1rem;padding:.7rem .9rem;border-radius:var(--r-sm); font-size:.92rem;line-height:1.45;text-align:left}
+.d-pred-fb.is-ok{background:color-mix(in srgb,#2e7d32 12%,#fff);color:#1b5e20}
+.d-pred-fb.is-no{background:color-mix(in srgb,#c62828 10%,#fff);color:#8e1c1c}
+
+/* ============================================================
+   21. GLOSARIO  ·  .d-glossary / .d-gloss
+   kit-base v1.8 — lista de términos con scroll propio y divisoria entre
+   entradas. `.d-glossary` es la versión larga (pop-up de consulta);
+   `.d-gloss` la compacta del resumen de cierre.
+   ⚠️ Un glosario largo es material de CONSULTA: la frase de entrada va
+   con `[data-narrate-only]` para no narrar los 16 términos de corrido
+   (CLAUDE.md §6.5).
+   ============================================================ */
+/* Bug real encontrado con check-css-duplicates.mjs (kit-base v1.9.39):
+   `.d-gloss > div`/`dt`/`dd` tenían acá abajo 4 "escalones" de
+   compresión MÁS, sin ningún `@media` que los envolviera — el mismo
+   selector redeclarado varias veces al hilo, cada uno pisando al
+   anterior en silencio, así que SIEMPRE se aplicaba solo el último
+   (el más chico), en CUALQUIER tamaño de pantalla. Parecía pensado
+   para escalonarse por altura (mismo patrón que `.d-medalla`/
+   `.d-cert-stats`, ver `max-height:800/860/740/660` más arriba y en
+   coto-cierre.css), pero los `@media` que le hubieran dado sentido
+   nunca se escribieron — no hay forma de recuperar qué breakpoints se
+   pensaban, así que en vez de inventarlos se consolidó acá SOLO el
+   valor final (el que ya era, en los hechos, el único que corría) —
+   sin cambio de comportamiento visible, nada más se borró el código
+   muerto. Si hace falta compresión real por altura de pantalla, es un
+   pedido nuevo a implementar aparte, con los breakpoints que
+   corresponda. */
+.d-gloss{margin:0;display:flex;flex-direction:column;gap:.05rem}
+.d-gloss > div{padding:.06rem .2rem}
+.d-gloss dt{font-size:.66rem;font-weight:700;color:var(--cat-strong);font-family:var(--font-title);margin:0}
+.d-gloss dd{font-size:.61rem;line-height:1.22;color:var(--text);margin:0}
+.d-glossary-intro{margin:0 0 .2rem;font-size:.85rem;color:var(--text-soft)}
+.d-glossary{margin:0;display:flex;flex-direction:column;gap:.9rem}
+/* `~` (hermano general), no `:not(:first-child)`: con initGlossarySearch
+   ocultando entradas por [hidden], el primer <dt> VISIBLE no siempre es
+   el primer <dt> del DOM — con :not(:first-child) le quedaba un borde
+   superior de más (el de un vecino oculto). Este selector solo aplica
+   el borde si existe al menos un <dt> visible ANTES en el DOM. */
+.d-glossary dt:not([hidden]) ~ dt:not([hidden]){border-top:1px solid var(--line);padding-top:.85rem}
+.d-glossary dt{font-family:var(--font-title);font-weight:900;color:var(--cat-strong);font-size:.95rem}
+.d-glossary dd{margin:.2rem 0 0;color:var(--text-soft);font-size:.88rem;line-height:1.45}
+
+/* ---- Glosario interactivo (initGlossaryUnlock, coto-ui.js): click en
+   el término navega a la diapositiva (vía data-goto, ya cableado por
+   el motor); candado + hint mientras esa diapositiva no se visitó. ---- */
+.d-glossary dt{display:flex;align-items:center;gap:.4rem}
+.d-gloss-term-btn{
+  font:inherit; color:inherit; background:none; border:0; padding:0;
+  margin:0; cursor:pointer; text-align:left; border-radius:var(--r-sm);
+}
+.d-gloss-term-btn:hover{text-decoration:underline}
+.d-gloss-term-btn:focus-visible{outline:2px solid var(--cat-strong);outline-offset:2px}
+/* Bloqueado = `disabled` real (initGlossaryUnlock, coto-ui.js) — sin
+   esto el botón nativo igual mostraba `cursor:pointer` heredado,
+   invitando a un clic que ya no hace nada. */
+.d-gloss-term-btn:disabled{cursor:default}
+.d-gloss-term-btn:disabled:hover{text-decoration:none}
+.d-gloss-lock-ic{display:none; width:14px; height:14px; flex:none; color:var(--text-soft)}
+.d-glossary dt.is-locked .d-gloss-lock-ic{display:block}
+.d-glossary dt.is-locked .d-gloss-term-btn{color:var(--text-soft); font-weight:700}
+.d-gloss-hint{display:none; font-style:italic; font-weight:600}
+.d-glossary dt.is-locked + dd .d-gloss-def{display:none}
+.d-glossary dt.is-locked + dd .d-gloss-hint{display:inline}
+
+/* ---- Buscador del glosario (initGlossarySearch, coto-ui.js) ---- */
+.d-gloss-search{
+  position:relative; margin:0 0 1rem;
+}
+.d-gloss-search input{
+  width:100%; box-sizing:border-box;
+  padding:.6rem .9rem .6rem 2.3rem;
+  border:1px solid var(--line); border-radius:var(--r-pill);
+  background:var(--surface-2); color:var(--text);
+  font-size:.9rem; font-family:inherit;
+}
+.d-gloss-search input:focus-visible{
+  outline:2px solid var(--cat-strong); outline-offset:1px;
+}
+.d-gloss-search svg{
+  position:absolute; left:.8rem; top:50%; translate:0 -50%;
+  width:16px; height:16px; color:var(--text-soft); pointer-events:none;
+}
+.d-gloss-empty{
+  margin:1.2rem 0; text-align:center; color:var(--text-soft); font-size:.88rem;
+}
+/* ============================================================
+   22. BOTÓN CON ÍCONO, DEL ANCHO DE SU TEXTO  ·  .btn-ic
+   kit-base v1.8 — genérico.
+   ------------------------------------------------------------
+   Reporte del cliente, dos veces: los botones de acción de los pop-ups
+   se veían enormes porque heredaban el ancho completo de la tarjeta.
+   Un botón que ocupa todo el ancho comunica "esta es la única salida" —
+   está bien en un formulario, mal en un pop-up donde además se puede
+   cerrar con la ✕.
+   `.btn-ic` lo deja del tamaño de su contenido y le agrega el ícono al
+   lado del texto. Para centrarlo, el CONTENEDOR es el que centra
+   (`display:flex; justify-content:center`), no el botón: un botón
+   centrado con `margin:auto` sigue siendo de ancho completo si su padre
+   es un bloque. */
+.btn-ic{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
+  width:auto;max-width:100%}
+
+/* Contenedor del llamado a la acción de un pop-up largo. Centra el
+   botón y lo deja PEGADO al pie de la tarjeta: en un pop-up que
+   scrollea (el instructivo, con 7 tarjetas y 2 avisos), el botón
+   quedaba abajo de todo y fuera de la vista — y un botón que hay que ir
+   a buscar scrolleando no se usa. Mismo criterio que `.modal-hd`
+   sticky, del otro lado de la tarjeta. */
+.d-cta-sticky{display:flex;justify-content:center;margin-top:1.1rem;
+  position:sticky;bottom:0;z-index:2;
+  padding:.7rem 0 .2rem;background:linear-gradient(to top,#fff 65%,transparent)}
+.btn-ic svg{width:1.1em;height:1.1em;flex:none;fill:none;stroke:currentColor;
+  stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ============================================================
+   23. POP-UP DE ARRANQUE: GRILLA 2X2 DE TARJETAS ÍCONO+TEXTO
+   kit-base v1.9 — genérico, pareja CSS de header-boilerplate.html.
+   ------------------------------------------------------------
+   Rediseño pedido por el cliente sobre una referencia visual de otro
+   curso ("Prevención cardiovascular", 3ª vuelta del pop-up "Cómo
+   recorrer el curso"). Armado 100% con tokens de color
+   (--cat/--cat-strong/--cat-soft/--cat-grad): cambia de color de curso
+   a curso solo con `data-cat` en el <body>, sin tocar nada de acá.
+   ============================================================ */
+.d-instr-modal{position:relative;overflow:hidden;width:min(620px,100%)}
+.d-instr-modal::before{content:"";position:absolute;
+  border-radius:50%;background:var(--cat-grad,var(--brand));opacity:.14;pointer-events:none}
+.d-instr-modal::before{width:220px;height:220px;top:-110px;right:-90px}
+/* BUG REAL (CLAUDE.md §6.36, y de nuevo esta vuelta): el círculo
+   decorativo de la esquina inferior izquierda pasó por 2 intentos y
+   ninguno se leyó como una esquina — alejado del borde (§6.36) quedaba
+   flotando a mitad del borde inferior, sin tocar ninguna esquina; y
+   pegado a la esquina (probado esta vuelta) el radio del círculo
+   (85px) es tan distinto al de la propia esquina redondeada de la
+   tarjeta (`--r-xl`, 32px) que las 2 curvas se cruzan en un "escalón"
+   feo en vez de fundirse en una sola curva. Un círculo flotante NUNCA
+   va a calzar perfecto contra una esquina de OTRO radio. Fix real: en
+   vez de superponer 2 formas con radios distintos, la esquina en sí
+   pasa a tener un radio grande — deja de ser "esquina redondeada +
+   círculo decorativo" y pasa a ser directamente "una esquina en punta
+   de medio círculo", que es lo que pedía el cliente. */
+.d-instr-modal{border-bottom-left-radius:70px}
+.d-instr-hd{position:relative;padding:2rem 2.2rem .4rem;text-align:center}
+.d-instr-kicker{display:inline-flex;align-items:center;gap:.4rem;
+  background:var(--cat-soft);color:var(--on-cat,var(--brand-navy));
+  font-size:.72rem;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
+  padding:.3rem .8rem;border-radius:var(--r-pill);margin-bottom:.7rem}
+.d-instr-hd h3{margin:0;font-family:var(--font-title);font-weight:900;
+  font-size:1.5rem;color:var(--brand-navy)}
+.d-instr-modal .modal-bd{position:relative;padding:1.3rem 2.2rem 2rem}
+.d-instr-cardgrid{display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+.d-instr-card{display:flex;gap:.8rem;align-items:flex-start;text-align:left;
+  background:var(--surface-2);border-radius:var(--r-lg);padding:.9rem 1rem}
+.d-instr-card-ic{flex:none;width:42px;height:42px;border-radius:var(--r);
+  background:var(--cat-grad,var(--brand));color:#fff;display:grid;place-items:center;
+  box-shadow:0 6px 14px color-mix(in srgb,var(--cat-strong) 35%,transparent)}
+.d-instr-card-ic svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round}
+.d-instr-card b{display:block;font-size:.9rem;color:var(--cat-strong);margin-bottom:.15rem}
+.d-instr-card span{display:block;font-size:.8rem;line-height:1.35;color:var(--text-soft)}
+.d-instr-modal .d-instr-cta{background:linear-gradient(to top,var(--surface) 65%,transparent)}
+@media (max-width:640px){
+  .d-instr-hd{padding:1.6rem 1.4rem .3rem}
+  .d-instr-hd h3{font-size:1.25rem}
+  .d-instr-modal .modal-bd{padding:1rem 1.4rem 1.5rem}
+  .d-instr-cardgrid{grid-template-columns:1fr;gap:.6rem}
+  .d-instr-card{padding:.7rem .8rem}
+}
+
+/* ---- Subtítulo de sección dentro del glosario (kit v1.9.9) ----
+   Un glosario que crece necesita agruparse (p.ej. "por número" +
+   "de la A a la Z"); sin separador las <dl> se leen como una sola
+   lista desordenada. */
+.d-glossary-sub{
+  margin: 1.4rem 0 .5rem; font-family: var(--font-title); font-weight: 900;
+  font-size: .95rem; color: var(--cat-strong);
+  border-bottom: 2px solid color-mix(in srgb, var(--cat) 35%, transparent);
+  padding-bottom: .3rem;
+}
+.d-glossary-sub:first-of-type{ margin-top: .2rem; }
+
+/* ============================================================
+   11 · PIEZAS DEL CONTRATO QUE EL KIT PEDÍA PERO NO ESTILABA
+   (kit v1.9.21 — auditoría §7.1 al arrancar "Seguridad alimentaria")
+   ------------------------------------------------------------
+   Las 4 reglas de abajo las usa marcado/JS que YA vive en el kit
+   (`marcarVistas()` escribe el contador del índice lateral, la
+   pantalla de salida de `coto-cierre.js` muestra el aviso de la
+   evaluación, `initCierreCelebration` y los gates encienden las
+   tildes de avance, `.d-instr-cta` es el pie de los pop-ups largos
+   del propio addendum) — pero su CSS vivía suelto en el
+   `diapositivas.css` de cada curso, con una nota que decía que "no
+   son universales porque dependen de --cat".
+   Eso último es falso: `--cat`/`--cat-soft`/`--cat-strong` los
+   resuelve el `data-cat` del <body>, que es justamente el mecanismo
+   genérico del kit (CLAUDE.md §6.14 punto 2). Al no estar acá, cada
+   curso las reescribía a mano y el que se olvidaba veía el contador
+   del índice como párrafo negro grande y el botón del instructivo
+   pegado a la izquierda (bugs reales, §6.21 punto 2 y §6.23).
+   Regla de §1: si el JS está en el kit, su CSS también. */
+
+/* Contador "Viste N de M secciones" del cajón del índice. */
+.d-sidenav-progress{ margin:0 0 .4rem; font-size:.82rem; font-weight:600; color:var(--text-soft); }
+
+/* Aviso destacado de la pantalla de salida (típicamente: "la
+   evaluación es aparte, en la plataforma"). Borde izquierdo, no un
+   recuadro parejo: lee como una nota al margen, no como una alerta de
+   error — es información de proceso, no algo que salió mal. */
+.d-salida-eval{
+  padding:.7rem .9rem; border-radius:var(--r-sm);
+  border-left:4px solid var(--cat-strong);
+  background:var(--cat-soft); color:var(--cat-strong); font-size:.9rem;
+  text-align:left;
+}
+
+/* Pie pegajoso de los pop-ups largos (instructivo, reglas de un
+   minijuego). El addendum ya traía SOLO el degradé de fondo dentro
+   de `.d-instr-modal`; sin esta regla base el botón queda alineado a
+   la izquierda de su contenedor en cualquier otro pop-up. */
+.d-instr-cta{
+  display:flex; justify-content:center; margin-top:1.1rem;
+  position:sticky; bottom:0; z-index:2;
+  padding:.7rem 0 .2rem;
+  background:linear-gradient(to top,var(--surface) 65%,transparent);
+}
+
+/* Fila de tildes de avance ("Factor 1 de 6", "1 de 5 videos vistos").
+   Indicador puro: sin cursor ni hover, no hay nada que clickear. El
+   verde es el verde de acierto del sistema, no el color de categoría
+   — acá "completado" es un estado de logro, no de marca.
+   Necesita `position:absolute` propio porque se posiciona con
+   `[data-place]` sobre un `.d-shot` (`Motor._initShots` escribe
+   top/left en px: un elemento en flujo normal los ignora — bug real
+   de §6.22 punto 7).
+   BUG REAL (reportado por el cliente, "Seguridad alimentaria"): la
+   caja `[data-place]` ya vive centrada contra la diapositiva/tarjeta
+   del medio, pero `align-items:flex-start` pegaba la etiqueta + las
+   tildes al borde IZQUIERDO de esa caja — visualmente se leía corrido
+   hacia la izquierda aunque el contenedor estuviera bien centrado.
+   `center` centra el bloque (etiqueta arriba, tildes abajo) dentro de
+   su propia caja. */
+.d-u2-prog{
+  position:absolute; display:flex; flex-direction:column; align-items:center; gap:.3rem;
+  pointer-events:none;
+}
+.d-u2-prog-lbl{ font-weight:700; color:var(--text-soft); font-size:clamp(.62rem, 1.1cqw, .82rem); }
+.d-u2-dots{ display:flex; align-items:center; gap:clamp(4px, .6cqw, 9px); }
+.d-u2-tick{
+  display:grid; place-items:center;
+  width:clamp(20px, 2.3cqw, 32px); height:clamp(20px, 2.3cqw, 32px);
+  border-radius:50%; border:2px solid var(--line); background:#fff;
+  transition:background .2s ease, border-color .2s ease;
+}
+.d-u2-tick svg{
+  width:70%; height:70%; fill:none; stroke:#c9d3dd; stroke-width:3.2;
+  stroke-linecap:round; stroke-linejoin:round; transition:stroke .2s ease;
+}
+.d-u2-tick.is-done{ background:#2e7d32; border-color:#2e7d32; }
+.d-u2-tick.is-done svg{ stroke:#fff; }
+
+/* ---- `.field input[type=range]` ---- `.field input` (arriba en
+   coto-base.css) da borde+fondo+padding pensado para texto — sobre un
+   range eso encierra la pista angosta del slider dentro de una caja
+   rectangular rara. Reset puntual para CUALQUIER slider dentro de un
+   `.field` (hoy: velocidad de locución, initRatePicker en
+   coto-player.js) — genérico, no específico de ningún curso. */
+.field input[type="range"]{
+  border:none; background:none; padding:.3rem 0; accent-color:var(--brand);
+}

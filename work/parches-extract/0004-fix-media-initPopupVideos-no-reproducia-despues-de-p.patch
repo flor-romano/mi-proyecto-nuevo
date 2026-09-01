@@ -1,0 +1,42 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 31 Aug 2026 13:43:51 +0000
+Subject: [PATCH 4/5] fix(media): initPopupVideos no reproducia despues de
+ pausar
+
+---
+ js/coto-media.js | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/js/coto-media.js b/js/coto-media.js
+index 766ef45..d58c203 100644
+--- a/js/coto-media.js
++++ b/js/coto-media.js
+@@ -591,7 +591,27 @@
+          se activan los controles nativos reales (barra, volumen,
+          pantalla completa) para que el resto de la experiencia sea
+          un reproductor de verdad. */
++      /* BUG REAL (reportado en "Uso de Sucursales 3 - NOA": "le pongo
++         play, lo pauso, quiero reproducir de nuevo y no me deja"): es
++         EXACTAMENTE el mismo bug que §3 ya corrigió en
++         `initInlineCircleVideos` (ver el comentario largo de arriba),
++         que nunca se portó a este patrón. Una vez que el evento `play`
++         prende `v.controls` (abajo), el navegador interpreta el clic
++         sobre el video como SU PROPIO toggle play/pausa — pero este
++         handler corre ANTES de esa acción por default, así que lee el
++         estado VIEJO: sobre un video pausado llama `play()` a mano y
++         acto seguido el toggle nativo lo vuelve a pausar. El video
++         queda clavado y parece que el reproductor se rompió.
++
++         Fix, idéntico al de la variante circular: mientras haya
++         controles nativos, el play/pausa es de ELLOS. Este toggle solo
++         actúa antes del primer play, que es cuando el póster hace de
++         "botón de play gigante" y todavía no hay `controls`.
++         Reproducido y verificado en Chromium con un video real:
++         clic->reproduce, clic->pausa, clic->NO reproducía; con el
++         guard, los 3 clics responden. */
+       v.addEventListener('click', function () {
++        if (v.controls) return;
+         if (v.paused) { v.muted = muted(); v.volume = volumeLevel(); v.play().catch(function () {}); }
+       });
+       v.addEventListener('play', function () {

@@ -1,0 +1,6 @@
+/* pulido.css — CSS propio de "Surtido sin ventas". Nunca tocar los .css del kit (CLAUDE.md §1). */
+
+/* El botón "Empezar"/nav normal sigue siendo el disparador principal en
+   portada/unidad1 mientras el video sea un placeholder de 0 bytes (no
+   dispara "ended" → no hay autoavance real todavía). */
+.d-shot-video-tap[hidden] { display: none; }

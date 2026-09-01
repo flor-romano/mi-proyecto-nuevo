@@ -1,0 +1,577 @@
+/* ============================================================
+   assets.css · "Seguridad alimentaria"
+   Las capas/hitboxes de ESTE curso sobre las capturas del PDF.
+   El comportamiento base (posición absoluta, botón invisible, aro de
+   foco, tinte de hover) ya lo da `.d-shot-hit` del kit
+   (coto-shot-stage.css) — acá solo va la FORMA de cada hitbox, medida
+   contra el arte, y los estados propios de este curso.
+   Regla que vale para todas: se resalta la forma que el arte ya
+   dibuja, nunca un rectángulo gris encima (CLAUDE.md §6.10.3).
+   ============================================================ */
+
+/* ---- Botón "Empezar" de la portada ----
+   El arte dibuja la píldora con su texto: la hitbox es transparente y
+   solo aporta el aro de foco, que la imagen no puede dar. Radio de
+   píldora medido contra el arte (298×102 px en el render 2520×1260). */
+.d-shot-hit--cta { border-radius: 999px; }
+.d-shot-hit--cta:hover { background: color-mix(in srgb, #fff 22%, transparent); }
+
+/* ---- Zona de la carne (Alteración) ----
+   El corte dibujado es un óvalo, no un rectángulo: con el tinte
+   rectangular por defecto se vería una caja gris sobre el dibujo.
+   `border-radius:50%` sigue la silueta real y el tinte baja a 8% —
+   acá el feedback FUERTE es el swap de la imagen, no el resaltado. */
+.d-shot-hit--carne { border-radius: 50%; }
+.d-shot-hit--carne:hover,
+.d-shot-hit--carne:focus-visible { background: color-mix(in srgb, var(--cat) 8%, transparent); }
+
+/* ---- Cartelito "Alterado" (Alteración) ----
+   Pedido del cliente: el swap de imagen solo no bastaba como señal de
+   que el estado cambió. `initAlteracion()` (curso.js) le agrega/saca
+   `.is-on` en el mismo onSelect/onClear que ya cambia el `src` — así
+   los dos indicadores (imagen + cartelito) siempre están sincronizados
+   entre sí, nunca uno de los dos suelto. */
+.d-carne-flag {
+  position: absolute;
+  display: flex; align-items: center; gap: .4rem; justify-content: center;
+  padding: .35rem .7rem; border-radius: 999px;
+  background: var(--warning); color: #3a2400;
+  font: 700 clamp(.72rem, 1.1cqw, .92rem)/1 'Roboto', sans-serif;
+  box-shadow: 0 8px 18px color-mix(in srgb, #000 22%, transparent);
+  opacity: 0; transform: translateY(6px) scale(.94);
+  transition: opacity .18s ease, transform .18s ease;
+  pointer-events: none;
+}
+.d-carne-flag svg { width: 15px; height: 15px; flex: none; }
+.d-carne-flag.is-on { opacity: 1; transform: translateY(0) scale(1); }
+@media (prefers-reduced-motion: reduce) {
+  .d-carne-flag { transition: opacity .18s ease; transform: none; }
+}
+
+/* ---- Tarjetas de peligro / de limpieza ----
+   La hitbox cubre SOLO la tarjeta blanca dibujada (no el círculo del
+   ícono, que sobresale por arriba): así el tinte de hover calza con
+   una forma que ya existe en el arte en vez de asomar como un
+   rectángulo por encima del círculo. Radio medido en el render: 30px
+   sobre 2520 de ancho ≈ 1.2cqw. */
+.d-shot-hit--peligro {
+  border-radius: clamp(8px, 1.2cqw, 30px);
+  transition: background .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+.d-shot-hit--peligro:hover,
+.d-shot-hit--peligro:focus-visible {
+  background: color-mix(in srgb, var(--cat) 10%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cat-strong) 45%, transparent);
+  transform: translateY(-2px);
+}
+/* "Ya la abriste": tilde verde en la esquina, mismo verde de acierto
+   que las tildes de avance (no el color de categoría — "completado" es
+   un estado de logro, no de marca) y mismo ícono que `.d-riesgo-check`
+   / `.d-u2-tick` — antes era un punto liso, sin tilde adentro,
+   inconsistente con el resto del curso (feedback real de cliente). */
+.d-peligro-check {
+  position: absolute; right: 6%; top: 8%;
+  width: clamp(20px, 2.4cqw, 34px); aspect-ratio: 1;
+  display: grid; place-items: center;
+  border-radius: 50%; background: #2e7d32; color: #fff;
+  box-shadow: 0 3px 8px color-mix(in srgb, #000 22%, transparent), 0 0 0 2px #fff;
+  opacity: 0; transform: scale(.6);
+  transition: opacity .2s ease, transform .2s ease;
+}
+.d-shot-hit--peligro.is-done .d-peligro-check { opacity: 1; transform: scale(1); }
+.d-peligro-check svg { width: 60%; height: 60%; }
+@media (prefers-reduced-motion: reduce) {
+  .d-peligro-check { transition: opacity .2s ease; transform: none; }
+}
+
+/* ---- Pestañas de "¿Cómo se contaminan los alimentos?" ----
+   La pestaña activa ya está resaltada EN LA IMAGEN (el diseñador
+   entrega una página por pestaña), así que `.is-active` no pinta nada:
+   duplicarlo con CSS daría dos resaltados distintos superpuestos.
+   Solo esquinas superiores redondeadas, como las dibuja el arte. */
+.d-shot-hit--tab { border-radius: 10px 10px 0 0; }
+.d-shot-hit--tab:hover { background: color-mix(in srgb, #fff 25%, transparent); }
+
+/* ---- Flechas de los carruseles ----
+   `.d-shot-hit--circle` del kit ya da el círculo y su tinte; acá solo
+   el aro de elevación, porque la flecha dibujada es más chica que el
+   área táctil (84px contra los 66px del dibujo) y sin él el tinte se
+   ve como un círculo de color "de más" alrededor. */
+.d-shot-hit--flecha { transition: box-shadow .15s ease; }
+.d-shot-hit--flecha:hover,
+.d-shot-hit--flecha:focus-visible {
+  background: transparent;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cat-strong) 50%, transparent);
+}
+
+/* ---- Tramos de la barra de pasos (Rotación y control) ----
+   Los 4 tramos están dibujados en el arte con el activo en azul
+   oscuro; la hitbox es más alta que la barra (86px contra 33px) para
+   ser cómoda al tacto.
+
+   SIN tinte de hover y SIN `cursor:pointer` (reporte del cliente,
+   kit-base v1.9.40): "cuando paso el mouse por una parte gris de la
+   barra tiene interacción de que se pinta de color y aparece la mano,
+   sacar esas interacciones". Tenía razón y era una incoherencia real
+   que quedó de antes: desde v1.9.37/v1.9.38 un clic sobre un tramo YA
+   no hace nada — la barra solo se mueve arrastrando —, pero el CSS
+   seguía prometiendo lo contrario. Un affordance que dice "clickeame"
+   sobre algo que no responde al clic es peor que no tener ninguno:
+   invita al gesto equivocado.
+   Lo que queda: `cursor:grab` (el gesto que SÍ funciona) y el aro de
+   `:focus-visible` que hereda `.d-shot-hit`, que no es decoración sino
+   el indicador de foco que el recorrido por teclado necesita — y por
+   teclado el tramo sí se activa con Enter/Espacio (ver el handler de
+   `click` con `detail === 0` en coto-media.js). */
+.d-shot-hit--paso { border-radius: 999px; cursor: grab; }
+.d-shot-hit--paso:hover { background: transparent; }
+.d-shot-hit--paso.is-active { pointer-events: none; }
+/* Cursor "agarrando" mientras se arrastra (mismo mecanismo que
+   initShotSwap, kit coto-media.js — la clase la pone el JS sobre el
+   [data-shot] contenedor, no sobre el botón puntual, porque el drag
+   sigue activo aunque el cursor salga del botón). */
+.d-shot[data-shot-swap].is-seeking-paso,
+.d-shot[data-shot-swap].is-seeking-paso .d-shot-hit--paso { cursor: grabbing; }
+
+/* ---- Caja del video del proceso ----
+   El cliente pasó una referencia (otro curso) de cómo tiene que verse
+   el contenedor: tarjeta blanca con aire alrededor del video, no el
+   video pegado al borde. Antes `.d-shot-hit--videobox` era transparente
+   sin padding — el video ocupaba TODA la hitbox medida contra el arte,
+   sin margen, así que se veía "más grande que el fondo" (ningún aire
+   entre el video y el resto de la diapo). Ahora es una tarjeta real:
+   fondo blanco, padding, sombra — el <video>/poster vive adentro con
+   su propio radio menor. Sin tinte de hover propio: lo da el <video>. */
+.d-shot-hit--videobox {
+  background: #fff; border-radius: 16px; padding: .6rem;
+  box-shadow: 0 10px 26px -10px color-mix(in srgb, #000 32%, transparent);
+  overflow: visible;
+}
+.d-shot-hit--videobox:hover { background: #fff; }
+.d-shot-hit--videobox [data-inline-video] { border-radius: 10px; overflow: hidden; height: 100%; }
+/* BUG REAL reportado: "el video se ve con unos recortes arriba y abajo
+   cuando empieza a reproducir". Causa real, confirmada (no la primera
+   sospecha): la carátula (`.d-shot-hit-poster-img`, un solo selector
+   de clase en el kit) SÍ pasaba a `cover` acá abajo, pero el `<video>`
+   real tiene en `coto-media.css` la regla
+   `[data-inline-video].is-poster .d-shot-hit-video` — 3 selectores de
+   especificidad contra los 2 de acá, así que ESA seguía ganando y el
+   video se quedaba en `contain` mientras la carátula ya estaba en
+   `cover`. Resultado real: el encuadre cambia de golpe justo al
+   arrancar a reproducir — la carátula llena el marco y el video, un
+   instante después, aparece con franjas. El selector con el wrapper
+   completo iguala la especificidad y gana por venir después en la
+   cascada; así carátula y video comparten SIEMPRE el mismo encuadre.
+   `cover` es lo correcto acá (a diferencia de la variante (b) del kit,
+   donde el poster ES un marco dibujado y recortar lo desalinearía):
+   la caja del reproductor la dibuja el arte del cliente en 1.716:1,
+   pero los videos que entrega son 2:1 (la proporción de trabajo,
+   CLAUDE.md §2.6) — el recorte lateral que produce, ~7% por lado, cae
+   holgado dentro del margen de seguridad del 13%. */
+[data-inline-video].is-poster.d-shot-hit--videobox .d-shot-hit-video,
+.d-shot-hit--videobox .d-shot-hit-poster-img { object-fit: cover; }
+
+/* ---- Botón de play con el ícono REAL del cliente ----
+   `.d-shot-hit-play` (kit) trae su propio círculo dibujado en CSS
+   (pensado para cursos sin un ícono de play propio) — acá el cliente
+   pasó su propio PNG con el círculo ya incluido (`elementos.zip`,
+   "Reproductor play 01.png"), así que el círculo del kit se apaga para
+   no dibujar dos veces el mismo botón. Selector combinado (2 clases)
+   para no depender del orden de carga CSS (CLAUDE.md §6.14 punto 3). */
+.d-shot-hit-play.d-shot-hit-play--art {
+  background: transparent; box-shadow: none;
+  /* Un solo eje manda + `aspect-ratio:1` (mismo fix que el kit): con
+     `width` y `height` en % de una caja RECTANGULAR más un tope por
+     eje, el botón salía ovalado apenas uno de los dos topes entraba a
+     jugar — se veía al pasar a pantalla completa. */
+  width: 30%; height: auto; aspect-ratio: 1;
+  min-width: 38px; max-width: 80px; max-height: none;
+}
+.d-shot-hit-play.d-shot-hit-play--art img { width: 100%; height: 100%; display: block; object-fit: contain; }
+.d-shot-hit-play.d-shot-hit-play--art:hover { background: transparent; }
+
+/* ---- ✕ y botón "Continuar" de los pop-ups del diseñador ---- */
+.d-shot-hit--pop-close { border-radius: 50%; }
+.d-shot-hit--pop-close:hover { background: color-mix(in srgb, #000 10%, transparent); }
+.d-shot-hit--pop-close:focus-visible { outline-offset: 0; border-radius: 50%; }
+.d-shot-hit--pop-cta { border-radius: 999px; }
+.d-shot-hit--pop-cta:hover { background: color-mix(in srgb, #fff 22%, transparent); }
+
+/* ---- Íconos de "¿Qué es la seguridad alimentaria?" ----
+   Pedido del cliente: la diapo quedaba estática, 3 íconos con pinta de
+   botón que no hacían nada. `.d-shot-hit--circle` (kit) ya da la forma
+   + el tinte de hover; acá solo falta el estado persistente para
+   tablet (tocar no deja el mouse "encima" como en desktop). */
+.d-shot-hit--circle.is-active { background: color-mix(in srgb, var(--cat) 16%, transparent); }
+/* `.d-seg-icons`/`.d-temp-rangos` NO llevan `position`/`transform`
+   propios a propósito: agrupan sus zonas como contenedor de
+   `initHotspots` (para que el mouseleave se dispare al salir del
+   grupo, no de la diapositiva entera) sin crear un contexto de
+   posicionamiento nuevo — los botones siguen resolviendo su
+   `position:absolute` contra `.d-shot`, que es lo que espera
+   `_initShots`. */
+
+/* Cartel que revela contenido bajo demanda (initHotspots, contenedor
+   acotado al grupo de zonas, nunca a la diapositiva entera — mismo fix
+   que la carne en "Alteración"). Genérico dentro de este curso: lo usan
+   "seguridad" (3 íconos) y "temperatura" (3 rangos). */
+.d-info-panel { position: absolute; display: flex; align-items: flex-start; }
+.d-info-hint {
+  margin: 0; color: var(--text-soft); font-style: italic;
+  font-size: clamp(.82rem, 1.3cqw, 1.02rem); line-height: 1.5;
+}
+.d-info-cartel {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-lg); box-shadow: var(--shadow-card);
+  padding: 1.1rem 1.3rem; width: 100%;
+}
+.d-info-cartel b {
+  display: block; color: var(--cat-strong);
+  font-size: clamp(.92rem, 1.5cqw, 1.12rem); margin-bottom: .4rem;
+}
+.d-info-cartel p {
+  margin: 0; color: var(--text); line-height: 1.45;
+  font-size: clamp(.82rem, 1.3cqw, 1rem);
+}
+
+/* ---- Filas de rango (Temperatura alimentaria) ----
+   Cada fila ya es texto real horneado en el arte (viñeta + rango); la
+   hitbox cubre la fila completa (no solo la viñeta chica) para que el
+   área de toque sea cómoda. `border-radius` de píldora, alineado al
+   alto real de la fila medido contra el arte. */
+.d-shot-hit--rango { border-radius: var(--r); }
+.d-shot-hit--rango.is-active { background: color-mix(in srgb, var(--cat) 14%, transparent); }
+
+/* ---- Tilde de estado real en las tarjetas (¿Qué es el riesgo?) ----
+   Oculto por default: solo aparece si `marcarRiesgoVisto()` (curso.js)
+   detecta, al ENTRAR a esta diapositiva, que la sección relacionada ya
+   se recorrió. Nunca decorativo — si no hay dato real, no se dibuja. */
+.d-riesgo-check {
+  position: absolute; display: grid; place-items: center;
+  border-radius: 50%; background: var(--success);
+  color: #fff; box-shadow: 0 4px 10px color-mix(in srgb, #000 25%, transparent);
+  opacity: 0; transform: scale(.6);
+  transition: opacity .2s ease, transform .2s ease;
+}
+.d-riesgo-check.is-on { opacity: 1; transform: scale(1); }
+.d-riesgo-check svg { width: 62%; height: 62%; }
+@media (prefers-reduced-motion: reduce) {
+  .d-riesgo-check { transition: opacity .2s ease; transform: none; }
+}
+
+/* ---- Repaso rápido (resúmenes de unidad) — v2, mismo lenguaje visual
+   que el minijuego (`coto-minijuego.css`: tarjetas con degradé +
+   sombra de contacto/ambiente, píldoras con borde grueso de color y
+   levitación al pasar el mouse, animación de acierto/error) para que
+   se lea como parte del mismo curso, no como un componente aparte.
+   2 preguntas V/F por unidad, sin nota ni gate — puro refuerzo
+   (CLAUDE.md §3.11, mismo criterio que una mini-práctica sin
+   calificar). Vive dentro de `.d-info-panel`, así que hereda su
+   caja/sombra; acá solo el contenido interno.
+   BUG REAL corregido en esta vuelta: la retroalimentación se revelaba
+   con `hidden` (display:none→block, no animable) dentro de una caja
+   de alto FIJO (`data-h` del `[data-place]`) — al contestar, el texto
+   quedaba recortado contra el borde inferior del panel. Ahora la
+   respuesta vive SIEMPRE en el flujo, colapsada a `max-height:0`
+   (transición animable), así el panel crece suavemente en vez de
+   recortar — pero el alto del `[data-place]` en index.html también se
+   agrandó para que ese crecimiento entre entero (medido con
+   Playwright contra las 3 diapositivas reales, no a ojo). */
+.d-repaso {
+  position: relative; overflow: visible;
+  width: 100%; display: flex; flex-direction: column; gap: .15rem;
+  background: linear-gradient(180deg, #fff 0%, color-mix(in srgb, var(--cat) 6%, #fff) 100%);
+  border: 1.5px solid color-mix(in srgb, var(--cat) 30%, var(--line));
+  border-radius: var(--r-lg, 16px);
+  padding: .5rem .8rem .55rem;
+  box-shadow: 0 1px 0 #fff inset, 0 2px 4px rgba(20, 30, 60, .06), 0 10px 22px -10px rgba(20, 30, 60, .28);
+}
+.d-repaso-title {
+  display: flex; align-items: center; gap: .5rem;
+  color: var(--cat-strong); font-family: var(--font-title); font-weight: 900;
+  font-size: clamp(.86rem, 1.3cqw, 1rem);
+}
+.d-repaso-title-ic {
+  display: grid; place-items: center; flex: none;
+  width: 1.7em; height: 1.7em; border-radius: 50%;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--cat) 26%, #fff), color-mix(in srgb, var(--cat) 14%, #fff));
+  box-shadow: 0 1px 0 #fff inset, 0 3px 8px -3px color-mix(in srgb, var(--cat-strong) 45%, transparent);
+  font-size: .82em;
+}
+/* Chip de progreso "1 de 2", mismo lenguaje que `.d-mj-stat`: aparece
+   siempre (no solo al completar), da feedback continuo en vez de un
+   salto al final. */
+/* Flechas ‹ › (pedido aparte del chip): navegan libre entre preguntas
+   sin depender de haber contestado — para volver a mirar la 1 después
+   de la 2, o saltar adelante, sin resetear nada. Van pegadas al chip
+   de progreso, no sueltas, para que se lean como un único paginador. */
+.d-repaso-nav {
+  margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: .3rem;
+}
+.d-repaso-arrow {
+  flex: none; display: grid; place-items: center;
+  width: 1.5rem; height: 1.5rem; border-radius: 50%; border: none; cursor: pointer;
+  background: var(--surface-2); color: var(--text-soft);
+  font-size: .9rem; line-height: 1; padding: 0;
+  transition: background .15s ease, color .15s ease, transform .15s ease;
+}
+.d-repaso-arrow:hover:not(:disabled) { background: color-mix(in srgb, var(--cat) 20%, var(--surface-2)); color: var(--cat-strong); }
+.d-repaso-arrow:active:not(:disabled) { transform: scale(.92); }
+.d-repaso-arrow:disabled { opacity: .35; cursor: default; }
+.d-repaso-count {
+  flex: none; display: inline-flex; align-items: center;
+  padding: .18rem .6rem; border-radius: 999px;
+  background: var(--surface-2); color: var(--text-soft);
+  font-family: var(--font-body); font-weight: 800; font-size: .68rem;
+  white-space: nowrap; transition: background .2s ease, color .2s ease;
+}
+.d-repaso.is-complete .d-repaso-count {
+  background: color-mix(in srgb, var(--success) 18%, var(--surface)); color: var(--success-ink);
+}
+/* UNA pregunta por vez: la que está en juego se muestra, el resto se
+   saca del flujo. Así el alto del bloque no crece al contestar — que
+   era el motivo real del choque contra el borde inferior. El número no
+   puede salir de un `counter` CSS (solo cuenta lo que se renderiza, y
+   acá se renderiza una sola): viene del marcado, en `data-repaso-n`. */
+.d-repaso-item { display: none; position: relative; padding-left: 2rem; }
+.d-repaso-item.is-current {
+  display: flex; flex-direction: column;
+  animation: d-repaso-in .32s cubic-bezier(.2, .8, .3, 1) both;
+}
+@keyframes d-repaso-in {
+  from { opacity: 0; transform: translateY(7px); }
+  to { opacity: 1; transform: none; }
+}
+.d-repaso-item::before {
+  content: attr(data-repaso-n);
+  position: absolute; left: 0; top: .05rem;
+  width: 1.45rem; height: 1.45rem; border-radius: 50%;
+  background: var(--surface-2); color: var(--text-dim);
+  font-size: .72rem; font-weight: 800; display: grid; place-items: center;
+  border: 1.5px solid var(--line);
+  transition: background .2s ease, color .2s ease, border-color .2s ease, transform .2s cubic-bezier(.22, 1.4, .4, 1);
+}
+.d-repaso-item.is-answered::before { background: var(--cat); color: #fff; border-color: var(--cat); transform: scale(1.08); }
+.d-repaso-q { margin: 0 0 .3rem; color: var(--text); font-size: clamp(.78rem, 1.15cqw, .9rem); line-height: 1.26; }
+/* Píldoras Verdadero/Falso — mismo trazo que `.d-mj-opt`: borde grueso
+   de color, degradé sutil, doble sombra, levitan al pasar el mouse.
+   Angostas (no `flex:1`): "Verdadero"/"Falso" son palabras cortas y el
+   cliente ya había pedido que no empujaran el panel contra la
+   ilustración de al lado — eso se mantiene. */
+.d-repaso-btns { display: flex; gap: .5rem; }
+.d-repaso-btns button {
+  flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: .3rem;
+  padding: .34rem .85rem; border-radius: 999px;
+  border: 2px solid var(--cat-strong); background: linear-gradient(180deg, #fff 0%, #fbfbfe 100%);
+  color: var(--cat-strong); font-size: .76rem; font-weight: 800; cursor: pointer;
+  box-shadow: 0 1px 0 #fff inset, 0 3px 8px -3px rgba(20, 30, 60, .18);
+  transition: background .15s, border-color .15s, color .15s, transform .15s, box-shadow .15s;
+}
+.d-repaso-btns button::before { font-size: .9em; }
+.d-repaso-btns button[data-repaso-ans="true"]::before { content: "✓"; }
+.d-repaso-btns button[data-repaso-ans="false"]::before { content: "✕"; }
+.d-repaso-btns button:hover:not(:disabled) {
+  border-color: var(--cat); background: var(--cat-soft); transform: translateY(-2px);
+  box-shadow: 0 10px 18px -8px rgba(20, 30, 60, .3);
+}
+.d-repaso-btns button:active:not(:disabled) { transform: translateY(0); }
+.d-repaso-btns button:disabled { cursor: default; }
+.d-repaso-item.is-answered .d-repaso-btns button:not([data-chosen]) { opacity: .45; }
+.d-repaso-item.is-answered .d-repaso-btns button[data-chosen] {
+  color: #fff; border-color: transparent; box-shadow: 0 8px 18px -6px rgba(20, 30, 60, .4);
+}
+.d-repaso-item.is-correct .d-repaso-btns button[data-chosen] {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--success) 88%, #fff), var(--success));
+  animation: d-repaso-celebrate .5s ease;
+}
+.d-repaso-item.is-wrong .d-repaso-btns button[data-chosen] {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--danger) 88%, #fff), var(--danger));
+  animation: d-repaso-shake .45s ease;
+}
+@keyframes d-repaso-celebrate {
+  0% { transform: scale(1) rotate(0); }
+  35% { transform: scale(1.1) rotate(-2deg); }
+  60% { transform: scale(.97) rotate(1.5deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+@keyframes d-repaso-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(2px); }
+}
+/* La respuesta SIEMPRE está en el flujo (nunca `display:none`), solo
+   colapsada — así crece con una transición real en vez de saltar o
+   recortarse contra el borde del panel. `[hidden]` sigue en el HTML
+   por si JS/accesibilidad lo necesitan, pero acá se anula su
+   `display:none` a propósito. */
+.d-repaso-fb[hidden] { display: flex !important; }
+.d-repaso-fb {
+  align-items: flex-start; gap: .3rem;
+  max-height: 0; opacity: 0; overflow: hidden;
+  margin: 0; border-radius: 9px; padding: 0 .55rem;
+  font-size: clamp(.72rem, 1.02cqw, .82rem); line-height: 1.24;
+  transition: max-height .35s cubic-bezier(.2, .8, .3, 1), opacity .3s ease .05s, padding .35s ease, margin .35s ease;
+}
+.d-repaso-item.is-answered .d-repaso-fb {
+  max-height: 12em; opacity: 1; margin-top: .28rem; padding: .3rem .55rem;
+}
+.d-repaso-item.is-correct .d-repaso-fb { background: color-mix(in srgb, var(--success) 12%, transparent); color: var(--success-ink); }
+.d-repaso-item.is-wrong .d-repaso-fb { background: color-mix(in srgb, var(--danger) 10%, transparent); color: var(--danger-ink); }
+.d-repaso-fb::before { flex: none; font-size: 1em; line-height: 1.35; margin-right: .1rem; }
+.d-repaso-item.is-correct .d-repaso-fb::before { content: "🎉"; }
+.d-repaso-item.is-wrong .d-repaso-fb::before { content: "💡"; }
+/* Paso a la pregunta siguiente. Botón explícito, no avance por
+   temporizador: la retroalimentación es lo que hay que leer, y el
+   curso ya tomó esa decisión en el minijuego (CLAUDE.md §6.37). */
+.d-repaso-next {
+  align-self: flex-end; display: none; align-items: center; gap: .3rem;
+  margin-top: .34rem; padding: .3rem .85rem; border-radius: 999px;
+  border: none; cursor: pointer;
+  background: linear-gradient(180deg, var(--cat), var(--cat-strong));
+  color: #fff; font-family: var(--font-body); font-weight: 800; font-size: .74rem;
+  box-shadow: 0 1px 0 color-mix(in srgb, #fff 35%, transparent) inset,
+              0 6px 14px -6px color-mix(in srgb, var(--cat-strong) 75%, transparent);
+  transition: transform .15s, box-shadow .15s, filter .15s;
+}
+.d-repaso-item.is-answered .d-repaso-next {
+  display: inline-flex; animation: d-repaso-in .32s ease .12s both;
+}
+.d-repaso-next:hover {
+  filter: brightness(1.07); transform: translateY(-2px);
+  box-shadow: 0 1px 0 color-mix(in srgb, #fff 35%, transparent) inset,
+              0 10px 18px -7px color-mix(in srgb, var(--cat-strong) 80%, transparent);
+}
+.d-repaso-next:active { transform: translateY(0); }
+/* Cierre — banda con check en vez del chip que aparecía de golpe
+   arriba a la derecha; mismo tono festivo que el panel final del
+   minijuego, sin reusar su HTML (acá no hace falta: es una sola
+   línea). */
+.d-repaso-done {
+  display: flex; align-items: center; justify-content: center; gap: .4rem;
+  max-height: 0; opacity: 0; overflow: hidden;
+  margin: 0 .15rem; padding: 0 .6rem; border-radius: 10px;
+  background: color-mix(in srgb, var(--success) 14%, var(--surface));
+  color: var(--success-ink); font-weight: 800; font-size: .74rem;
+  transition: max-height .3s cubic-bezier(.22, 1.3, .4, 1), opacity .3s ease, padding .3s ease, margin .3s ease;
+}
+.d-repaso.is-complete .d-repaso-done { max-height: 3em; opacity: 1; margin-top: .08rem; padding: .22rem .6rem; }
+@media (prefers-reduced-motion: reduce) {
+  .d-repaso-item::before, .d-repaso-btns button, .d-repaso-fb, .d-repaso-done,
+  .d-repaso-count, .d-repaso-next, .d-repaso-arrow { transition: none; }
+  .d-repaso-item.is-current, .d-repaso-item.is-answered .d-repaso-next,
+  .d-repaso-item.is-correct .d-repaso-btns button[data-chosen],
+  .d-repaso-item.is-wrong .d-repaso-btns button[data-chosen] { animation: none; }
+}
+
+/* ---- Predicción antes del video "proceso" (item 7) ----
+   Vive dentro de `.modal-bd`, mismo molde de texto plano que "logros"
+   — sin --art, sin estilo propio: no es la excepción de §6.10.2.2. */
+.d-pred-opts { display: flex; flex-direction: column; gap: .5rem; margin: .9rem 0; }
+.d-pred-opts button {
+  padding: .6rem .95rem; border-radius: var(--r-pill);
+  border: 1px solid var(--line); background: var(--surface);
+  color: var(--text); font-size: .92rem; font-weight: 600; text-align: left;
+  cursor: pointer; transition: background .15s ease, border-color .15s ease;
+}
+.d-pred-opts button:hover:not(:disabled) { background: var(--surface-2); }
+.d-pred-opts button:disabled { cursor: default; }
+.d-pred-opts button[data-chosen] { border-color: currentColor; }
+.d-pred-opts button[data-chosen].is-correct { background: color-mix(in srgb, var(--success) 18%, var(--surface)); color: var(--success-ink); }
+.d-pred-opts button[data-chosen].is-wrong { background: color-mix(in srgb, var(--danger) 14%, var(--surface)); color: var(--danger-ink); }
+/* BUG REAL, encontrado auditando el reporte del cliente ("esta un poco
+   desfazado el tamaño y las cosas no se ven bien alineadas"):
+   `coto-base-addendum-v1.8.css` (kit) define SU PROPIO `.d-pred-fb`
+   (pensado para la excepción de diseño de §6.10.2.2, con
+   padding/border-radius propios) — mismo nombre de clase que este
+   párrafo, elegido acá sin saber que colisionaba. Como este archivo
+   carga DESPUÉS del addendum, `margin`/`font-size`/`line-height` ya
+   ganaban acá, pero `padding`/`border-radius` (que este archivo nunca
+   pisaba) se colaban igual: un párrafo con caja fantasma (padding +
+   esquinas redondeadas) sin fondo visible que la delate, corriendo
+   todo lo de abajo. `padding:0;border-radius:0` explícitos lo anulan
+   — sin tocar el kit, esto es una colisión de nombre en ESTE curso. */
+.d-pred-fb { margin: 0; padding: 0; border-radius: 0; font-size: .9rem; line-height: 1.4; }
+.d-pred-continue {
+  align-self: flex-end; margin-top: .3rem;
+  padding: .55rem 1.15rem; border-radius: var(--r-pill); border: 0;
+  background: var(--cat-strong, var(--brand)); color: #fff;
+  font-weight: 800; font-size: .9rem; cursor: pointer;
+  transition: background .15s ease;
+}
+.d-pred-continue:hover { background: var(--cat, var(--brand)); }
+
+/* `[data-cat="control-de-calidad"]` fija --on-cat oscuro (navy) a
+   propósito para ESE degradado claro (coto-base.css §"colores por
+   categoría") — pero este es el único pop-up del curso que usa el
+   `.modal-hd` liso sin pasar por `.d-wide`/`.d-drawer-r` (que ya
+   fuerzan blanco, pedido de cliente — ver addendum). Sin sibling que
+   mantener consistente, corrijo acá nomás: navy sobre este celeste se
+   lee bajo en contraste. */
+[data-popup="prediccion-proceso"] .modal-hd {
+  color: #fff;
+  background: linear-gradient(120deg, #0096D2, #50BEE6 55%, #7dd8ea);
+}
+[data-popup="prediccion-proceso"] .modal-hd h3 {
+  display: flex; align-items: center; gap: .55rem;
+}
+.d-pred-ic {
+  display: grid; place-items: center; flex: none;
+  width: 2.1rem; height: 2.1rem; border-radius: 50%;
+  background: rgba(255, 255, 255, .22);
+  font-size: 1.05rem;
+  animation: d-pred-bob 2.4s ease-in-out infinite;
+}
+@keyframes d-pred-bob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-3px) rotate(-6deg); }
+}
+@media (prefers-reduced-motion: reduce) { .d-pred-ic { animation: none; } }
+
+/* ---- Entrada animada en las diapos 100% genéricas ---- (introducción,
+   objetivos, índice, últimos consejos) — pedido del cliente: son la
+   misma captura plana en cualquier curso, sin nada propio que
+   escalonar (título y texto vienen horneados en el arte — no hay
+   piezas sueltas para animar en cascada, a diferencia de un pop-up con
+   HTML real). Fade + rise sutil del bloque entero al entrar, disparado
+   por JS en cada `slidechange` (mismo truco remove/reflow/add que
+   `.d-stagger-in`, kit-base) — sin eso la animación CSS solo correría
+   la primera vez, no cada vez que se vuelve a la diapo. */
+.d-generic-enter { animation: d-generic-fade-rise .6s cubic-bezier(.22, .61, .36, 1) both; }
+@keyframes d-generic-fade-rise {
+  from { opacity: 0; transform: translateY(16px) scale(.985); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .d-generic-enter { animation: none; }
+}
+
+/* ---- Progreso por objetivo, en el índice lateral ---- (propuesta de
+   UX propia, no del PDF: CLAUDE.md, "10 propuestas"). Mismo lugar y
+   tipografía que `.d-sidenav-progress` (kit), un escalón por debajo en
+   tamaño porque es información secundaria a "cuántas secciones viste". */
+.d-obj-progress {
+  display: flex; align-items: center; gap: .35rem;
+  margin: 0 0 1rem;
+}
+.d-obj-pip {
+  display: grid; place-items: center;
+  width: 1.5rem; height: 1.5rem; border-radius: 50%;
+  border: 1.5px solid var(--line);
+  font-size: .68rem; font-weight: 800; color: var(--text-soft);
+  transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+.d-obj-pip.is-done {
+  background: var(--cat); border-color: var(--cat); color: #fff;
+}
+.d-obj-progress-lbl { font-size: .74rem; color: var(--text-soft); }
+
+/* ---- Remediación adaptativa del minijuego ---- (propuesta de UX
+   propia: al reintentar, se resaltan primero las opciones que más le
+   costaron la vez anterior — CLAUDE.md, "10 propuestas"). Mismo tono
+   que el resto del texto secundario del minijuego, nunca compite con
+   la consigna principal. */
+.d-mj-remedy {
+  margin: 0 0 .8rem; font-size: .82rem; font-style: italic; color: var(--text-soft);
+}

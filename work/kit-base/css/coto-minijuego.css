@@ -1,0 +1,673 @@
+/* ============================================================
+   coto-minijuego.css — kit-base v1.9.21
+   Área Aprendizaje (COTO) — cáscara visual del minijuego
+   ------------------------------------------------------------
+   POR QUÉ EXISTE (auditoría §7.1 al arrancar "Seguridad alimentaria"):
+   el minijuego de "Uso de Sucursales 3 - NOA" se escribió entero en el
+   `diapositivas.css` de ESE curso (~120 reglas `.d-mj-*`), con 6
+   vueltas de feedback del cliente encima (CLAUDE.md §6.30, §6.34,
+   §6.37, §6.39, §6.40, §6.42). "Seguridad alimentaria" trae un
+   minijuego del MISMO molde de diseño —mismo cartel arriba a la
+   izquierda, misma ilustración a un lado, mismas 4 tarjetas de estado
+   (encontrados / puntos / vidas / reglas), mismo banco de píldoras
+   unidas por líneas, mismo panel final con los 2 personajes— así que
+   volver a escribirlo desde cero era garantía de volver a tropezar con
+   los mismos 8 bugs de layout. Regla de §4: si la pieza es
+   genéricamente útil y un segundo curso la necesita, sube al kit.
+
+   QUÉ ES GENÉRICO (está acá) y QUÉ NO (queda en el curso):
+   · Acá: la cáscara — lienzo de las capas intro/fin, columna del
+     cartel + ilustración, las 4 tarjetas de estado, las píldoras de
+     opción con sus estados, el feedback, el botón de avance, el panel
+     final y toda la escalera responsive.
+   · En el curso: la TOPOLOGÍA del banco de opciones (cuántas filas/
+     columnas y dónde va cada línea del mapa: 10 nodos en NOA, 12 acá),
+     la proporción real de sus ilustraciones (`--mj-escena-ratio`) y,
+     por supuesto, la lógica del juego en `curso.js`.
+
+   Depende de `coto-base.css` (tokens) y se carga después del addendum.
+   Variables que puede pisar cada curso:
+     --mj-accent        color propio del minijuego (default: azul del arte)
+     --mj-escena-ratio  proporción exacta de las ilustraciones
+     --mj-track         ancho/alto de las pistas donde viven las líneas
+   Y, por hotspot (inline en el marcado, no globales — ver `.d-mj-hotspot`):
+     --l --t --w --h    posición y tamaño del aro, en % del arte
+   ============================================================ */
+
+.d-mj{ flex:1 1 auto; min-height:0; width:100%; --mj-accent:#5d7aba; --mj-escena-ratio:950/668; --mj-track:2rem; }
+.d-mj-panel{ height:100%; width:100%; }
+.d-mj-panel[hidden]{ display:none; }
+
+/* ---- capas intro y fin: diapositivas-captura dentro del juego ----
+   Mismo lienzo de `coto-shot-stage.css`, pero para un contenedor que NO
+   es `.d-shot-slide` (es un panel de capa adentro de la diapositiva del
+   juego), por eso se repite el cálculo acá en vez de sumar el selector
+   allá.
+   BUG REAL (reportado por el cliente, "Seguridad alimentaria"): esta
+   regla solo tenía la rama de lienzo fijo 2:1 (letterbox), sin el
+   @container que `coto-shot-stage.css` ya usa para las diapositivas
+   normales (llenar el frame completo entre 1.5 y 2.2 de proporción —
+   CLAUDE.md §6.31, cubre 16:9 de escritorio). Resultado: en cualquier
+   ventana donde el resto del curso llena la pantalla sin márgenes
+   (la inmensa mayoría), la portada y el cierre del minijuego SÍ tenían
+   franjas vacías a los costados — la única pantalla del curso con ese
+   comportamiento distinto, porque nunca heredó el fix de §6.31. Mismo
+   @container acá, mismo criterio: en el rango "llenar completo",
+   `object-fit` pasa a `cover` (como cualquier diapositiva-captura,
+   el 2:1 exacto de estas artes hace que cover no recorte nada — CLAUDE.md
+   §2.8); fuera de ese rango, `contain` sigue siendo lo seguro. */
+.d-mj-shot, .d-mj-fin{ container-type:size; display:block; }
+.d-mj-shot > .d-shot,
+.d-mj-fin > .d-shot{
+  position:relative; aspect-ratio:2 / 1;
+  width:min(100cqw, 100cqh * 2 / 1);
+  height:min(100cqh, 100cqw * 1 / 2);
+  margin:auto;
+}
+.d-mj-shot > .d-shot > .d-shot-img,
+.d-mj-fin > .d-shot > .d-shot-img{ width:100%; height:100%; object-fit:contain; }
+@container (min-aspect-ratio: 1.5) and (max-aspect-ratio: 2.2) {
+  .d-mj-shot > .d-shot,
+  .d-mj-fin > .d-shot{
+    aspect-ratio:auto; width:100cqw; height:100cqh;
+  }
+  .d-mj-shot > .d-shot > .d-shot-img,
+  .d-mj-fin > .d-shot > .d-shot-img{ object-fit:cover; }
+}
+
+/* ---- capa de juego ---- */
+.d-mj-play{ display:flex; flex-direction:column; gap:1rem; padding:1.1rem 1.6rem 1.4rem; }
+
+/* Columna del cartel + ilustración (CLAUDE.md §6.40: el cartel va
+   ARRIBA de la ilustración y alineado a su borde izquierdo, no en una
+   franja propia centrada sobre las 2 columnas).
+   BUG REAL (§6.40 bug 1): sin `min-width:0` este ítem de grid se
+   estira al ancho INTRÍNSECO de su contenido en vez de encogerse a su
+   columna, y como `.d-mj-escena` deriva su altura de ese ancho vía
+   `aspect-ratio`, terminaba pisando las tarjetas de estado de abajo.
+   Sin `height:100%` a propósito (§6.34): en una fila de grid "auto",
+   pedir 100% de una altura todavía no resuelta es circular. */
+.d-mj-escena-col{
+  display:flex; flex-direction:column; align-items:flex-start; gap:1.6rem;
+  min-width:0; min-height:0;
+}
+/* Cartel: recorte REAL del PDF (no una recreación en CSS/SVG — se
+   probó y no calcaba). Alto relativo al lienzo, ancho automático para
+   no deformar la píldora. */
+.d-mj-kicker{ flex:none; height:clamp(3.4rem, 7.6cqh, 5rem); width:auto; display:block; }
+
+/* Ilustración de la situación.
+   BUG REAL (§6.39 punto 3): las ilustraciones son un webp plano sin
+   alpha (fondo horneado). Con `object-fit:contain` y una caja de OTRA
+   proporción, el aire sobrante se lee como un recuadro de más
+   alrededor del dibujo. La caja lleva el `aspect-ratio` EXACTO de las
+   imágenes del curso (`--mj-escena-ratio`) para que no sobre aire en
+   ningún eje. */
+/* `position:relative` es el contexto de posicionamiento de los
+   `.d-mj-hotspot` de más abajo (kit-base v1.9.53). Sin él sus
+   `left/top` en % se resolverían contra el ancestro posicionado más
+   cercano —el lienzo entero, o el `<body>`— y las etiquetas quedarían
+   tiradas sueltas encima del dibujo: el MISMO bug que el warning de
+   `_initShots()` (motor-slides.js) avisa para `[data-hit]`, acá
+   prevenido en el CSS porque el kit ya sabe quién es el contenedor. */
+.d-mj-escena{
+  position:relative;
+  margin:0; min-height:0; max-height:100%; width:100%;
+  aspect-ratio:var(--mj-escena-ratio);
+  display:grid; place-items:center; overflow:hidden; justify-self:center;
+}
+.d-mj-escena img{
+  width:100%; height:100%; object-fit:cover;
+  border-radius:var(--r-lg); box-shadow:0 10px 26px -10px rgba(20,30,60,.35);
+}
+
+/* ---- Halo de hallazgo sobre la ilustración (kit-base v1.9.53) ----
+   Viene de "Seguridad alimentaria", aprobado por el cliente y ya en
+   producción allá: al acertar una opción, además de que la píldora se
+   ponga verde, se resalta con un aro pulsante la zona REAL del dibujo
+   que explica ese hallazgo (acertar "Plagas" resalta la mosca). Sube
+   al kit por la regla de §4 —pieza genéricamente útil— y porque el
+   kit no sabe ni necesita saber qué hallazgo es cada uno: solo pinta
+   un aro en la posición que le pasa el curso.
+
+   POR QUÉ NO USA `[data-hit]` + `_initShots()` (la otra forma de
+   posicionar algo sobre un arte en este kit): `_initShots()` existe
+   para lienzos con letterbox/pillarbox, donde el % del CONTENEDOR no
+   coincide con el % de la IMAGEN y hay que recalcular en JS. Acá no
+   pasa: `.d-mj-escena` tiene `aspect-ratio:var(--mj-escena-ratio)`
+   fijado a la proporción real del arte, así que el `cover` del `<img>`
+   de arriba no recorta nada y el % del archivo mapea 1:1 al del
+   contenedor en cualquier tamaño. Variables CSS puras alcanzan.
+
+   ⚠️ PRECONDICIÓN, y es la única fragilidad de este diseño: eso vale
+   SOLO si el curso puso `--mj-escena-ratio` igual a la proporción real
+   de SUS ilustraciones (está listado arriba entre las variables que
+   cada curso pisa). Con un ratio equivocado, `cover` sí recorta y los
+   aros se van corriendo del objeto — sin ningún error, igual que
+   cualquier desajuste de hitbox. Si un curso necesita halos sobre un
+   arte que NO llena el contenedor exacto, ahí sí corresponde
+   `[data-hit]` + `_initShots()`, no esto.
+
+   Marcado esperado, dentro de la `<figure class="d-mj-escena">` junto
+   al `<img>` (los % salen de medir el arte, ver CLAUDE.md §6.70):
+
+     <span class="d-mj-hotspot" data-mj-hotspot="plagas" aria-hidden="true"
+           style="--l:70.98%; --t:26.06%; --w:3.72%; --h:4.39%">
+       <span class="d-mj-hotspot-lbl">Plagas</span>
+     </span>
+
+   `aria-hidden` a propósito: es refuerzo visual de un feedback que ya
+   se anuncia por texto en la píldora y en el cartel: un lector de
+   pantalla no gana nada oyendo la etiqueta dos veces.
+
+   El curso lo prende/apaga con `.is-on` (`data-mj-hotspot` coincide
+   1:1 con el id de la opción, sin tabla de mapeo aparte) — el JS del
+   minijuego es contenido, vive en `curso.js`, no acá.
+
+   3 decisiones que conviene no "simplificar" después:
+   · La etiqueta es HIJA del aro: hereda mostrar/ocultar gratis (un
+     hijo de algo en `opacity:0` no se ve) y hereda el `transform` del
+     pulso, así que pulsa junto con el aro sin una segunda animación.
+   · Su tamaño va en `em`, NO en % del aro: los aros varían muchísimo
+     entre sí (una mosca contra una tabla entera), y a escala del aro
+     la píldora quedaría ilegible en el chico o gigante en el grande.
+   · `[data-mj-hotspot-lbl-pos="abajo"]` resuelve una colisión REAL, no
+     hipotética: dos hallazgos pueden compartir zona física (uno siendo
+     sub-área del otro), y ahí las dos etiquetas "arriba" se pisan
+     apenas se aciertan juntas — que es el caso común, no un borde.
+     Qué hallazgos conviven en una zona es CONTENIDO, así que el
+     atributo lo pone el curso en el HTML; el kit solo ofrece las dos
+     posiciones. */
+.d-mj-hotspot{
+  position:absolute; left:var(--l); top:var(--t); width:var(--w); height:var(--h);
+  border-radius:50%; pointer-events:none; opacity:0;
+  box-shadow:0 0 0 2px rgba(255,196,0,.95), 0 0 12px 3px rgba(255,196,0,.55);
+  background:rgba(255,235,150,.14);
+}
+.d-mj-hotspot.is-on{
+  opacity:1; animation:d-mj-hotspot-pulse 1.1s ease-in-out infinite;
+}
+@keyframes d-mj-hotspot-pulse{
+  0%,100%{ transform:scale(1); opacity:1; }
+  50%{ transform:scale(1.05); opacity:.8; }
+}
+@media (prefers-reduced-motion:reduce){
+  .d-mj-hotspot.is-on{ animation:none; }
+}
+
+.d-mj-hotspot-lbl{
+  position:absolute; left:50%; bottom:100%; transform:translateX(-50%);
+  margin-bottom:.4em; padding:.22em .6em; border-radius:999px;
+  background:#1e2d46; color:#fff; font-size:11px; font-weight:700;
+  white-space:nowrap; line-height:1.4;
+}
+[data-mj-hotspot-lbl-pos="abajo"] .d-mj-hotspot-lbl{
+  bottom:auto; top:100%; margin-bottom:0; margin-top:.4em;
+}
+
+/* Las 4 tarjetas de estado no tienen recorte del PDF (su contenido es
+   dinámico), así que acá aplica el pedido "que lo recreado se vea más
+   terminado que el plano gris del arte" (§6.30): degradé sutil, borde
+   interior y doble sombra (contacto + ambiente).
+   BUG REAL (§6.42 punto 4): con `flex-wrap:wrap` la 4ª tarjeta se caía
+   sola a una 2ª línea en anchos de iPad — las 4 van SIEMPRE juntas.
+   BUG REAL (§6.42 punto 5): `min-width:0` acá saca el piso de
+   contenido y las tarjetas se derraman fuera de su borde; el ajuste
+   correcto es achicar el CONTENIDO en el media query, no el piso. */
+.d-mj-stats{ display:flex; gap:.6rem; flex-wrap:nowrap; justify-content:center; margin:0 0 1.1rem; }
+.d-mj-stat{
+  flex:1 1 88px; text-align:center;
+  background:linear-gradient(180deg, #fff 0%, #eceef3 100%);
+  border:1px solid #dcdfe8; color:var(--text);
+  border-radius:var(--r-lg); padding:.55rem .95rem;
+  display:grid; gap:.15rem; align-content:center;
+  box-shadow:0 1px 0 #fff inset, 0 2px 4px rgba(20,30,60,.06), 0 6px 14px -6px rgba(20,30,60,.22);
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+.d-mj-stat-lbl{ font-size:.68rem; font-weight:800; letter-spacing:.03em; text-transform:uppercase; color:var(--text-soft); }
+.d-mj-stat b{ font-size:1.4rem; font-family:var(--font-title); font-weight:900; color:var(--text); }
+/* `display:flex` SOLO en la tarjeta de puntos: puesto en la regla
+   compartida, flexbox trataba el texto suelto como otro ítem y metía
+   un hueco ("1 /5" en vez de "1/5") en la tarjeta de contador. */
+.d-mj-stat--pts{ background:linear-gradient(180deg, #fff8e8 0%, #fdecc4 100%); border-color:#f0d896; }
+.d-mj-stat--pts b{ display:flex; align-items:center; justify-content:center; gap:.3rem; color:#8a5a00; }
+.d-mj-trophy{ font-size:1.2em; line-height:1; filter:drop-shadow(0 1px 1px rgba(120,80,0,.35)); }
+.d-mj-rules{ cursor:pointer; font:inherit; transition:transform .15s ease, box-shadow .15s ease, background .15s ease; }
+.d-mj-rules:hover{ transform:translateY(-2px); box-shadow:0 1px 0 #fff inset, 0 8px 16px -6px rgba(20,30,60,.3); }
+.d-mj-rules:active{ transform:translateY(0); }
+.d-mj-rules-ic{ width:1.5rem; height:1.5rem; margin:0 auto; filter:drop-shadow(0 1px 1px rgba(20,60,140,.25)); }
+.d-mj-rules-ic svg{ width:100%; height:100%; color:#2e4b96; }
+
+/* Corazones "pixel art" (SVG desde curso.js), no el glifo ❤ liso:
+   el arte del PDF los dibuja 8-bit. `is-off` apaga al marrón oscuro
+   del propio arte, así se sigue viendo cuántas vidas había en total. */
+.d-mj-lives{ display:flex; gap:.2rem; justify-content:center; }
+.d-mj-heart{ width:1.3rem; height:1.15rem; color:#ec7a3e; }
+.d-mj-heart.is-off{ color:#7a3e21; }
+
+/* BUG REAL (§6.41 + §6.42 punto 1, dos vueltas): la fila del grid era
+   `minmax(0,1fr)`, un track flexible que absorbe TODO el alto de
+   `.d-mj-body` (que es `flex:1`). Con `align-items:center` cada
+   columna flotaba con su propio aire; con `start` todo el sobrante se
+   iba abajo. La fila `auto` mide lo que el contenido necesita y
+   `align-content:center` centra ese bloque ya compacto como una
+   unidad: mismo aire arriba que abajo. */
+.d-mj-body{
+  flex:1; min-height:0;
+  display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  grid-template-rows:auto; align-content:center;
+  gap:1.6rem; align-items:start;
+}
+.d-mj-consigna{ margin:0 0 1rem; font-size:1.02rem; line-height:1.45; }
+
+/* ---- Banco de opciones ----
+   Las pistas de conexión son TRACKS del grid (no `gap`), para tener
+   dónde "enganchar" las líneas del mapa como ítems más del grid, sin
+   SVG ni JS de layout. El curso declara `grid-template-columns/rows`
+   con su propia topología; acá va solo el default de 3 columnas.
+   BUG REAL (§6.42): `1fr` a secas es `minmax(auto,1fr)` — el piso es
+   el ancho intrínseco del texto, así que una píldora larga empuja el
+   grid fuera del contenedor en vez de hacer wrap. `minmax(0,1fr)` en
+   el track Y `min-width:0` en el ítem: hacen falta LOS DOS. */
+/* BUG REAL ("Seguridad alimentaria"): `align-items:stretch` hace que
+   CUALQUIER píldora corta se estire a la altura de la más alta de su
+   MISMA fila — y en cuanto la ventana se achica, una etiqueta larga
+   ("Productos de limpieza cerca de los alimentos") pasa a 2 líneas,
+   así que toda la fila (incluidas las píldoras cortas de al lado,
+   "Contaminación cruzada", "Plagas"...) se infla con ella. El
+   síntoma real reportado: "las cajitas se agrandan cuando el curso
+   está achicado" — no es que crezcan solas, es que se estiran para
+   igualar a su vecina más alta. `start` deja que cada píldora mida
+   SU propio contenido (el `grid-template-rows` implícito sigue
+   reservando la altura de la fila más alta, así que el layout total
+   no cambia — solo cada botón individual deja de inflarse de más). */
+.d-mj-grid{
+  display:grid;
+  grid-template-columns: minmax(0,1fr) var(--mj-track) minmax(0,1fr) var(--mj-track) minmax(0,1fr);
+  align-items:start;
+}
+.d-mj-opt{
+  font:inherit; font-weight:800; font-size:.88rem; line-height:1.25;
+  color:var(--cat-ink); text-align:center; cursor:pointer;
+  background:linear-gradient(180deg, #fff 0%, #fbfbfe 100%);
+  border:2px solid var(--cat-strong);
+  border-radius:999px; padding:.75rem .9rem;
+  box-shadow:0 1px 0 #fff inset, 0 3px 8px -3px rgba(20,30,60,.18);
+  transition:background .15s, border-color .15s, color .15s, transform .15s, box-shadow .15s;
+  position:relative; z-index:1; min-width:0;
+}
+.d-mj-opt:hover:not(:disabled){
+  border-color:var(--cat); background:var(--cat-wash); transform:translateY(-3px) scale(1.02);
+  box-shadow:0 12px 22px -8px rgba(20,30,60,.32);
+}
+.d-mj-opt:active:not(:disabled){ transform:translateY(0) scale(1); box-shadow:0 2px 6px -2px rgba(20,30,60,.15); }
+.d-mj-opt:disabled{ cursor:default; }
+/* El estado NO se comunica solo con color: la marca ✓/✕ antepuesta lo
+   hace legible sin percepción de color. */
+.d-mj-opt.is-ok{
+  background:linear-gradient(180deg,#2f5cc0,#1c3f8f); border-color:#1c3f8f; color:#fff;
+  box-shadow:0 8px 20px -4px rgba(28,63,143,.6); animation:mj-celebrate .5s ease;
+}
+.d-mj-opt.is-ok::before{ content:"✓ "; }
+.d-mj-opt.is-bad{
+  background:var(--error-soft,#fde8e6); border-color:var(--error,#c0392b); color:var(--error,#c0392b);
+  animation:mj-shake .45s ease;
+}
+.d-mj-opt.is-bad::before{ content:"✕ "; }
+/* "Resuelto": una opción ya acertada queda bloqueada el resto de la
+   partida. Se ve como una tarea tildada, no como un botón roto. */
+.d-mj-opt.is-resuelto{ background:#eef1f7; border-color:#c7cede; color:#8b93a8; cursor:default; box-shadow:none; }
+.d-mj-opt.is-resuelto::before{ content:"✓ "; color:#8b93a8; }
+@keyframes mj-celebrate{
+  0%{ transform:scale(1) rotate(0); }
+  35%{ transform:scale(1.12) rotate(-2deg); }
+  60%{ transform:scale(.97) rotate(1.5deg); }
+  100%{ transform:scale(1) rotate(0); }
+}
+@keyframes mj-shake{
+  0%, 100%{ transform:translateX(0); }
+  20%{ transform:translateX(-6px); }
+  40%{ transform:translateX(5px); }
+  60%{ transform:translateX(-3px); }
+  80%{ transform:translateX(2px); }
+}
+/* Pista tras N segundos sin elegir. Pedido explícito del cliente
+   ("Seguridad alimentaria"): que SÍ quede claro cuál de las resaltadas
+   es la correcta — a propósito distinto del diseño original (§6.39,
+   "nunca delata cuál de las 3 es la correcta"), decisión de producto,
+   no bug. `.is-hint-ok` (una sola, la correcta) suma un ícono 💡 en
+   una insignia propia + pulso celeste; `.is-hint-bad` (las incorrectas
+   del trío) se queda con el pulso ámbar de siempre, sin ícono — dos
+   estados que se leen distinto sin depender solo del color (el ícono
+   es la señal accesible). El curso decide CUÁLES 3 resaltar; este CSS
+   solo decide cómo se ve cada una. */
+.d-mj-opt.is-hint{ animation:mj-hint-pulse 1.1s ease-in-out infinite; }
+.d-mj-opt.is-hint-ok{ animation-name:mj-hint-pulse-ok; }
+.d-mj-opt.is-hint-ok::after{
+  content:"💡"; position:absolute; top:-.55rem; right:-.55rem; z-index:2;
+  width:1.5rem; height:1.5rem; border-radius:50%; font-size:.82rem;
+  display:grid; place-items:center; background:#fff;
+  box-shadow:0 2px 8px -1px rgba(20,30,60,.35), 0 0 0 2px #2f8fd6;
+}
+@keyframes mj-hint-pulse{
+  0%, 100%{ box-shadow:0 1px 0 #fff inset, 0 3px 8px -3px rgba(20,30,60,.18), 0 0 0 0 rgba(240,180,41,.55); }
+  50%{ box-shadow:0 1px 0 #fff inset, 0 3px 8px -3px rgba(20,30,60,.18), 0 0 0 7px rgba(240,180,41,0); }
+}
+@keyframes mj-hint-pulse-ok{
+  0%, 100%{ box-shadow:0 1px 0 #fff inset, 0 3px 8px -3px rgba(20,30,60,.18), 0 0 0 0 rgba(47,143,214,.55); }
+  50%{ box-shadow:0 1px 0 #fff inset, 0 3px 8px -3px rgba(20,30,60,.18), 0 0 0 7px rgba(47,143,214,0); }
+}
+@media (prefers-reduced-motion:reduce){
+  .d-mj-opt.is-ok, .d-mj-opt.is-bad{ animation:none; }
+  .d-mj-opt.is-hint{ animation:none; box-shadow:0 0 0 3px rgba(240,180,41,.6); }
+  .d-mj-opt.is-hint-ok{ box-shadow:0 0 0 3px rgba(47,143,214,.6); }
+}
+
+/* ---- Líneas del mapa ---- El curso las ubica por número de línea. */
+.d-mj-line{ background:#1c3f8f; }
+.d-mj-line--h{ height:2px; align-self:center; }
+.d-mj-line--v{ width:2px; justify-self:center; }
+
+/* ---- Feedback y botón de avance ---- */
+.d-mj-fb{ margin:.9rem 0 0; min-height:0; line-height:1.45; }
+.d-mj-fb:empty{ margin:0; }
+.d-mj-fb.is-ok, .d-mj-fb.is-bad{
+  display:flex; gap:.7rem; align-items:flex-start;
+  padding:.85rem 1rem; border-radius:var(--r-lg); animation:mj-fb-in .3s ease;
+}
+.d-mj-fb.is-ok{ background:#eaf3ec; color:#1e5c2e; font-weight:600; }
+.d-mj-fb.is-bad{ background:#fdf1ef; color:var(--text); }
+.d-mj-fb::before{
+  flex:none; width:1.5rem; height:1.5rem; border-radius:50%;
+  display:grid; place-items:center; color:#fff; font-weight:900; font-size:.85rem; margin-top:.05rem;
+}
+.d-mj-fb.is-ok::before{ content:"✓"; background:#2e7d32; }
+.d-mj-fb.is-bad::before{ content:"i"; background:#8a94a8; font-style:italic; }
+@keyframes mj-fb-in{ from{ opacity:0; transform:translateY(4px); } to{ opacity:1; transform:none; } }
+.d-mj-next{ align-self:center; margin-top:.9rem; display:inline-flex; align-items:center; gap:.5rem; animation:mj-fb-in .3s ease; }
+.d-mj-next::after{ content:"→"; display:inline-block; transition:transform .15s ease; }
+.d-mj-next:hover::after{ transform:translateX(4px); }
+@media (prefers-reduced-motion:reduce){ .d-mj-fb.is-ok, .d-mj-fb.is-bad, .d-mj-next{ animation:none; } }
+
+/* ---- Panel final ----
+   Reusa el arte real del diseñador con las zonas de texto variable
+   borradas (blanco sobre blanco no deja costura) y HTML real encima,
+   posicionado con el MISMO `Motor._initShots` de cualquier hitbox
+   (`[data-place]` para lo no clickeable, `[data-hit]` para el botón).
+   Técnica de §6.19 punto 5. */
+.d-mj-fin > .d-shot{ background:#fff; }
+.d-mj-fin-tit, .d-mj-fin-sub, .d-mj-fin-stat{ position:absolute; text-align:center; }
+.d-mj-fin-tit{
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-title); font-weight:900; color:#1a1a2e;
+  font-size:clamp(1.1rem, 2.6cqw, 1.9rem); line-height:1.18;
+}
+/* `flex-direction:column` es OBLIGATORIO: con `row` (el default) un
+   texto suelto + un <b> se tratan como 2 ítems de flex y quedan lado a
+   lado en vez de uno abajo del otro (bug real, §6.19). */
+.d-mj-fin-sub{
+  display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+  color:#333; font-size:clamp(.72rem, 1.15cqw, .95rem); line-height:1.4;
+}
+.d-mj-fin-sub b{ color:var(--mj-accent); }
+/* `justify-content:flex-start` (no flex-end): el contenido dinámico es
+   más corto que la caja medida sobre el arte original, y anclarlo
+   abajo lo empujaba a pisar el botón que está inmediatamente debajo. */
+.d-mj-fin-stat{ display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:.15rem; }
+.d-mj-fin-stat b{ font-family:var(--font-title); font-weight:900; color:#1a1a2e; font-size:clamp(1rem, 1.9cqw, 1.5rem); line-height:1.15; }
+.d-mj-fin-stat span{ color:#333; font-size:clamp(.66rem, 1cqw, .84rem); line-height:1.25; }
+/* La píldora del botón viene DIBUJADA en el arte con su texto, así que
+   esto es una hitbox invisible, no un botón pintado — pintarle fondo
+   tapaba el texto del diseñador (bug real). Solo el aro de foco/hover,
+   que el arte no puede dar. */
+.d-shot-hit.d-mj-fin-btn{ background:transparent; border-radius:999px; }
+.d-shot-hit.d-mj-fin-btn:hover{ box-shadow:0 0 0 4px color-mix(in srgb, var(--cat-strong) 45%, transparent); }
+
+/* Variante PINTADA del mismo botón (kit v1.9.21).
+   Cuándo usar cuál — no es estética, depende del arte:
+   · `.d-mj-fin-btn` (arriba): el arte dibuja el botón con el texto
+     CORRECTO para ese resultado. Hitbox transparente encima; pintarle
+     fondo taparía el texto del diseñador (bug real, §6.26 punto 2).
+   · `.d-mj-fin-cta` (acá): el texto del botón DEPENDE del resultado
+     pero el arte dibuja uno solo — caso real de "Seguridad
+     alimentaria": las dos artes de cierre traen "Reintentar", también
+     la de aprobado. Entonces el botón se repinta entero con la misma
+     forma, tamaño y color que el dibujado, cubriéndolo. NO se
+     blanquea la zona en el arte: un rectángulo blanco sobre una
+     píldora redondeada deja las 4 esquinas asomando (bug real, §6.22
+     punto 5), y acá además el botón cae justo sobre el borde entre el
+     fondo blanco y el piso gris del dibujo, así que no hay un color
+     de fondo único con el que taparlo.
+   Los colores salen del ARTE, así que los pone el curso con
+   `--mj-cta-bg`/`--mj-cta-border`; el default usa los tokens de
+   categoría para que la clase sirva sin configurar nada.
+   El `:hover` va con selector combinado a propósito: `.d-shot-hit`
+   define su propio `background` en hover con la misma especificidad, y
+   ahí gana el que esté más abajo en el archivo final, no el que tenga
+   más sentido (§6.14 punto 3). */
+.d-shot-hit.d-mj-fin-cta{
+  --mj-cta-bg: var(--cat);
+  --mj-cta-border: var(--cat-strong);
+  display:flex; align-items:center; justify-content:center;
+  background: var(--mj-cta-bg);
+  border: clamp(1px, .13cqw, 3px) solid var(--mj-cta-border);
+  border-radius: 999px;
+  color:#fff; font-family: var(--font-title); font-weight:900;
+  font-size: clamp(.72rem, 1.45cqw, 1.3rem); line-height:1;
+  transition: filter .15s ease, transform .15s ease;
+}
+.d-shot-hit.d-mj-fin-cta:hover{
+  background: var(--mj-cta-bg); filter: brightness(1.07); transform: translateY(-1px);
+}
+.d-shot-hit.d-mj-fin-cta:active{ transform: translateY(0); }
+@media (prefers-reduced-motion: reduce){
+  .d-shot-hit.d-mj-fin-cta:hover{ transform: none; }
+}
+
+/* ---- Repaso (pop-up real entre terminar la partida y ver el resultado)
+   Pedido explícito ("Seguridad alimentaria"): mejor devolución antes
+   del festejo/reintento — ver `mostrarRepaso()`/`irA()` en curso.js
+   para la lógica de contenido (qué mostrar al ganar vs. al perder).
+   Acá solo la cáscara visual, 100% genérica: una lista de tarjetas
+   ✓/✕ con ícono, título y explicación — reusable por cualquier
+   minijuego futuro de "encontrar N cosas" que quiera la misma
+   devolución.
+
+   kit-base v1.9.41 — CAMBIO DE MECANISMO, no solo de layout: era una
+   capa más del `[data-layers]` del minijuego (`[data-panel="mj-
+   repaso"]`, pantalla completa, cerrada a mano por un botón que
+   saltaba a la capa "fin"). Pasa a ser un `[data-popup]` REAL, mismo
+   contrato que cualquier otro pop-up del kit (`.modal`/`.modal-back`/
+   `.modal-card`/`.modal-bd`, `[data-popup-close]`) — el motor
+   (`showPopup`/`closePopup`, spec-motor-slides.md §6) YA sabe abrirlo,
+   atrapar foco, y cerrarlo por las 4 vías genéricas (botón/✕/Esc/
+   backdrop), así que esto NO necesita JS nuevo del kit: el curso
+   escucha `popupclose` en vez de cablear un handler de clic propio.
+   Contrato de marcado esperado (curso.js arma el contenido real):
+     <div class="modal" data-popup="mj-repaso" role="dialog" aria-modal="true">
+       <div class="modal-back" data-popup-close></div>
+       <div class="modal-card modal-card--mj-repaso">
+         <button class="modal-x modal-x--mj-repaso" data-popup-close aria-label="Cerrar">✕</button>
+         <div class="modal-bd d-mj-repaso">
+           <span class="d-mj-repaso-kicker">…</span>
+           <h3 class="d-mj-repaso-title">…</h3>
+           <p class="d-mj-repaso-sub">…</p>
+           <ul class="d-mj-repaso-list">…</ul>
+           <button class="btn btn-cat d-mj-repaso-cta" data-popup-close>Ver resultado</button>
+         </div>
+       </div>
+     </div>
+   Sin `.modal-hd`, a propósito (mismo criterio que el pop-up de video,
+   §6.12 punto 5: "la barra superior es opcional, no obligatoria") — la
+   píldora + título YA tienen su propia identidad de color
+   (`--cat`/`--cat-ink`, igual que el resto del minijuego); forzar el
+   degradado de marca fijo de `.modal-hd` encima sería un segundo
+   lenguaje de color en el mismo pop-up. El cierre es un `.modal-x`
+   flotante (`.modal-x--mj-repaso`, mismo patrón que `.modal-x--video`
+   en coto-media.css — el `.modal-x` base está pensado para leerse
+   sobre un `.modal-hd` de color, no sobre la tarjeta blanca).
+
+   La lista pasa de 1 a 2 COLUMNAS (antes: 1 columna, texto largo por
+   ítem, más alto que la pantalla en la mayoría de los tamaños — la
+   razón real por la que hacía falta scroll). "Sin scroll" resultó ser
+   2 problemas de layout distintos, no uno — el mismo contenido se
+   desborda por ANCHO angosto (mobile portrait) o por ALTO bajo
+   (teléfono en horizontal, mismo ancho de sobra que desktop pero la
+   mitad de alto) — una sola regla de compactación cubre los dos casos
+   con un `@media` de dos condiciones (ver el bloque de abajo). */
+.modal-card--mj-repaso{ width:min(720px,100%); }
+.modal-x--mj-repaso{
+  background: color-mix(in srgb, var(--cat-ink) 82%, transparent); color:#fff;
+}
+.modal-x--mj-repaso:hover{ background: var(--cat-ink); }
+.d-mj-repaso{
+  display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+  text-align:center;
+  /* `.modal-bd` (coto-base.css) ya trae `gap:1rem` en su propio
+     flex-column — este componente maneja el espaciado con
+     `margin-bottom` por hijo (heredado de cuando era un panel
+     standalone). Sin este `gap:0`, quedarían los dos sumados: el gap
+     del padre MÁS el margin de cada hijo, doble espacio. */
+  gap:0;
+}
+.d-mj-repaso-kicker{
+  display:inline-flex; align-items:center; gap:.5rem; padding:.35rem .9rem;
+  border-radius:999px;
+  background:linear-gradient(180deg, color-mix(in srgb,var(--cat) 22%,#fff), color-mix(in srgb,var(--cat) 10%,#fff));
+  color:var(--cat-ink); font-weight:800; font-size:.78rem; box-shadow:0 1px 0 #fff inset;
+  margin-bottom:.7rem; flex:none;
+}
+.d-mj-repaso-title{
+  font-family:var(--font-title); font-weight:900; color:var(--brand-navy);
+  font-size:clamp(1.15rem, 2.4cqw, 1.55rem); margin:0 0 .3rem; flex:none;
+}
+.d-mj-repaso-sub{
+  color:var(--text-soft); font-size:.86rem; margin:0 0 1.1rem; max-width:34rem; flex:none;
+}
+.d-mj-repaso-list{
+  list-style:none; margin:0 0 1.2rem; padding:0;
+  display:grid; grid-template-columns:1fr 1fr; gap:.6rem .8rem;
+  width:100%; text-align:left;
+}
+.d-mj-repaso-item{
+  display:flex; gap:.75rem; align-items:flex-start; padding:.7rem .9rem;
+  background:linear-gradient(180deg,#fff 0%,#fbfbfe 100%); border:1.5px solid var(--line);
+  border-radius:14px; box-shadow:0 1px 0 #fff inset, 0 2px 6px -3px rgba(20,30,60,.15);
+}
+.d-mj-repaso-ic{
+  flex:none; width:1.7rem; height:1.7rem; border-radius:50%; display:grid; place-items:center;
+  font-size:.85rem; font-weight:900; color:#fff; margin-top:.05rem;
+}
+.d-mj-repaso-item.is-ok .d-mj-repaso-ic{ background:linear-gradient(180deg,#3fae55,#2e7d32); box-shadow:0 3px 8px -2px rgba(46,125,50,.5); }
+.d-mj-repaso-item.is-bad .d-mj-repaso-ic{ background:linear-gradient(180deg,#e06767,#c94444); box-shadow:0 3px 8px -2px rgba(201,68,68,.5); }
+.d-mj-repaso-txt b{ display:block; color:var(--brand-navy); font-size:.88rem; margin-bottom:.12rem; }
+.d-mj-repaso-txt p{ margin:0; color:var(--text-soft); font-size:.78rem; line-height:1.4; }
+.d-mj-repaso-cta{ flex:none; margin-top:.2rem; }
+/* Compactación: ancho angosto (mobile portrait) O alto bajo (teléfono
+   horizontal) — las dos condiciones separadas por coma, cualquiera de
+   las dos alcanza para disparar el mismo escalón. 1 columna cuando el
+   ancho aprieta (2 columnas de tarjeta con texto real no entran en
+   <640px sin quedar ilegibles); en el caso de alto bajo la grilla
+   sigue en 2 columnas (el ancho sobra en horizontal) pero se compacta
+   el aire interno — son dos aprietes de ejes distintos, no el mismo
+   ajuste aplicado dos veces. */
+@media (max-width:640px){
+  .d-mj-repaso-list{ grid-template-columns:1fr; }
+}
+@media (max-width:640px), (max-height:480px){
+  .d-mj-repaso{ padding:.9rem 1.1rem .8rem; }
+  .d-mj-repaso-kicker{ margin-bottom:.4rem; padding:.25rem .7rem; font-size:.72rem; }
+  .d-mj-repaso-title{ font-size:1.05rem; margin-bottom:.15rem; }
+  .d-mj-repaso-sub{ font-size:.8rem; margin-bottom:.65rem; }
+  .d-mj-repaso-list{ gap:.4rem .5rem; margin-bottom:.7rem; }
+  .d-mj-repaso-item{ padding:.5rem .65rem; gap:.55rem; }
+  .d-mj-repaso-ic{ width:1.4rem; height:1.4rem; font-size:.72rem; }
+  .d-mj-repaso-txt b{ font-size:.8rem; }
+  .d-mj-repaso-txt p{ font-size:.72rem; }
+}
+/* Segunda vuelta de aprietes, SOLO por alto bajo (no por ancho angosto
+   — mobile portrait tiene alto de sobra, no hace falta apretarlo tanto
+   como un teléfono en horizontal, donde el alto es el eje que aprieta
+   de verdad). Medido con Playwright a 844×390 (el caso real más
+   angosto de alto de la propia suite de mobile del kit, §6.55 punto 4):
+   con solo el escalón de arriba sobraban ~57px sobre los 88vh
+   disponibles del `.modal-card` — no un ajuste cosmético, hacía falta
+   otro escalón completo. */
+@media (max-height:480px){
+  .d-mj-repaso{ padding:.6rem 1rem .6rem; }
+  .d-mj-repaso-kicker{ margin-bottom:.25rem; padding:.18rem .6rem; font-size:.66rem; }
+  .d-mj-repaso-title{ font-size:.92rem; margin-bottom:.1rem; }
+  .d-mj-repaso-sub{ font-size:.72rem; margin-bottom:.4rem; }
+  .d-mj-repaso-list{ gap:.3rem .4rem; margin-bottom:.45rem; }
+  .d-mj-repaso-item{ padding:.35rem .5rem; gap:.4rem; border-radius:10px; }
+  .d-mj-repaso-ic{ width:1.15rem; height:1.15rem; font-size:.62rem; margin-top:0; }
+  .d-mj-repaso-txt b{ font-size:.72rem; margin-bottom:.02rem; }
+  .d-mj-repaso-txt p{ font-size:.64rem; line-height:1.25; }
+  .d-mj-repaso-cta{ padding:.45rem 1.1rem; font-size:.78rem; margin-top:0; }
+}
+
+/* ---- Escalera responsive ----
+   Regla aprendida a fuerza de vueltas (§6.42 punto 2): en mobile NO se
+   reemplaza la disposición, se compacta. Las columnas son `fr`, se
+   angostan solas; lo único que cambia es el aire interno. */
+@media (max-width:1100px){
+  .d-mj{ --mj-track:.5rem; }
+  .d-mj-opt{ padding:.5rem .6rem; font-size:.8rem; }
+  .d-mj-consigna{ margin-bottom:.7rem; font-size:.94rem; }
+  .d-mj-stats{ margin-bottom:1.2rem; gap:.5rem; }
+  .d-mj-stat{ padding:.5rem .55rem; }
+  .d-mj-stat-lbl{ font-size:.6rem; }
+  .d-mj-stat b{ font-size:1.15rem; }
+  .d-mj-trophy{ font-size:1em; }
+  .d-mj-stat--pts b{ gap:.2rem; }
+  .d-mj-heart{ width:1.05rem; height:.92rem; }
+  .d-mj-lives{ gap:.15rem; }
+}
+/* BUG REAL (auditoría "Seguridad alimentaria" a partir de un bug real
+   encontrado en "Uso de Sucursales 3 - NOA"): el comentario de la
+   "escalera responsive" de arriba decía que en mobile alcanzaba con
+   angostar las columnas `fr` — probado en un ancho de teléfono REAL
+   (375-414px, no la ventana de escritorio redimensionada) el grid de
+   2 columnas se comprimía a ~135-155px por columna: la imagen quedaba
+   minúscula y cada píldora del banco de opciones bajaba a ~50px de
+   ancho, texto envuelto en 3-4 líneas, ilegible.
+   `display:grid` → `flex-direction:column` para apilar en vez de
+   comprimir. Dos trampas reales al hacer ese cambio (las dos costaron
+   una vuelta entera en NOA):
+   1) `.d-mj-escena-col` ya trae `min-height:0` (línea 68-70, puesto
+      para el grid: sin eso el ítem se estiraba al alto intrínseco).
+      En columna, ESE MISMO `min-height:0` + el `flex-shrink:1` por
+      default de cualquier hijo flex lo vuelve el candidato a comerse
+      TODO el faltante si `.d-mj-choose` no entra — la imagen colapsa
+      a 0px, no achica. `flex-shrink:0` acá lo fija a su alto real.
+   2) `.d-mj-escena` trae `max-height:100%` (línea 85), pensado para
+      una fila de grid con alto ya resuelto. En columna esa `%` no
+      tiene una base fiable — se saca; el `aspect-ratio` ya dimensiona
+      la imagen solo, no hace falta.
+   `.d-mj-play` suma `overflow-y:auto` (mismo patrón que el resumen
+   del cierre, `coto-cierre.css`, `.d-cierre-summary`) porque `.d-stage`
+   recorta con `overflow:hidden` más arriba en la cadena — sin esto,
+   lo que no entra en un viewport bajo (alto ≤700px) queda CORTADO,
+   no solo apretado: no hay forma de llegar a las últimas opciones. */
+@media (max-width:600px){
+  .d-mj{ --mj-track:1rem; }
+  .d-mj-play{ min-height:0; overflow-y:auto; overflow-x:hidden; }
+  .d-mj-body{
+    display:flex; flex-direction:column; align-items:stretch;
+    gap:1rem;
+  }
+  .d-mj-escena-col{ flex-shrink:0; align-items:center; }
+  .d-mj-escena{ max-height:none; width:min(100%, 60vh); }
+  .d-mj-kicker{ height:clamp(2.6rem, 8cqh, 3.6rem); }
+  .d-mj-stats{ gap:.4rem; margin-bottom:.7rem; }
+  .d-mj-stat{ padding:.4rem .5rem; }
+  .d-mj-stat-lbl{ font-size:.62rem; }
+  .d-mj-stat b{ font-size:1rem; }
+  .d-mj-consigna{ font-size:.88rem; margin-bottom:.7rem; }
+  .d-mj-opt{ font-size:.72rem; padding:.55rem .5rem; }
+}
+@media (max-height:760px){
+  .d-mj-opt{ font-size:.8rem; padding:.55rem .7rem; }
+  .d-mj-consigna{ font-size:.94rem; margin-bottom:.7rem; }
+  .d-mj-fb{ min-height:2.6em; }
+}

@@ -1,0 +1,391 @@
+/* ============================================================
+   coto-shot-stage.css · Lienzo de diapositivas-captura (.d-shot)
+   kit-base v1.7 · Área Aprendizaje (COTO) — genérico, sin contenido
+   de curso. Copiar tal cual a cada curso nuevo, sin editar.
+   ------------------------------------------------------------
+   Reemplaza el bloque equivalente que hasta ahora se escribía a mano
+   en el `assets.css`/`diapositivas.css` de CADA curso (duplicado,
+   con el mismo bug/fix repetido más de una vez — ver CLAUDE.md §2.7).
+   Requiere `.d-stage { container-type: size; }` (ver
+   coto-player-chrome.css o el propio CSS del curso).
+
+   ⚠️ REQUIERE que el PDF del curso se haya diseñado con el margen de
+   seguridad NUEVO (ver CLAUDE.md §2.9): 8% arriba/abajo (sin cambio)
+   + 13% a cada costado (nuevo, protege el recorte lateral en tablets
+   tipo iPad). Cursos diseñados con el margen VIEJO
+   (8% parejo en las 4 direcciones, ej. "Surtido sin venta") NO deben
+   usar este archivo — el recorte que habilita en el rango tablet
+   caería sobre contenido real, no sobre margen vacío. Para esos
+   cursos, seguir usando el bloque estático de solo-lienzo-fijo (sin
+   el @container de abajo) — ver el historial de "Surtido sin venta"
+   en CLAUDE.md §6.8/§2.9 para el razonamiento completo.
+
+   CONTRATO — aplica a los 3 patrones de diapo-captura del curso
+   (adaptar los selectores si el curso usa nombres de clase distintos):
+     .d-shot-slide--bg-layered > .d-shot
+     .d-shot-slide--bg-video > .d-shot
+     .slide-cierre .d-cierre-shot .d-shot
+
+   Además trae `.d-rotate-notice` (kit-base v1.9.39) — aviso "Girá tu
+   dispositivo" para portrait angosto, ver su bloque más abajo para el
+   markup exacto que hay que agregar dentro de `<main class="d-stage">`.
+   ============================================================ */
+
+/* ============================================================
+   BASE DEL ESCENARIO Y DE LAS DIAPOSITIVAS
+   ------------------------------------------------------------
+   Faltaba en el kit: el resto de este archivo da por sentado
+   `container-type: size` sobre .d-stage (sin eso las @container de más
+   abajo no evalúan nunca) y `position:absolute` en .slide, pero ningún
+   archivo del kit los definía — cada curso los reescribía a mano. Sin
+   esto no hay posicionamiento ni transición de diapositivas.
+
+   No hace falta `.slide[hidden]{display:none}`: coto-player-chrome.css
+   ya trae `[hidden]{display:none!important}` global.
+
+   Las clases anim-l/anim-r las pone motor-slides.js (Motor.prototype.go)
+   sobre la diapositiva que ENTRA, nunca sobre la que sale — verificado
+   en el código: el bloque está dentro de un `if (active)`, y elige
+   `k >= prev ? 'anim-r' : 'anim-l'` (avanzar → anim-r, retroceder →
+   anim-l). Por eso alcanza con animar la entrada.
+
+   El @media de prefers-reduced-motion NO es redundante con el chequeo
+   que ya hace el motor: `prefersReduced` se evalúa UNA vez al cargar el
+   script, así que si el alumno cambia la preferencia del sistema con el
+   curso abierto, el JS no se entera y el CSS sí.
+
+   Magnitud/duración ajustadas en kit-base v1.9.44 (CLAUDE.md §6.65):
+   la versión original (2.5% translateX, 320ms, sin scale) SÍ dispara
+   en cada `go()` — verificado con Playwright, opacity capturada a
+   mitad de la transición — pero resultó demasiado sutil para
+   registrarse como "una animación" en el uso real (reporte del
+   cliente: "las diapos aparecen de golpe sin animación"). No es un
+   mecanismo nuevo, es el mismo tuneado: 5% translateX (el doble),
+   420ms, más un scale sutil (.985→1, "asentamiento") — sigue siendo
+   "prolijo y sutil", sin overshoot ni rebote, solo más perceptible.
+   ============================================================ */
+.d-stage {
+  container-type: size;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.slide {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.slide.anim-r { animation: d-slide-in-r .42s cubic-bezier(.22, .61, .36, 1); }
+.slide.anim-l { animation: d-slide-in-l .42s cubic-bezier(.22, .61, .36, 1); }
+@keyframes d-slide-in-r { from { opacity: 0; transform: translateX(5%) scale(.985); } to { opacity: 1; transform: none; } }
+@keyframes d-slide-in-l { from { opacity: 0; transform: translateX(-5%) scale(.985); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .slide.anim-r, .slide.anim-l { animation: none; }
+}
+
+/* ---- Fallback / ultrawide de verdad (aspect-ratio > 2.2) ----
+   Lienzo fijo 2:1 exacto, cero recorte garantizado — igual que la
+   versión anterior sin este archivo. El doble min() con cqw/cqh (a
+   diferencia de %/vw/vh, SÍ se pueden combinar en el mismo calc())
+   calcula el ancho y el alto tope respetando SIEMPRE la proporción
+   2:1, sin hardcodear el alto del header/footer en ningún número
+   mágico (ver CLAUDE.md §2.7 para el bug real que esto corrige:
+   `width:100%;height:100%` estiraba/recortaba una cantidad DISTINTA
+   según la forma de cada ventana). Esta es la regla POR DEFECTO (sin
+   @container); el rango 1.33-2.2 de abajo la pisa con "llenar
+   completo" — así que en la práctica esta rama fija solo se ve en
+   ultrawide real (21:9 y más angosto verticalmente todavía, fuera de
+   rango incluso hacia abajo). Ver CLAUDE.md §6.31 para por qué el
+   límite subió de 1.9 a 2.2. */
+.d-shot-slide--bg-layered > .d-shot,
+.d-shot-slide--bg-video > .d-shot,
+.slide-cierre .d-cierre-shot .d-shot {
+  position: relative;
+  aspect-ratio: 2 / 1;
+  width: min(100cqw, 100cqh * 2 / 1);
+  height: min(100cqh, 100cqw * 1 / 2);
+  max-width: none; max-height: none; margin: auto;
+  overflow: hidden;
+}
+
+/* ---- Ken Burns sutil en diapositivas-captura íntegras (kit-base v1.9.44) ----
+   Zoom lento y continuo mientras la diapositiva está activa — mismo
+   pedido de "dinamismo cinematográfico" que motivó el tuneo de
+   anim-r/anim-l de arriba. Escala el CONTENEDOR `.d-shot` (`[data-shot]`)
+   entero, no solo `.d-shot-img`: ese contenedor también es el padre de
+   los `[data-hit]`/`[data-place]` posicionados en % contra la imagen
+   (§2.3) — si solo la imagen escalara, cada hitbox/hotspot quedaría
+   corrido del elemento real que señala en cuanto el zoom avanzara.
+   Escalando `.d-shot` completo, imagen y overlays se mueven como una
+   sola unidad y el registro se mantiene exacto en todo momento.
+   `.d-stage` ya tiene `overflow:hidden` (arriba en este archivo): el
+   contenedor puede "pintarse" más grande que su propia caja sin que
+   nada más del layout se mueva (transform no afecta el flujo), y el
+   recorte real ocurre ahí, no acá.
+
+   Acotado A PROPÓSITO a `.slide.d-shot-slide--bg-layered.is-active`
+   (la SECTION de la diapositiva, no cualquier `.d-shot` suelto): las
+   fichas/pop-ups reusan el mismo patrón `.d-shot-slide--bg-layered >
+   .d-shot` puesto en un `[data-panel]` (CLAUDE.md §6.20), nunca en un
+   `.slide` — así que ese selector no los alcanza, y tampoco a
+   `.modal-card--shot`/`.modal-card--art` (otros contenedores) ni a las
+   diapos de video de fondo (`--bg-video`, otra clase). `alternate
+   infinite` mantiene el último frame calculado en todo momento,
+   incluida la transición de salida (`anim-l`/`anim-r` de la diapo
+   siguiente tapa el corte).
+
+   ⚠️ `:not(:has([data-hit], [data-place]))` — bug real encontrado con
+   la suite de tests, no solo estético: escalar `.d-shot` completo
+   (necesario para que imagen y overlays no se desalineen, ver arriba)
+   pone en movimiento continuo a CUALQUIER `[data-hit]`/`[data-place]`
+   que viva adentro. Para una hitbox de clic es un blanco que nunca
+   deja de moverse (Playwright lo reporta literal como "element is not
+   stable" al intentar interactuar — mismo problema para un alumno de
+   carne y hueso); para la barra de pasos arrastrable de "Rotación"
+   (§6.51) es peor: el cálculo de arrastre lee `getBoundingClientRect()`
+   de un contenedor cuyo tamaño está cambiando bajo el dedo en cada
+   frame. Ken Burns queda automáticamente limitado a diapositivas de
+   "captura íntegra" SIN overlays interactivos ni decorativos
+   posicionados (el caso que además es el default recomendado desde
+   CLAUDE.md §2.8/§3 punto 3) — cero atributo nuevo que el curso tenga
+   que acordarse de poner, ninguna diapositiva con hitboxes pierde
+   precisión de clic. Requiere `:has()` (soportado por cualquier
+   navegador que ya hace falta para las `@container` de arriba en este
+   mismo archivo, en uso desde kit-base v1.3 — mismo piso de
+   compatibilidad, nada nuevo que el kit no pida ya). */
+.slide.d-shot-slide--bg-layered.is-active > .d-shot:not(:has([data-hit], [data-place])) {
+  animation: d-ken-burns 18s ease-in-out infinite alternate;
+}
+@keyframes d-ken-burns {
+  from { transform: scale(1); }
+  to { transform: scale(1.06); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .slide.d-shot-slide--bg-layered.is-active > .d-shot { animation: none; }
+}
+
+/* ---- .d-shot dentro de un pop-up (recorte de la tarjeta del PDF) ----
+   kit-base v1.9.7, vuelve. Mismo patrón .d-shot-slide--bg-layered de
+   siempre (captura + [data-hit]/[data-place] posicionados por
+   _initShots), pero colgado de un `.modal-card--shot` real (con
+   `.modal-back` clickeable para cerrar) en vez de un `<section
+   data-slide>` o una capa dentro de la diapositiva — pedido final del
+   cliente (CLAUDE.md §6.22 punto 3): la ficha tiene que "vivir
+   separada del fondo" para poder cerrarse tocando afuera, algo que la
+   versión de capa (§6.20/§6.21) no podía dar porque no era un pop-up
+   real. El `.webp` es SOLO la tarjeta (sin el fondo difuminado del
+   PDF horneado) — con eso, el único blur que se ve es el del propio
+   `.modal-back` del pop-up, sin duplicar. Proporción real del recorte
+   1980×1097 ≈ 1.805:1 (no 2:1): el `aspect-ratio` tiene que matchear
+   exacto o `object-fit:cover` recorta el arte para forzarlo al cuadro
+   equivocado. `155.6vh` = `88vh × 1902/1076` (la proporción real del
+   recorte) — así el ancho nunca fuerza una altura mayor a la que el
+   viewport permite. */
+/* La proporción del recorte la fija CADA CURSO con --shot-card-ratio
+   (ancho/alto del .webp que entregó el diseñador): el kit no puede
+   saberla porque cambia con el arte. Tiene que matchear exacto o
+   `object-fit:cover` recorta el arte para forzarlo al cuadro
+   equivocado. El `vh` sale del mismo número, así el ancho nunca
+   fuerza una altura mayor a la que el viewport permite. */
+.modal-card--shot {
+  --shot-card-ratio: 1.8;
+  width: min(94vw, calc(88vh * var(--shot-card-ratio)));
+  padding: 0; overflow: hidden;
+}
+.modal-card--shot > .d-shot {
+  position: relative; width: 100%; display: block;
+  aspect-ratio: var(--shot-card-ratio);
+}
+
+/* ---- .modal-card--art — el pop-up ES el archivo del diseñador ----
+   (kit-base v1.9.21, primer uso: "Seguridad alimentaria")
+
+   Variante hermana de `.modal-card--shot` para cuando el diseñador
+   exporta cada pop-up como PNG/WebP **con alfa real** (no como recorte
+   rectangular de una página del PDF). Dos diferencias que NO son de
+   gusto:
+
+   1 · La silueta no es un rectángulo. En estos pop-ups el ícono
+       redondo sobresale por ARRIBA de la tarjeta: un `background` y un
+       `border-radius` de `.modal-card` se dibujarían como una caja
+       blanca detrás del círculo, delatando el recorte. Por eso acá la
+       tarjeta es transparente y sin borde: lo único que se ve es el
+       arte.
+   2 · La sombra ya viene en el alfa del archivo. `.modal-card` aplica
+       `var(--shadow-pop)` a CUALQUIER pop-up; sumada a la del PNG dan
+       las dos sombras desalineadas de CLAUDE.md §6.28 — el "se ve mal"
+       que costó 6 vueltas de feedback en el curso anterior. Con
+       `box-shadow:none` queda una sola, la que dibujó el diseñador.
+
+   `object-fit:contain` (no el `cover` por defecto de `.d-shot-img`):
+   acá la imagen ES el pop-up entero, recortarla no tiene sentido.
+   Cada pop-up declara su propia proporción con `--shot-card-ratio`
+   (ancho/alto del archivo), igual que `.modal-card--shot`. */
+.modal-card--art {
+  --shot-card-ratio: 1.05;
+  width: min(55vw, 580px, calc(90vh * var(--shot-card-ratio)));
+  max-width: none; max-height: none;
+  padding: 0; overflow: visible;
+  background: transparent; border: 0; border-radius: 0; box-shadow: none;
+}
+.modal-card--art > .d-shot {
+  position: relative; width: 100%; display: block;
+  aspect-ratio: var(--shot-card-ratio);
+}
+.modal-card--art .d-shot-img { object-fit: contain; background: transparent; }
+
+/* ---- Rango tablet/desktop (1.33 ≤ aspect-ratio ≤ 2.2) ----
+   Entre el 4:3 de un iPad (1.33) y bastante más allá de 2:1, el
+   lienzo pasa a llenar el frame COMPLETO (sin letterbox) — el recorte
+   que introduce `object-fit:cover` sobre la imagen (que sigue siendo
+   2:1 real) cae siempre DENTRO del margen de seguridad de 13% por
+   costado que ya sabemos vacío por diseño. Resultado: en tablets Y en
+   la enorme mayoría de laptops/monitores de escritorio, el curso se ve
+   a pantalla completa (sin franjas vacías) sin arriesgar contenido real.
+   ⚠️ BUG REAL (CLAUDE.md §6.31): el límite de arriba estaba en 1.9,
+   pensado como "cerca de 2:1, deja un margen chico y tolerable" — pero
+   medido de verdad contra el `.d-stage` real (ancho / (alto − header −
+   footer, ~120px fijo)), CASI NINGUNA resolución 16:9 común cae cerca
+   de 2:1: 1366×768 (la resolución de laptop MÁS usada en el mundo) da
+   ≈2.11, 1600×900 ≈2.05, 1280×720 ≈2.13, 1536×864 ≈2.07 — todas por
+   ENCIMA de 1.9, así que caían en la rama de lienzo fijo con letterbox
+   lateral real y visible (30-45px de cada lado en 1366×768), no
+   "chico y tolerable". Solo 1920×1080 exacto da 2:1 justo. Subir el
+   techo a 2.2 cubre 16:9 completo (hasta ~1280×720) y deja SOLO
+   ultrawide de verdad (21:9 ≈2.33+) en la rama de lienzo fijo, que es
+   donde sí corresponde un letterbox real (recortar tanto ancho excede
+   el margen de seguridad).
+   ⚠️ El límite de abajo es 1.5, NO la proporción cruda del dispositivo
+   (un iPad 4:3 "es" 1.33, pero después de restar el alto fijo del
+   header+footer (~120px) del área real de la diapositiva, la
+   proporción que efectivamente ve este @container en un iPad
+   landscape real (viewport CSS 1024×768) es ≈1.58, y en un iPad Pro
+   landscape (1366×1024) ≈1.51 — más angosto el dispositivo NO implica
+   proporcionalmente más angosto el lienzo, porque el margen fijo de
+   chrome pesa distinto según el alto total disponible. Medir siempre
+   la proporción del `.d-stage` real (ancho / (alto − header − footer)),
+   nunca la del dispositivo/viewport completo — es el error que se
+   cometió en la 1ª pasada de este cálculo (ver CLAUDE.md §6.8/§2.9).
+   Por debajo de 1.5 (tablets más angostas de lo protegido, o
+   verticales — fuera de alcance, el curso es de uso horizontal
+   únicamente) NO hay regla acá: cae en la regla de arriba (lienzo
+   fijo, letterbox grande) por default, la opción segura para una
+   proporción no protegida por el margen de diseño. */
+@container (min-aspect-ratio: 1.5) and (max-aspect-ratio: 2.2) {
+  .d-shot-slide--bg-layered > .d-shot,
+  .d-shot-slide--bg-video > .d-shot,
+  .slide-cierre .d-cierre-shot .d-shot {
+    aspect-ratio: auto;
+    width: 100cqw;
+    height: 100cqh;
+  }
+}
+
+/* ---- Aviso "Girá tu dispositivo" para portrait angosto (kit-base
+   v1.9.39) ----
+   Resuelve la limitación que había quedado documentada sin resolver
+   en CLAUDE.md §6.56 ("no es un bug de código, es una decisión de
+   producto pendiente") — con el pedido explícito del cliente de que
+   el curso sea sólido en CUALQUIER dispositivo (CLAUDE.md §6.10.1
+   punto 4), dejarlo sin resolver ya no alcanza.
+
+   Por debajo de `aspect-ratio:1` el `.d-stage` es más ALTO que ancho
+   — portrait de verdad, no solo una tablet angosta en horizontal (ESE
+   caso ya lo cubre el lienzo fijo de arriba con un letterbox
+   razonable). Ahí el lienzo 2:1 letterboxeado queda como una franja
+   mínima, prácticamente ilegible — en vez de mostrar ESO, se cubre
+   con un aviso claro: girá el dispositivo, acá no hay nada roto.
+
+   No es una restricción nueva: el cliente ya había limitado el curso
+   a uso horizontal en tablets (§6.8) — esto solo lo COMUNICA en vez
+   de dejar que se vea como un layout roto sin explicación.
+
+   Markup (agregar como PRIMER hijo de `<main class="d-stage">`, antes
+   de las `<section class="slide">` — necesita que `.d-stage` sea el
+   `position:relative` que ya es):
+     <div class="d-rotate-notice" aria-hidden="true">
+       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+         <rect x="7" y="2" width="10" height="16" rx="2"/>
+         <path d="M12 15h.01"/>
+         <path d="M20 9a8 8 0 0 1-1.5 7"/>
+         <path d="M20 5v4h-4"/>
+       </svg>
+       <b>Girá tu dispositivo</b>
+       <span>Este curso se ve mejor en horizontal.</span>
+     </div>
+   `aria-hidden`: es un affordance puramente visual para quien ve un
+   layout apretado — un lector de pantalla no percibe proporción de
+   pantalla, así que no aporta nada anunciarlo. */
+.d-rotate-notice { display: none; }
+@container (max-aspect-ratio: 1) {
+  .d-rotate-notice {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: .9rem; position: absolute; inset: 0; z-index: 5;
+    background: var(--bg); color: var(--text); text-align: center;
+    padding: 2rem 1.5rem;
+  }
+  .d-rotate-notice svg { width: 56px; height: 56px; color: var(--cat-strong); animation: d-rotate-hint 1.8s ease-in-out infinite; }
+  .d-rotate-notice b { font-family: var(--font-title); font-weight: 900; font-size: 1.1rem; color: var(--text); }
+  .d-rotate-notice span { font-size: .9rem; color: var(--text-soft); max-width: 26ch; }
+}
+@keyframes d-rotate-hint { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-90deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .d-rotate-notice svg { animation: none; }
+}
+
+/* ---- Hitboxes sobre la captura (.d-shot-hit) ----
+   kit-base v1.7. Pareja CSS de `Motor.prototype._initShots()`
+   (motor-slides.js), que hasta ahora estaba SOLO del lado JS: el motor
+   calculaba y aplicaba `left/top/width/height` en % a cada
+   `[data-hit]`, pero las reglas que hacen que eso funcione
+   (`position:absolute`, el botón invisible, el aro de foco) vivían
+   copiadas a mano en el `diapositivas.css` de cada curso. Mismo tipo
+   de hueco que ya se tapó en v1.4 (`coto-player-bottom.css`) y v1.6
+   (`coto-fx.css`): un archivo del kit que asume clases que el kit no
+   define. De hecho `coto-player-bottom.css` ya usaba
+   `.d-shot-hit.d-nudge` sin que `.d-shot-hit` existiera acá.
+
+   El hitbox es un botón REAL (con texto accesible en `.sr-only`), no
+   un div: tiene que ser navegable por teclado y anunciable por un
+   lector de pantalla (CLAUDE.md §3.6). Por eso `:focus-visible` con
+   aro visible es obligatorio — sin eso, el recorrido por teclado que
+   exige `keyboard-a11y.mjs` queda invisible. */
+.d-shot-hit {
+  position: absolute; border: none; background: transparent; cursor: pointer;
+  padding: 0; margin: 0; border-radius: var(--r-sm);
+}
+.d-shot-hit:hover { background: color-mix(in srgb, var(--cat) 12%, transparent); }
+.d-shot-hit:focus-visible { outline: 3px solid var(--cat-strong); outline-offset: 2px; }
+.d-shot-hit--circle { border-radius: 50%; overflow: hidden; }
+.d-shot-hit--circle:hover { background: color-mix(in srgb, var(--cat) 16%, transparent); }
+
+/* ---- Imagen base de la captura (.d-shot-img) ----
+   kit-base v1.8. Es LA referencia contra la que `_initShots` calcula la
+   posición de cada `[data-hit]`/`[data-place]` (lee su naturalWidth, su
+   clientWidth y su object-fit computados). Que semejante pieza siguiera
+   definida en el CSS de cada curso era el mismo hueco de siempre: el
+   kit calculaba contra un elemento que el kit no definía. */
+.d-shot-img{width:100%;height:100%;object-fit:cover;object-position:50% 50%; display:block;background:#fff}
+
+/* ---- Saltos del índice de contenidos (kit v1.9.9) ----
+   Pareja de `initIndexJumps` (coto-ui.js).
+   Cada bloque (círculo numerado + su lista) es un botón que vuelve a
+   esa unidad. Mismo lenguaje de hover que las burbujas: aro de color
+   sobre la forma, nunca un tinte plano que tape el arte
+   (CLAUDE.md §6.10.3). Deshabilitado = invisible y sin cursor: el
+   alumno que todavía no llegó no tiene por qué enterarse de que ahí
+   había algo clicable. */
+.d-shot-hit--indice{
+  border-radius: var(--r-lg, 16px);
+  transition: box-shadow .18s ease, transform .18s ease;
+}
+.d-shot-hit--indice:disabled{ cursor: default; box-shadow: none; transform: none; }
+.d-shot-hit--indice.is-open:hover,
+.d-shot-hit--indice.is-open:focus-visible{
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--cat-strong) 50%, transparent),
+    0 8px 20px color-mix(in srgb, #000 18%, transparent);
+  transform: translateY(-1px);
+}

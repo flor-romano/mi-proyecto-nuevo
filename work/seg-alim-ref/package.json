@@ -1,0 +1,13 @@
+{
+  "name": "kit-base-coto-aprendizaje",
+  "version": "1.9.5",
+  "private": true,
+  "description": "Herramientas de verificación (Playwright) para cursos SCORM del molde Área Aprendizaje (COTO). Ver README.md y CLAUDE.md.",
+  "scripts": {
+    "test": "for t in deep-audit full-regress hitbox-click-check scroll-audit keyboard-a11y markup-sanity; do node tools/tests/$t.mjs \"$COURSE_URL\" || exit 1; done",
+    "verify-hitboxes": "node tools/verify-hitboxes.mjs \"$COURSE_URL\""
+  },
+  "dependencies": {
+    "playwright-core": "^1.61.1"
+  }
+}

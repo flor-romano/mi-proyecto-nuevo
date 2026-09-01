@@ -1,0 +1,498 @@
+/* ============================================================
+   coto-base.css  ·  Sistema de Diseño Web — Área Aprendizaje (COTO)
+   Versión 1.1 · 2026
+   ------------------------------------------------------------
+   Base reutilizable y ramificable para todos los proyectos web
+   del área. Los valores derivan del Manual de identidad gráfica
+   y del Manual de contenido (fuentes de verdad).
+
+   Cambios v1.1:
+   · Categorías: se reemplazaron los 5 ejemplos por las 21 reales
+     del manual (+ 2 excepciones de Zona E!).
+   · Se agregó la capa de COLORES FUNCIONALES (éxito/advertencia/
+     error/info) como sistema propio, con componente .alert.
+   · Tipografías reales: Faible (títulos) + Roboto (lectura).
+   · Se documentaron nombres Pantone/RGB de la paleta principal.
+   ============================================================ */
+
+/* ---------- Tipografías del sistema ----------
+   Cliente sacó Anton SC y Unbounded (se probaron en rondas anteriores, no
+   convencieron) pero SÍ sigue usando Raleway — ojo, no confundir con esas
+   dos: Faible/Roboto/Raleway se mantienen, solo se sumó basis33 puntual
+   para el minijuego.
+   Faible Black (900) → títulos y subtítulos, y todo texto "de impacto"
+   (números grandes, chips decorativos de cierre) que antes usaba Anton SC
+   o Unbounded.
+   Roboto → texto de lectura (--font-body).
+   Raleway → detalles puntuales (--font-soft: taglines, subtítulo del
+   header) — como estaba antes.
+   basis33 → SOLO para el minijuego "Adiviná el concepto" (--font-game):
+   fuente pixel/monoespaciada que manda el cliente puntualmente para esa
+   pieza, no reemplaza a Faible/Roboto/Raleway en el resto del curso. */
+@font-face{font-family:'Faible';src:url('../fonts/Faible-Black.woff2') format('woff2');font-weight:900;font-style:normal;font-display:swap}
+@font-face{font-family:'Roboto';src:url('../fonts/Roboto-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Roboto';src:url('../fonts/Roboto-Medium.woff2') format('woff2');font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Roboto';src:url('../fonts/Roboto-SemiBold.woff2') format('woff2');font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Roboto';src:url('../fonts/Roboto-Bold.woff2') format('woff2');font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Raleway';src:url('../fonts/Raleway-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Raleway';src:url('../fonts/Raleway-Medium.woff2') format('woff2');font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'basis33';src:url('../fonts/basis33.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
+
+:root{
+  /* ---- Marca / Paleta principal (Manual de identidad) ----
+     #006EA0 Methyl Blue   · acento (botones, títulos, links)
+     #1E2D46 Pageant Blue  · navy (navbar, fondos "noche")
+     #00466E Mykonos Blue  · hero / hover / variante oscura
+     #96A5BE Soft Chambray · gris azulado de detalle
+     #EBF0FF Brilliant White· fondo general "día"                */
+  --brand:#006EA0;
+  --brand-navy:#1E2D46;
+  --brand-deep:#00466E;
+  --brand-soft:#96A5BE;
+  --brand-tint:#EBF0FF;
+
+  /* ---- Escala de grises (siempre con tinte azulado) ---- */
+  --gray-900:#1A2233; --gray-700:#46506A; --gray-500:#6B7690;
+  --gray-300:#D7DEEC; --gray-150:#E9EEF8; --gray-50:#F4F7FE;
+
+  /* ---- Colores funcionales / de estado ----
+     Capa semántica PROPIA (no es una categoría). Se usa para
+     feedback de UI: validaciones, alertas, toasts, badges.
+     base = ícono/borde · soft = fondo · ink = texto (flip por tema) */
+  --success:#00A578; --warning:#F0A032; --danger:#F02850; --info:#006EA0;
+  --success-ink:#007A52; --warning-ink:#8A5200; --danger-ink:#AA0028; --info-ink:#00466E;
+
+  /* ---- Tipografía ---- */
+  --font-title:'Faible','Roboto',system-ui,sans-serif;
+  --font-body:'Roboto',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-display:var(--font-title);
+  --font-soft:'Raleway',var(--font-body);
+  --font-alt:var(--font-title);
+  /* SOLO para el minijuego "Adiviná el concepto" (ver .d-mg-* en
+     diapositivas.css) — el resto del curso no la toca. */
+  --font-game:'basis33',var(--font-title);
+  /* números de impacto (minijuego, laboratorio, cierre): Roboto en su peso
+     más grueso, no una display font — más legible y "serio" para cifras
+     que Unbounded/Anton SC (probados antes, no convencieron). */
+  --font-num:'Roboto',var(--font-body);
+  --fs-display:clamp(2.4rem,1.6rem + 3.4vw,3.6rem);
+  --fs-h1:clamp(1.9rem,1.4rem + 2.2vw,2.6rem);
+  --fs-h2:clamp(1.4rem,1.2rem + 1vw,1.7rem);
+  --fs-h3:1.2rem; --fs-body:1rem; --fs-small:.875rem; --fs-tiny:.75rem;
+  --lh-tight:1.1; --lh-snug:1.3; --lh-body:1.6;
+
+  /* ---- Radios ---- */
+  --r-sm:8px; --r:14px; --r-lg:22px; --r-xl:32px; --r-pill:999px;
+
+  /* ---- Sombras (siempre azuladas) ---- */
+  --shadow-card:0 4px 18px rgba(30,45,70,.08);
+  --shadow-card-hover:0 14px 40px rgba(30,45,70,.16);
+  --shadow-pop:0 18px 50px rgba(30,45,70,.22);
+
+  /* ---- Espaciado y layout ---- */
+  --s1:.25rem; --s2:.5rem; --s3:.75rem; --s4:1rem; --s5:1.5rem; --s6:2rem; --s7:3rem; --s8:4rem;
+  --container:1120px; --gutter:clamp(1rem,3vw,2rem);
+
+  /* ---- Breakpoints (referencia; usar en media queries) ----
+     Mobile ≤767 · Tablet 768–1023 · Desktop 1024–1440 · Wide 1440+ */
+  --bp-tablet:768px; --bp-desktop:1024px; --bp-wide:1440px;
+
+  --grad-brand:linear-gradient(135deg,var(--brand-deep),var(--brand));
+}
+
+/* ---- Semánticos (tema claro) ---- */
+:root{
+  --bg:var(--brand-tint); --surface:#FFFFFF; --surface-2:var(--gray-50);
+  --text:var(--brand-navy); --text-soft:var(--gray-700); --line:var(--gray-300);
+  --link:var(--brand); --focus:var(--brand); --on-brand:#FFFFFF;
+}
+/* ============================================================
+   COLOR POR CATEGORÍA — patrón "data-cat"
+   21 categorías del Manual de identidad. Cada una es una paleta
+   monocromática de 6 tonos (valor 1 = más oscuro → valor 6 = más
+   claro). Mapeo del sistema:
+     --cat-strong = valor 1   (texto/hover fuerte)
+     --cat        = valor 3   (color pleno de la categoría)
+     --cat-soft   = valor 5   (tintes, fondos suaves)
+     --cat-grad   = 135° de valor 2 → valor 4  (regla del manual:
+                    degradado dentro de la familia, 2 pasos de dif.)
+     --on-cat     = #FFF en colores oscuros/saturados,
+                    #1E2D46 (navy) en colores claros (naranja,
+                    amarillo, verde agua, celeste) para contraste.
+   ------------------------------------------------------------ */
+
+/* --- COTO Sucursales --- */
+[data-cat="cajas"]              {--cat:#F02850;--cat-strong:#AA0028;--cat-soft:#FA828C;--cat-grad:linear-gradient(135deg,#DC0032,#FA506E);--on-cat:#FFF}
+[data-cat="frescos-1"]          {--cat:#F0281E;--cat-strong:#A00000;--cat-soft:#FF8278;--cat-grad:linear-gradient(135deg,#D20A00,#FA5046);--on-cat:#FFF}
+/* --on-cat navy, no blanco: es la ÚNICA categoría cuyo degradado sube
+   hasta un tono tan claro (#FF6E64) que el título blanco caía a 2.74:1,
+   por debajo incluso del 3:1 de texto grande. Navy da 5.05:1. */
+[data-cat="frescos-2"]          {--cat:#FA463C;--cat-strong:#B41E14;--cat-soft:#FA968C;--cat-grad:linear-gradient(135deg,#DC3228,#FF6E64);--on-cat:#1E2D46}
+[data-cat="elaborados"]         {--cat:#FF8200;--cat-strong:#D25000;--cat-soft:#FFBE64;--cat-grad:linear-gradient(135deg,#E66400,#FA9646);--on-cat:#1E2D46}
+[data-cat="salon"]              {--cat:#F0BE00;--cat-strong:#B47800;--cat-soft:#F0DB67;--cat-grad:linear-gradient(135deg,#DCA014,#F0C846);--on-cat:#1E2D46}
+[data-cat="mantenimiento"]      {--cat:#00C88C;--cat-strong:#008C64;--cat-soft:#82DCAA;--cat-grad:linear-gradient(135deg,#00AA78,#50D2A0);--on-cat:#1E2D46}
+[data-cat="coto-digital"]       {--cat:#2896E6;--cat-strong:#145AA0;--cat-soft:#64C8F0;--cat-grad:linear-gradient(135deg,#1E78D2,#46AAE6);--on-cat:#1E2D46}
+[data-cat="flota-propia"]       {--cat:#1E5AD2;--cat-strong:#0A3282;--cat-soft:#5A96FA;--cat-grad:linear-gradient(135deg,#0046B4,#3278E6);--on-cat:#FFF}
+[data-cat="no-alimentos"]       {--cat:#0032C8;--cat-strong:#001E78;--cat-soft:#5A82F0;--cat-grad:linear-gradient(135deg,#002896,#1E5ADC);--on-cat:#FFF}
+[data-cat="administracion"]     {--cat:#5A1ED2;--cat-strong:#320082;--cat-soft:#9678E6;--cat-grad:linear-gradient(135deg,#4B00B4,#7846DC);--on-cat:#FFF}
+[data-cat="recursos-humanos"]   {--cat:#8232C8;--cat-strong:#460082;--cat-soft:#B482DC;--cat-grad:linear-gradient(135deg,#5A1E96,#9650C8);--on-cat:#FFF}
+[data-cat="gestion-comercial"]  {--cat:#AA28A0;--cat-strong:#78005A;--cat-soft:#E678D2;--cat-grad:linear-gradient(135deg,#960A82,#D246BE);--on-cat:#FFF}
+[data-cat="atencion-al-cliente"]{--cat:#BE1478;--cat-strong:#820A3C;--cat-soft:#F064B4;--cat-grad:linear-gradient(135deg,#A0145A,#DC3C96);--on-cat:#FFF}
+[data-cat="tci"]                {--cat:#D71E50;--cat-strong:#960028;--cat-soft:#FA6EA0;--cat-grad:linear-gradient(135deg,#B4143C,#E64678);--on-cat:#FFF}
+[data-cat="seguridad"]          {--cat:#646464;--cat-strong:#323232;--cat-soft:#969696;--cat-grad:linear-gradient(135deg,#505050,#828282);--on-cat:#FFF}
+
+/* --- COTO Central --- */
+/* NOTA: en el manual, el "valor 1" de Sistemas figura como #AA0028 (rojo),
+   lo cual es un error de tipeo del propio manual (la familia es azul).
+   Se corrigió a #0A3C82 para mantener la coherencia. CONFIRMAR con diseño. */
+[data-cat="sistemas"]           {--cat:#1E78DC;--cat-strong:#0A3C82;--cat-soft:#64AAF0;--cat-grad:linear-gradient(135deg,#145ABE,#378CE6);--on-cat:#FFF}
+[data-cat="control-de-calidad"] {--cat:#1EAADC;--cat-strong:#006EA0;--cat-soft:#82D2E6;--cat-grad:linear-gradient(135deg,#0096D2,#50BEE6);--on-cat:#1E2D46}
+[data-cat="servicio-medico"]    {--cat:#1EB4BE;--cat-strong:#008296;--cat-soft:#82D2D2;--cat-grad:linear-gradient(135deg,#1EA0AA,#5AC8C8);--on-cat:#1E2D46}
+[data-cat="panol-base-12"]      {--cat:#6EBE50;--cat-strong:#46821E;--cat-soft:#96DC96;--cat-grad:linear-gradient(135deg,#64AA3C,#82C878);--on-cat:#1E2D46}
+[data-cat="seguridad-higiene"]  {--cat:#F0A032;--cat-strong:#C86400;--cat-soft:#FAC864;--cat-grad:linear-gradient(135deg,#DC8C1E,#F0B446);--on-cat:#1E2D46}
+
+/* --- Zona E! --- */
+[data-cat="zona-e"]             {--cat:#5A5A5A;--cat-strong:#1E1E1E;--cat-soft:#8C8C8C;--cat-grad:linear-gradient(135deg,#3C3C3C,#6E6E6E);--on-cat:#FFF}
+
+/* Excepciones planificadas: Zona Gourmet y Zona Cumples NO son
+   monocromáticas (otra unidad de negocio). Se conservan sus tríos
+   de color originales; el gradiente cruza entre dos de ellos.      */
+[data-cat="zona-gourmet"]       {--cat:#CD1E1E;--cat-strong:#1E1E1E;--cat-soft:#505050;--cat-grad:linear-gradient(135deg,#1E1E1E,#CD1E1E);--on-cat:#FFF}
+[data-cat="zona-cumples"]       {--cat:#6E328C;--cat-strong:#E66E0A;--cat-soft:#BED20A;--cat-grad:linear-gradient(135deg,#E66E0A,#6E328C);--on-cat:#FFF}
+
+/* ============================================================
+   TOKENS DERIVADOS DE TEXTO — --cat-ink y --cat-wash
+   ------------------------------------------------------------
+   BUG REAL que dio origen a esto (CLAUDE.md §6.60): el comentario
+   de más abajo afirmaba que --cat-strong "es lo bastante oscuro en
+   TODAS las categorías" citando UNA medición puntual (servicio-
+   médico, 4.53:1 — justo la más al límite de las que pasan). Falso:
+   medido con tools/check-contraste.mjs, 5 categorías no llegaban a
+   4.5:1 con blanco encima, y 7 no llegaban en cuanto el texto caía
+   sobre un fondo con algo de tinte. Mismo patrón de §6.7 — un valor
+   verificado contra un solo caso y aplicado como constante global.
+
+   La corrección NO toca --cat-strong: los 23 valores siguen siendo
+   EXACTAMENTE el Valor 1 de la tabla oficial del manual (§6.5), que
+   es lo que hace que la paleta siga siendo auditable contra el
+   manual. Se separan los dos trabajos que ese token hacía mezclados:
+
+     --cat-strong  → BORDES, outlines, sombras, thumbs, paradas de
+                     degradado, puntos. Decoración: no le aplica el
+                     contraste de texto. Intacto, igual al manual.
+     --cat-ink     → TEXTO, íconos, y rellenos sólidos que llevan
+                     texto blanco. Por default ES --cat-strong; solo
+                     las 7 categorías que no llegaban traen su propio
+                     valor, oscurecido lo mínimo en HSL (mismo tono y
+                     saturación — la familia se sigue leyendo igual).
+     --cat-wash    → fondo tintado que LLEVA TEXTO. --cat-soft es el
+                     Valor 5 de la rampa: a 4 pasos del Valor 1 en
+                     una escala de 6, nunca puede dar 4.5:1 contra
+                     --cat-ink. Sirve para bordes y decoración, no
+                     como fondo de texto — usar --cat-wash ahí.
+
+   Los overrides de --cat-ink van DESPUÉS del default: los dos son
+   selectores de atributo (misma especificidad), así que acá manda
+   el orden en el archivo. No reordenar.
+   ------------------------------------------------------------ */
+[data-cat]{
+  --cat-ink: var(--cat-strong);
+  --cat-wash: color-mix(in srgb, var(--cat) 12%, #FFFFFF);
+}
+/* Las 7 que necesitan tinta propia. Cada valor está calibrado a
+   >=4.5:1 contra --cat-wash (el fondo más exigente en el que se usa),
+   lo que le da >=4.85:1 contra blanco de yapa. Verificado por
+   tools/check-contraste.mjs — no ajustar a ojo. */
+[data-cat="elaborados"]        {--cat-ink:#BF4900}
+[data-cat="salon"]             {--cat-ink:#9B6700}
+[data-cat="mantenimiento"]     {--cat-ink:#007F5B}
+[data-cat="servicio-medico"]   {--cat-ink:#007A8D}
+[data-cat="panol-base-12"]     {--cat-ink:#447E1D}
+[data-cat="seguridad-higiene"] {--cat-ink:#B15800}
+[data-cat="zona-cumples"]      {--cat-ink:#A75007}
+
+/* Sin data-cat (páginas de prueba, smoke tests del kit): que los
+   tokens resuelvan a la marca en vez de quedar sin valor. */
+:root{ --cat-ink: var(--brand-deep); --cat-wash: var(--brand-tint); }
+
+/* ============================================================
+   ACCESIBILIDAD DE COLOR (verificado con WCAG 2.1)
+   ------------------------------------------------------------
+   El "pleno" (--cat) es vívido: seguro para TEXTO GRANDE y
+   decoración (covers, hero, cover-title, número de paso,
+   icon-circle) — todas las categorías pasan AA-large (>=3:1).
+   Para TEXTO CHICO (botones, labels, párrafos):
+     · Botones: usar .btn-cat (fondo --cat-ink + blanco).
+     · Texto sobre superficie clara: usar color:var(--cat-ink).
+     · Fondo tintado que lleva texto: --cat-wash + --cat-ink.
+       NUNCA --cat-soft como fondo de texto (ver el bloque de
+       tokens derivados, arriba).
+     · Familias claras (salón, seguridad-higiene, mantenimiento,
+       elaborados, zona-cumples): esta regla ya no depende de
+       acordarse — --cat-ink les da un valor que sí contrasta, y
+       check-contraste.mjs lo verifica en cada entrega.
+   Nunca poner texto chico blanco directamente sobre --cat en
+   rojos ni celestes: no alcanza 4.5:1.
+
+   frescos-2 tenía --on-cat:#FFF y su propio degradado le daba
+   2.74:1 al título — por debajo incluso del 3:1 de texto grande.
+   Corregido a navy (#1E2D46), 5.05:1. Era la única categoría con
+   ese error.
+   ============================================================ */
+
+/* ============================================================
+   BASE
+   ============================================================ */
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--font-body);color:var(--text);background:var(--bg);
+  line-height:var(--lh-body);-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:var(--font-title);font-weight:900;color:var(--brand-navy);
+  line-height:var(--lh-tight);letter-spacing:-.5px;margin:.2em 0}
+a{color:var(--link);text-decoration:none}
+kbd{font-family:var(--font-body);font-size:.8rem;font-weight:700;color:var(--text);
+  background:var(--surface-2);border:1px solid var(--line);border-bottom-width:2px;
+  border-radius:6px;padding:.15rem .5rem;min-width:1.6em;text-align:center;display:inline-block}
+.container{max-width:var(--container);margin:0 auto;padding:0 var(--gutter)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto}}
+
+/* ---- Entrada escalonada (título → párrafo → elementos) ----
+   kit-base v1.5 — genérico, sin contenido de curso. Pedido del cliente:
+   que el contenido HTML real (pop-ups, mini-práctica, resumen del
+   cierre) entre en cascada en vez de aparecer todo junto. A propósito
+   NO se aplica a las diapositivas-captura (.d-shot-slide): ahí el
+   título y el texto son parte de una única imagen — no existen como
+   elementos separados para escalonar (ver README, "revisión de
+   arquitectura"). El JS que llama esto (`staggerReveal` en coto-ui.js,
+   v1.7) solo le pone a cada elemento un `animation-delay` creciente
+   antes de sumar esta clase — la clase en sí es genérica y no sabe nada
+   del curso.
+   ⚠️ DEPENDE de la regla global de `prefers-reduced-motion` de más
+   arriba (`*{animation:none!important}`): la animación arranca en
+   `opacity:0` y `both` mantiene el estado inicial, así que si esa regla
+   global no estuviera, un alumno con movimiento reducido vería el
+   contenido INVISIBLE, no "sin animación". Verificado que hoy cae
+   directo al estado final. Cualquier animación de entrada nueva que se
+   agregue tiene que respetar lo mismo: nunca dejar el estado visible
+   dependiendo de que la animación efectivamente corra. */
+.d-stagger-in{animation:d-stagger-in .38s cubic-bezier(.22,.61,.36,1) both}
+@keyframes d-stagger-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* Utilidad estándar de accesibilidad — oculta VISUALMENTE sin sacar del
+   árbol de accesibilidad (nada de display:none/visibility:hidden, que sí
+   lo sacarían). No estaba en ningún archivo del kit v1.3 aunque hace
+   falta para los data-slide-title y el texto accesible de cada hitbox
+   de las diapos-captura (ver spec-motor-slides.md §3/§8) — cada curso la
+   reescribía a mano. */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* ---- Textura de puntos ("la educación es un camino": puntos y conexiones) ---- */
+.trama{background-image:
+    radial-gradient(circle, color-mix(in srgb,var(--brand) 55%,transparent) 2.4px, transparent 3px),
+    radial-gradient(circle, color-mix(in srgb,var(--brand-soft) 60%,transparent) 1.1px, transparent 1.8px);
+  background-size:46px 46px, 23px 23px; background-position:0 0, 11px 11px}
+
+/* ============================================================
+   COMPONENTES BASE
+   ============================================================ */
+
+/* Botones: siempre píldora */
+.btn{font-family:var(--font-body);font-weight:600;font-size:.95rem;border-radius:var(--r-pill);
+  padding:.72rem 1.4rem;border:1.5px solid transparent;cursor:pointer;display:inline-flex;
+  align-items:center;gap:.5rem;transition:background .15s,color .15s,border-color .15s,box-shadow .15s}
+.btn-primary{background:var(--brand);color:var(--on-brand)}
+.btn-primary:hover{background:var(--brand-deep)}
+.btn-ghost{background:transparent;color:var(--brand);border-color:var(--brand)}
+.btn-ghost:hover{background:var(--brand);color:var(--on-brand)}
+/* Botón de categoría: usa el tono FUERTE (valor 1) + blanco para
+   garantizar contraste con texto chico. Ver "Accesibilidad de color". */
+.btn-cat{background:var(--cat-ink);color:#fff}
+.btn-cat:hover{background:color-mix(in srgb,var(--cat-ink) 85%,#000)}
+/* Variante ghost para las categorías más claras (amarillos/verdes) en CTA chicos */
+.btn-cat-ghost{background:transparent;color:var(--cat-ink);border-color:var(--cat-strong)}
+.btn-cat-ghost:hover{background:var(--cat-ink);color:#fff}
+
+/* Chips */
+.chip{display:inline-flex;align-items:center;gap:.4rem;font-size:.72rem;font-weight:700;
+  letter-spacing:.4px;text-transform:uppercase;padding:.3rem .8rem;border-radius:var(--r-pill)}
+.chip-brand{background:color-mix(in srgb,var(--brand) 14%,transparent);color:var(--brand)}
+.chip-cat{background:color-mix(in srgb,var(--cat) 16%,transparent);color:var(--cat-ink)}
+
+/* Badge / Tag numérico */
+.badge{display:inline-grid;place-items:center;min-width:1.4rem;height:1.4rem;padding:0 .4rem;
+  font-size:.72rem;font-weight:700;border-radius:var(--r-pill);background:var(--brand);color:#fff}
+.badge-cat{background:var(--cat-ink);color:#fff}
+.badge-soft{background:color-mix(in srgb,var(--brand) 15%,transparent);color:var(--brand)}
+
+/* Ícono circular con gradiente de marca o categoría */
+.icon-circle{width:72px;height:72px;border-radius:50%;background:var(--cat,var(--grad-brand));
+  display:grid;place-items:center;box-shadow:var(--shadow-card);flex:none}
+.icon-circle svg{width:38px;height:38px;fill:none;stroke:var(--on-cat,#fff);stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round}
+
+/* ---- Alertas / estados (usan la capa funcional) ----
+   Íconos: estilo lineal con remates redondeados (set del área).   */
+.alert{display:flex;align-items:flex-start;gap:.7rem;padding:.85rem 1.05rem;border-radius:var(--r);
+  border-left:5px solid var(--info);background:color-mix(in srgb,var(--info) 12%,var(--surface));
+  color:var(--info-ink);font-size:.92rem}
+.alert svg{flex:none;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round;margin-top:.1rem}
+.alert-success{border-left-color:var(--success);background:color-mix(in srgb,var(--success) 12%,var(--surface));color:var(--success-ink)}
+.alert-warning{border-left-color:var(--warning);background:color-mix(in srgb,var(--warning) 14%,var(--surface));color:var(--warning-ink)}
+.alert-danger {border-left-color:var(--danger);background:color-mix(in srgb,var(--danger) 12%,var(--surface));color:var(--danger-ink)}
+.alert-info   {border-left-color:var(--info);background:color-mix(in srgb,var(--info) 12%,var(--surface));color:var(--info-ink)}
+
+/* ---- Navbar ---- */
+.navbar{position:sticky;top:0;z-index:60;background:var(--brand-navy);color:#fff;height:62px;
+  display:flex;align-items:center;gap:1rem;padding:0 var(--gutter);box-shadow:0 2px 12px rgba(0,0,0,.18)}
+.navbar .sp{flex:1}
+.navbar .nb-link{color:#fff;font-size:.85rem;font-weight:600;padding:.45rem .9rem;
+  border-radius:var(--r-pill);background:rgba(255,255,255,.12)}
+.navbar .nb-link:hover{background:rgba(255,255,255,.22)}
+
+/* ---- Hero ---- */
+.hero{position:relative;background:var(--brand-navy);color:#fff;overflow:hidden;isolation:isolate}
+.hero::before{content:"";position:absolute;inset:0;z-index:-1;opacity:.5;
+  background:radial-gradient(circle at 80% -10%,rgba(0,150,210,.55),transparent 55%),
+             radial-gradient(circle at 0% 120%,rgba(120,70,220,.35),transparent 50%)}
+.hero .trama{position:absolute;inset:0;z-index:-1;opacity:.18}
+.hero h1{color:#fff;font-size:var(--fs-display);max-width:16ch}
+.hero .lead{color:#dbe4f5;max-width:60ch;font-size:1.05rem}
+.hero .eyebrow{font-size:.72rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--brand-soft)}
+.stats{display:flex;flex-wrap:wrap;gap:2.2rem}
+.stat .n{font-family:var(--font-display);font-weight:400;font-size:2.4rem;line-height:1;color:#fff}
+.stat .l{font-size:.78rem;text-transform:uppercase;letter-spacing:1px;color:var(--brand-soft)}
+
+/* Curva orgánica: colocar un <svg><path> con clase .wave dentro de .hero al final,
+   fill:var(--bg), para conectar con el contenido claro de abajo */
+
+/* ---- Toolbar sticky (buscador + filtros) ---- */
+.toolbar{position:sticky;top:62px;z-index:50;background:color-mix(in srgb,var(--surface) 92%,transparent);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.search input,.selectwrap select{font-family:var(--font-body);font-size:.95rem;
+  border:1.5px solid var(--line);border-radius:var(--r-pill);background:var(--surface);color:var(--text)}
+.search input:focus-visible,.selectwrap select:focus-visible{outline:none;border-color:var(--brand);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 25%,transparent)}
+
+/* ---- Campo de formulario ---- */
+.field{display:flex;flex-direction:column;gap:.35rem}
+.field label{font-size:.8rem;font-weight:600;color:var(--text-soft)}
+.field input,.field textarea,.field select{font-family:var(--font-body);font-size:.95rem;color:var(--text);
+  background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r);padding:.6rem .8rem;width:100%}
+.field input:focus-visible,.field textarea:focus-visible,.field select:focus-visible{outline:none;
+  border-color:var(--brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 22%,transparent)}
+.field .hint{font-size:.75rem;color:var(--text-soft)}
+.field.is-error input,.field.is-error textarea{border-color:var(--danger)}
+.field.is-error .hint{color:var(--danger-ink)}
+.field.is-ok input{border-color:var(--success)}
+
+/* ---- Tarjeta de contenido (grilla) ---- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:1.1rem}
+.card{position:relative;display:flex;flex-direction:column;background:var(--surface);
+  border:1px solid var(--line);border-left:5px solid var(--cat,var(--brand));border-radius:var(--r-lg);
+  overflow:hidden;box-shadow:var(--shadow-card);cursor:pointer;transition:transform .16s,box-shadow .16s}
+.card:hover{transform:translateY(-4px);box-shadow:var(--shadow-pop)}
+.card:focus-visible{outline:3px solid var(--cat,var(--brand));outline-offset:2px}
+.card .card-top{display:flex;align-items:center;gap:.8rem;padding:1.1rem 1.1rem .4rem}
+.card .card-desc{margin:.2rem 1.1rem .8rem;font-size:.86rem;color:var(--text-soft);font-style:italic;flex:1}
+.card .card-foot{display:flex;align-items:center;justify-content:space-between;margin-top:auto;
+  padding:.7rem 1.1rem;border-top:1px solid var(--line);background:var(--surface-2)}
+.card .card-foot .go{font-size:.85rem;font-weight:700;color:var(--cat-strong,var(--brand));
+  display:inline-flex;align-items:center;gap:.3rem}
+.card:hover .card-foot .go{gap:.55rem}
+
+/* ---- Cover con gradiente de categoría + círculos decorativos ---- */
+.cover{position:relative;border-radius:var(--r-xl);overflow:hidden;min-height:220px;
+  background:var(--cat-grad,var(--grad-brand));color:var(--on-cat,#fff);display:flex;isolation:isolate}
+.cover .rings{position:absolute;inset:0;z-index:0;opacity:.16}
+.cover .rings span{position:absolute;border:2px solid currentColor;border-radius:50%}
+.cover-body{position:relative;z-index:3;padding:2.2rem 2.4rem;max-width:64%}
+.cover-title{font-family:var(--font-title);font-weight:900;font-size:clamp(1.9rem,1rem + 3vw,3rem)}
+
+/* ---- Stepper vertical ("ruta") ---- */
+.stepper{list-style:none;margin:1rem 0 0;padding:0;position:relative}
+.stepper::before{content:"";position:absolute;left:18px;top:26px;bottom:26px;width:3px;
+  background:color-mix(in srgb,var(--cat,var(--brand)) 40%,var(--line));z-index:0}
+.stepper li{position:relative;display:grid;grid-template-columns:38px 1fr auto;align-items:center;
+  gap:.4rem 1rem;padding:.5rem 0}
+.stepper .pn{position:relative;z-index:1;width:38px;height:38px;border-radius:50%;display:grid;
+  place-items:center;font-family:var(--font-title);font-weight:900;color:var(--on-cat,#fff);
+  background:var(--cat-grad,var(--grad-brand));box-shadow:0 0 0 4px var(--surface)}
+.stepper .row{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  padding:.7rem .95rem;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.stepper .row:hover{border-color:var(--cat,var(--brand));box-shadow:var(--shadow-card)}
+
+/* ---- Modal ---- */
+.modal{position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;padding:1.2rem}
+.modal.open{display:flex}
+.modal-back{position:absolute;inset:0;background:rgba(15,23,38,.55);backdrop-filter:blur(2px)}
+.modal-card{position:relative;z-index:1;width:min(560px,100%);max-height:88vh;overflow:auto;
+  background:var(--surface);border-radius:var(--r-xl);box-shadow:var(--shadow-pop);animation:pop .2s ease}
+/* Variante ancha: pop-ups con contenido denso en grilla/columnas (ej. el
+   pop-up de instrucciones con su grilla de accesos rápidos) no entran
+   cómodos en los 560px del modal-card default. */
+.modal-card.d-wide{width:min(720px,100%)}
+@keyframes pop{from{transform:translateY(14px) scale(.98);opacity:0}to{transform:none;opacity:1}}
+/* sticky, no relative: con contenido largo (ej. un glosario de 16
+   términos) el .modal-card scrollea entero y el encabezado —con el
+   título y el botón de cerrar— se iba de pantalla. Así queda siempre a
+   la vista sin cambiar nada del marcado. */
+.modal-hd{position:sticky;top:0;z-index:2;background:var(--cat-grad,var(--grad-brand));color:var(--on-cat,#fff);
+  padding:1.6rem 1.6rem 1.3rem;overflow:hidden}
+/* `.modal-hd--dark` · nueva en kit-base v1.6.
+   ⚠️ REGLA DE CONSISTENCIA (hallazgo visual real en "Prevención
+   cardiovascular"): las dos variantes de encabezado NO se mezclan
+   dentro de un mismo curso. Ahí quedaron 4 pop-ups con encabezado
+   claro y 1 con oscuro, y la diferencia se leía como un error de
+   diseño aunque las dos variantes fueran correctas por separado (el
+   navy sobre el degradado pasa contraste de sobra: 4.39-6.93:1 contra
+   un mínimo de 3.0). Al elegir una variante para un pop-up, aplicarla
+   a TODOS los pop-ups del curso.
+
+   Variante sólida y más oscura: para categorías claras (ej. "servicio-
+   médico", --cat:#1EB4BE) --on-cat es intencionalmente oscuro (navy) por
+   contraste — un texto BLANCO ahí falla WCAG AA (calculado: blanco vs
+   --cat da ~2.5:1, vs el extremo claro de --cat-grad ~2:1; muy por debajo
+   del 3:1 mínimo para texto grande/negrita). --cat-strong, en cambio, es
+   lo bastante oscuro en TODAS las categorías del kit para que el blanco
+   sí pase (blanco vs --cat-strong de "servicio-médico" da 4.53:1) — usar
+   esta variante en vez de --cat-grad cuando se quiera título en blanco. */
+.modal-hd--dark{background:var(--cat-ink,var(--brand-deep));color:#fff}
+/* BUG REAL (revisión general, CLAUDE.md §6.36): sin `z-index`, un
+   hijo posterior del modal con `position:relative` (ej. `.d-instr-hd`,
+   que lo necesita para que sus PROPIOS pseudo-elementos/hijos con
+   z-index respeten el orden) pasa a apilarse ARRIBA de esta ✕ — los
+   dos son "positioned" con z-index:auto, y entre dos elementos así el
+   que aparece DESPUÉS en el DOM gana, sin importar que la ✕ se vea
+   "encima" visualmente (nada la tapa a los ojos, pero el div de al
+   lado intercepta el clic igual). Confirmado con Playwright: la ✕ del
+   pop-up "Cómo recorrer el curso" no cerraba — `.d-instr-hd`
+   interceptaba el puntero. `z-index:2` la saca de la duda para
+   siempre, sea cual sea el resto del marcado del modal. */
+.modal-x{position:absolute;top:.9rem;right:.9rem;width:34px;height:34px;border-radius:50%;border:none;
+  cursor:pointer;background:rgba(255,255,255,.25);color:inherit;display:grid;place-items:center;z-index:2}
+/* BUG REAL (revisión general, CLAUDE.md §6.38): el pop-up abre con foco
+   en la ✕ (accesibilidad — WCAG, el foco tiene que entrar al modal),
+   y el anillo de foco GENÉRICO (`:focus-visible` de coto-base.css,
+   `border-radius:6px`, pensado para botones rectangulares) dibuja un
+   anillo CASI CUADRADO alrededor de un botón CIRCULAR — el choque de
+   formas se lee como un recorte/glitch, no como foco (así lo reportó
+   el cliente: "algo está mal en el diseño"). Redondeado a juego con
+   el botón. */
+.modal-x:focus-visible{ border-radius:50%; }
+.modal-bd{padding:1.4rem 1.6rem 1.7rem;display:flex;flex-direction:column;gap:1rem}
+.modal-bd .ficha{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.7rem}
+.modal-bd .ficha .f{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);
+  padding:.7rem .85rem}
+
+/* ---- Toast ---- */
+.toast{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--brand-navy);color:#fff;padding:.6rem 1.1rem;border-radius:var(--r-pill);
+  font-size:.85rem;opacity:0;transition:.25s;pointer-events:none;z-index:99}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ---- Footer ---- */
+.footer{border-top:1px solid var(--line);background:var(--surface);color:var(--text-soft);
+  font-size:.85rem;padding:2rem 0}

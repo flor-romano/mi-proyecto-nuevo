@@ -1,0 +1,41 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 31 Aug 2026 13:42:53 +0000
+Subject: [PATCH 1/5] fix(player): Esc cierra los popovers pinned (audio y
+ flotantes)
+
+---
+ js/coto-player.js | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/js/coto-player.js b/js/coto-player.js
+index 936cdc2..de2d0ca 100644
+--- a/js/coto-player.js
++++ b/js/coto-player.js
+@@ -371,6 +371,26 @@
+           if (!it.contains(e.target)) it.classList.remove('is-open', 'is-hover');
+         });
+       });
++      /* Esc también cierra. Faltaba: el panel se cerraba con clic
++         afuera y al cambiar de diapositiva, pero no con Esc — y el
++         texto de Ayuda del propio kit promete "Esc cierra cualquier
++         ventana emergente". Afecta a los DOS consumidores de este
++         helper: los popovers de audio de la barra (Sonido/Locución) y
++         los flotantes de Ayuda/Configuración.
++
++         Ojo con el `blur()`: el CSS abre el panel también con
++         `:focus-within` (.d-audio-ctl / .d-fab), así que sacar las
++         clases NO alcanza si el foco quedó adentro — por ejemplo tras
++         tocar una pregunta del acordeón de Ayuda, o el slider de
++         volumen. Sin soltar el foco, el panel se queda abierto y
++         encima sigue interceptando clics sobre lo que tapa. */
++      document.addEventListener('keydown', function (e) {
++        if (e.key !== 'Escape') return;
++        var foco = document.activeElement;
++        var dentro = items.some(function (it) { return it.contains(foco); });
++        if (dentro && foco && foco.blur) foco.blur();
++        closeAll();
++      });
+       document.addEventListener('slidechange', closeAll);
+       if (opts.onOpen) {
+         window.addEventListener('resize', function () {

@@ -1,0 +1,578 @@
+/* ============================================================
+   coto-player-chrome.css · Barra superior + estructura de página
+   kit-base v1.1 · Área Aprendizaje (COTO) — genérico, sin contenido
+   de curso. Copiar tal cual a cada curso nuevo, sin editar.
+   ------------------------------------------------------------
+   Extraído de "Surtido sin venta" tras un rediseño completo de la
+   barra superior (antes vivía mezclado en el CSS específico del curso
+   — diapositivas.css/pulido.css — por historia, pero no lee nada del
+   contenido del curso: es 100% reutilizable, ver CLAUDE.md §1).
+
+   Depende de los tokens de coto-base.css (--on-brand, --cat, --brand,
+   --brand-deep, --font-title/body/soft, --r-pill, --r-sm, --focus,
+   --shadow-card, --grad-brand/--cat-grad, --on-cat, --brand-soft).
+
+   CONTRATO — el HTML de cada curso tiene que respetar estos IDs/clases
+   para que este CSS (y los estados que togglea curso.js) funcionen:
+     #d-narrate / #d-sound / #d-fullscreen  → botones con clase .is-on
+       (narrate, fullscreen) o .is-muted (sound) togglada por JS.
+     .d-top-left / .d-top-center / .d-top-right → las 3 zonas de la
+       barra (menú+marca / saludo+logros / controles).
+     .d-top-group con modificador .d-top-group--<nombre> por cada grupo
+       de controles — el modificador es el que la grilla mobile usa
+       para saber a qué columna va cada grupo (ver media query).
+   Ver kit-base/header-boilerplate.html para el HTML de referencia
+   completo, listo para copiar y adaptar (nombre del curso, logo,
+   grupos de controles reales de ESE curso).
+   ============================================================ */
+
+/* ---- Página sin scroll ---- */
+html, body { height: 100%; }
+body { margin: 0; overflow: hidden; background: var(--bg); }
+[hidden] { display: none !important; }
+
+/* ============================================================
+   CHROME: barra superior + escenario + barra inferior
+   ============================================================ */
+/* `grid-template-columns: minmax(0,1fr)` es OBLIGATORIO acá, no
+   cosmético. BUG REAL encontrado en tablet con un nombre real de
+   alumno en el saludo (`#d-greet`, ver más abajo): sin esto, la
+   columna implícita del grid usa su ancho `auto` por default, que en
+   CSS Grid se calcula por el MIN-CONTENT de los items — y como
+   `.d-top`/`.d-bottom` tienen varios hijos `flex:none` que se niegan a
+   achicarse, ese min-content puede superar el ancho real de `.d-app`
+   (fijo por `inset:0`). El resultado: la fila del grid crece más
+   ancha que la ventana y el contenido de más queda invisible — nunca
+   como scroll (`body{overflow:hidden}` lo tapa), así que
+   `scroll-audit` no lo detecta. Sin la voz del alumno en las pruebas
+   automáticas (no hay LMS real corriendo los tests) el saludo nunca
+   llega a ese ancho crítico, así que el bug pasó inadvertido hasta
+   probarlo con un nombre real en un iPad de 1024px. `minmax(0,1fr)`
+   es el fix estándar de este bug de CSS Grid ("grid blowout"): fuerza
+   a la columna a NUNCA superar el contenedor, sin importar cuánto
+   pidan sus hijos — a partir de ahí, lo que no entra se resuelve dentro
+   de `.d-top`/`.d-bottom` (ver `#d-greet` con elipsis y el media query
+   de abajo), no inflando el layout entero. */
+.d-app { position: fixed; inset: 0; display: grid;
+  grid-template-columns: minmax(0, 1fr); grid-template-rows: 56px 1fr 64px; }
+
+/* Header: izquierda (menú + marca) / CENTRO (saludo + logros/puntos,
+   la "zona de estado del alumno") / derecha (controles agrupados).
+   flex plano con 2 spacers (.d-top-spacer, flex:1 cada uno) a los
+   costados del bloque central — NO grid de 3 columnas iguales: esa
+   versión centra el bloque contra el ANCHO TOTAL de la barra, pero si
+   la izquierda es más angosta que la derecha (típico: marca corta,
+   2+ grupos de controles), el centro queda corrido hacia los íconos.
+   Con 2 spacers iguales repartiendo el espacio SOBRANTE real (ancho
+   total menos lo que ocupan los 3 bloques de contenido), el centro
+   queda a mitad de camino entre el borde real de la marca y el borde
+   real de los íconos — se autoajusta solo si cambia el largo de
+   cualquiera de los 3 bloques (nombre de curso más largo, más/menos
+   controles). */
+.d-top { color: var(--on-brand); display: flex; align-items: center;
+  padding: 0 clamp(.8rem, 3vw, 1.6rem); z-index: 40;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 22%, transparent),
+              0 2px 0 color-mix(in srgb, var(--cat) 55%, transparent),
+              0 6px 20px color-mix(in srgb, var(--brand-deep) 45%, transparent); }
+/* degradé de fondo "respirando" muy lento — inspirado en el lenguaje
+   "tech" de las webs de Coto (azul con toques celestes). Contraste
+   cuidado a propósito: el tramo más claro no pasa de ~80% hacia
+   --brand-deep, así --on-brand (blanco) se mantiene legible siempre. */
+@keyframes d-topbar-breathe { 0%,100% { background-position: 0% 50%, 0 0; } 50% { background-position: 100% 50%, 0 0; } }
+.d-top {
+  background:
+    radial-gradient(130% 200% at 12% -60%, color-mix(in srgb, #eaf6ff 32%, transparent), transparent 62%),
+    linear-gradient(100deg, var(--brand-deep), var(--brand), color-mix(in srgb, var(--brand) 80%, var(--brand-deep)));
+  background-size: 100% 100%, 200% 100%;
+  animation: d-topbar-breathe 16s ease-in-out infinite;
+}
+.d-top-spacer { flex: 1 1 0; min-width: 0; }
+/* En escritorio, "invisible" para el layout: sus hijos (.d-top-left,
+   spacer, .d-top-center) pasan a ser hijos directos del flex de .d-top
+   — ver override a grid real en el media query mobile más abajo. */
+.d-top-row1 { display: contents; }
+.d-top-left { display: flex; align-items: center; gap: 1rem; min-width: 0; flex: none; }
+.d-top-center { display: flex; align-items: center; gap: .65rem; min-width: 0; flex: none; }
+.d-top-right { display: flex; align-items: center; gap: .5rem; min-width: 0; flex: none; }
+.d-brand { display: flex; align-items: center; gap: .55rem; font-family: var(--font-title);
+  font-weight: 900; letter-spacing: -.5px; text-align: left; white-space: nowrap; }
+.d-brand .lg { width: 32px; height: 32px; border-radius: var(--r-sm); flex: none; display: grid; place-items: center;
+  background: var(--cat-grad, var(--grad-brand)); color: var(--on-cat); box-shadow: var(--shadow-card); }
+.d-brand .lg img { width: 20px; height: 20px; object-fit: contain; display: block; }
+.d-brand small { display: block; font-family: var(--font-soft); font-weight: 500; font-size: .66rem;
+  letter-spacing: 1px; text-transform: uppercase; color: var(--brand-soft); }
+.d-chip { display: inline-flex; align-items: center; gap: .4rem; font-family: var(--font-body); font-weight: 700;
+  font-size: .8rem; color: var(--on-brand); cursor: pointer; border: none; padding: .42rem .75rem;
+  border-radius: var(--r-pill); background: color-mix(in srgb, var(--on-brand) 12%, transparent); }
+.d-chip:hover { background: color-mix(in srgb, var(--on-brand) 22%, transparent); }
+.d-chip .v { font-family: var(--font-body); font-weight: 600; }
+.d-chip--achieve #d-badge-count { font-family: var(--font-title); font-weight: 900; }
+.d-chip--achieve .lbl { font-weight: 500; opacity: .85; margin-left: -.15rem; }
+.d-chip-sep { width: 1px; height: 13px; background: color-mix(in srgb, var(--on-brand) 30%, transparent); flex: none; }
+
+/* ---- Pulso al sumar puntos (kit-base v1.9.44) ----
+   El curso agrega/saca `.is-award-pulse` en `.d-chip--achieve` desde
+   `award()` (nunca desde `updateHud()` a secas — restaurar progreso o
+   desbloquear un logro también llaman a `updateHud()`, y ahí un pulso
+   sería ruido, no festejo). Mismo patrón de re-disparo que
+   `.d-stagger-in`/`.d-nudge` (CLAUDE.md §6.11): sacar+reflow+poner la
+   clase para que corra de nuevo en awards seguidos. Escala + glow
+   corto, nunca en loop — un brillo que no termina se lee como "roto",
+   no como festejo (CLAUDE.md §6.13 punto 4). */
+.d-chip--achieve.is-award-pulse {
+  animation: d-chip-award-pulse .5s cubic-bezier(.34, 1.56, .64, 1);
+}
+@keyframes d-chip-award-pulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 color-mix(in srgb, var(--on-brand) 55%, transparent); }
+  40% { transform: scale(1.12); box-shadow: 0 0 0 6px transparent; }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .d-chip--achieve.is-award-pulse { animation: none; }
+}
+/* nombres reales largos no deben poder romper el ancho de la barra */
+#d-greet { max-width: 22vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; }
+/* El saludo se arma en 2 partes (curso.js): un <span class="ic"> con el
+   emoji + el texto "Hola, Nombre" como nodo de texto aparte — así el
+   emoji se puede ocultar solo en mobile (ver media query) sin tocar el
+   nombre real. Ver kit-base/header-boilerplate.html para el patrón JS. */
+
+.d-iconbtn { width: 38px; height: 38px; border-radius: 50%; border: none; cursor: pointer; display: grid;
+  place-items: center; color: var(--on-brand); background: transparent; flex: none;
+  transition: transform .15s cubic-bezier(.34,1.56,.5,1), background .15s; }
+.d-iconbtn:hover { background: color-mix(in srgb, var(--on-brand) 22%, transparent); transform: translateY(-2px) scale(1.06); }
+.d-iconbtn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---- Divisor + grupos de controles ----
+   Los controles se agrupan por función en "islas" con fondo propio
+   (nunca sueltos en fila — con 5+ botones-ícono idénticos, ninguno se
+   distingue de los demás a simple vista) separadas por un hairline
+   vertical sutil (.d-top-sep, solo en escritorio — ver media query). */
+.d-top-sep { width: 1px; align-self: stretch; margin: .5rem 0;
+  background: color-mix(in srgb, var(--on-brand) 22%, transparent); flex: none; }
+.d-top-group { display: flex; align-items: center; gap: .2rem; padding: .2rem;
+  border-radius: var(--r-pill); background: color-mix(in srgb, var(--on-brand) 10%, transparent); flex: none; }
+.d-top-group .d-iconbtn { background: transparent; }
+.d-top-group .d-iconbtn:hover { background: color-mix(in srgb, var(--on-brand) 22%, transparent); }
+/* Todo control lleva texto visible, no solo ícono+tooltip — el
+   reproductor es nuevo para el alumno la primera vez, mejor pecar de
+   claro que de "elegante pero ambiguo". .d-iconbtn hereda
+   display:grid+place-items:center (pensado para UN ícono); acá adentro
+   van DOS elementos (ícono+texto) y grid sin columnas explícitas los
+   apila uno arriba del otro en vez de ponerlos en fila — por eso el
+   fix pasa a flex en fila. justify-content:center es necesario aparte
+   de align-items:center: sin él, cuando el texto se oculta en mobile
+   (ver media query) y solo queda el ícono, éste se pega al lado
+   izquierdo del botón en vez de quedar centrado — el fondo/aro de
+   estado activo (.is-on) sí queda centrado en el botón completo,
+   así que sin justify-content el ícono y su propio resaltado quedan
+   visualmente desalineados entre sí (bug real, encontrado probando en
+   mobile). */
+.d-iconbtn--labeled { display: inline-flex; flex-direction: row; align-items: center; justify-content: center;
+  width: auto; height: 38px; border-radius: var(--r-pill); padding: 0 .9rem 0 .65rem; gap: .4rem; }
+.d-iconbtn--labeled .lbl { font-family: var(--font-body); font-weight: 700; font-size: .78rem; white-space: nowrap; line-height: 1; }
+
+/* ---- Estados de los controles (togglados por curso.js/narrador.js) ---- */
+#d-narrate .ic-on { display: none; }
+#d-narrate.is-on .ic-off { display: none; }
+#d-narrate.is-on .ic-on { display: block; }
+#d-narrate.is-on { background: color-mix(in srgb, var(--on-brand) 26%, transparent);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--on-brand) 55%, transparent); }
+#d-narrate.is-on svg { animation: d-narr-pulse 1.1s ease-in-out infinite; }
+@keyframes d-narr-pulse { 0%,100% { opacity: 1; } 50% { opacity: .5; } }
+@media (prefers-reduced-motion: reduce) { #d-narrate.is-on svg { animation: none; } }
+#d-sound .ic-off { display: none; }
+#d-sound.is-muted .ic-on { display: none; }
+#d-sound.is-muted .ic-off { display: block; }
+#d-fullscreen .ic-compress { display: none; }
+#d-fullscreen.is-on .ic-expand { display: none; }
+#d-fullscreen.is-on .ic-compress { display: block; }
+
+/* ============================================================
+   PANELES DE AUDIO — volumen (Sonido) y línea de tiempo (Locución)
+   kit-base v1.9.35, pedido de producto. Se despliegan bajo el botón:
+   con mouse por hover/foco, y con un tap fijándolos abiertos
+   (`.is-open`, ver `initAudioPopovers` en coto-player.js — mismo
+   criterio "pinned" que `initHotspots`, porque en touch no existe el
+   hover, CLAUDE.md §6.10.1 regla 2). El botón sigue siendo el toggle
+   de siempre (mute / on-off); el panel SUMA control fino, nunca lo
+   reemplaza.
+   A propósito, la transición de apertura es SOLO opacidad/visibilidad
+   — nunca transform: la posición (centrada en escritorio, anclada a
+   la derecha en mobile, ver media query) tiene que quedar fija en
+   TODO momento para no tener que reconciliar un transform "cerrado"
+   contra uno "abierto" en dos breakpoints distintos — menos superficie
+   de bug que un desliz vertical más prolijo. */
+.d-audio-ctl { position: relative; }
+.d-audio-pop {
+  position: absolute; top: calc(100% + 10px); left: 50%; transform: translateX(-50%);
+  background: var(--surface); color: var(--text); border-radius: var(--r-lg);
+  padding: .9rem 1rem; box-shadow: var(--shadow-pop);
+  opacity: 0; pointer-events: none; visibility: hidden; transition: opacity .15s ease, visibility .15s;
+  z-index: 10;
+}
+/* El anclaje horizontal REAL (centrado bajo el botón, o corrido para no
+   salirse de pantalla) lo calcula JS en cada apertura
+   (`initAudioPopovers` → `posicionar()`, coto-player.js) contra la
+   posición real del botón — el grupo de audio puede terminar en
+   cualquier lugar del header según el breakpoint (layout de 2 filas
+   más abajo en este mismo archivo), así que un anclaje fijo por CSS
+   (ej. "siempre a la derecha en mobile") asumía mal dónde iba a estar
+   el botón y el panel se salía de pantalla. `left:50%` +
+   `transform:translateX(-50%)` de arriba queda como fallback sin JS
+   únicamente. `--flecha-left` la fija la misma función, para que la
+   flechita siga apuntando al botón real aunque el panel se haya
+   corrido para entrar en pantalla. */
+.d-audio-pop::before {
+  content: ""; position: absolute; top: -6px; left: var(--flecha-left, 50%); translate: -50% 0;
+  width: 13px; height: 13px; background: var(--surface); transform: rotate(45deg);
+  box-shadow: -2px -2px 5px -3px rgba(20, 30, 60, .18);
+}
+.d-audio-ctl:focus-within .d-audio-pop,
+.d-audio-ctl.is-hover .d-audio-pop,
+.d-audio-ctl.is-open .d-audio-pop {
+  opacity: 1; pointer-events: auto; visibility: visible;
+}
+
+/* ---- Volumen ---- */
+.d-vol-pop { width: 190px; }
+.d-vol-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: .55rem; }
+.d-vol-title { font-family: var(--font-title); font-weight: 900; font-size: .72rem; color: var(--text);
+  text-transform: uppercase; letter-spacing: .4px; }
+.d-vol-pct { font-family: var(--font-title); font-weight: 900; font-size: .88rem; color: var(--cat-strong);
+  min-width: 2.4em; text-align: right; }
+.d-vol-row { display: flex; align-items: center; gap: .5rem; }
+.d-vol-mute { width: 28px; height: 28px; border-radius: 50%; border: none; background: var(--surface-2);
+  color: var(--text-soft); display: grid; place-items: center; cursor: pointer; flex: none; padding: 0;
+  transition: background .15s, color .15s; }
+.d-vol-mute:hover { background: color-mix(in srgb, var(--cat) 18%, var(--surface-2)); color: var(--cat-strong); }
+.d-vol-mute svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.d-vol-mute .ic-off { display: none; }
+.d-vol-mute.is-muted .ic-on { display: none; }
+.d-vol-mute.is-muted .ic-off { display: block; }
+.d-vol-bars { display: flex; align-items: flex-end; gap: 2px; height: 14px; margin-top: .55rem; }
+.d-vol-bars span { flex: 1; border-radius: 2px; background: var(--line); }
+.d-vol-bars span:nth-child(1) { height: 30%; } .d-vol-bars span:nth-child(2) { height: 42%; }
+.d-vol-bars span:nth-child(3) { height: 55%; } .d-vol-bars span:nth-child(4) { height: 68%; }
+.d-vol-bars span:nth-child(5) { height: 78%; } .d-vol-bars span:nth-child(6) { height: 88%; }
+.d-vol-bars span:nth-child(7) { height: 94%; } .d-vol-bars span:nth-child(n+8) { height: 100%; }
+.d-vol-bars span.is-on { background: linear-gradient(180deg, var(--cat), var(--cat-strong)); }
+
+/* ---- Slider genérico (volumen + línea de tiempo) — thumb redondo con
+   borde de categoría, mismo lenguaje visual en los dos paneles. ---- */
+.d-vol-slider, .d-narr-range {
+  -webkit-appearance: none; appearance: none; height: 6px; border-radius: var(--r-pill);
+  background: var(--line); outline: none; cursor: pointer; width: 100%; margin: 0; flex: 1;
+}
+.d-vol-slider::-webkit-slider-thumb, .d-narr-range::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: 15px; height: 15px; border-radius: 50%;
+  background: var(--surface); border: 3px solid var(--cat-strong); box-shadow: 0 2px 6px rgba(20, 30, 60, .3); cursor: grab; }
+.d-vol-slider::-moz-range-thumb, .d-narr-range::-moz-range-thumb {
+  width: 15px; height: 15px; border-radius: 50%; background: var(--surface); border: 3px solid var(--cat-strong);
+  box-shadow: 0 2px 6px rgba(20, 30, 60, .3); cursor: grab; }
+.d-narr-range:disabled { opacity: .4; cursor: not-allowed; }
+.d-narr-range:disabled::-webkit-slider-thumb, .d-narr-range:disabled::-moz-range-thumb { cursor: not-allowed; }
+
+/* ---- Locución: línea de tiempo + repetir ---- */
+.d-narr-pop { width: 250px; }
+.d-narr-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: .5rem; }
+.d-narr-title { font-family: var(--font-title); font-weight: 900; font-size: .72rem; color: var(--text);
+  text-transform: uppercase; letter-spacing: .4px; }
+.d-narr-status { font-size: .68rem; font-weight: 800; color: var(--cat-strong); display: flex; align-items: center; gap: .3rem; }
+.d-narr-status .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--cat-strong);
+  animation: d-narr-dot-blink 1.1s ease-in-out infinite; }
+@keyframes d-narr-dot-blink { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+.d-narr-range { display: block; margin: .3rem 0 .55rem; }
+.d-narr-foot { display: flex; align-items: center; justify-content: flex-end; gap: .5rem; }
+.d-narr-replay { display: flex; align-items: center; gap: .3rem; border: none; background: var(--surface-2);
+  color: var(--cat-strong); font-weight: 800; font-size: .72rem; padding: .4rem .65rem; border-radius: var(--r-pill);
+  cursor: pointer; transition: background .15s; flex: none; }
+.d-narr-replay:hover:not(:disabled) { background: color-mix(in srgb, var(--cat) 18%, var(--surface-2)); }
+.d-narr-replay:disabled { opacity: .4; cursor: not-allowed; }
+.d-narr-replay svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+
+@media (prefers-reduced-motion: reduce) {
+  .d-audio-pop { transition: none; }
+  .d-narr-status .dot { animation: none; }
+}
+
+/* Mobile: el anclaje a la derecha que había acá (asumiendo que el
+   grupo de audio siempre queda pegado al borde derecho) se sacó — es
+   justo la asunción que rompía el popover cuando el layout de 2 filas
+   de abajo mueve ese grupo a la IZQUIERDA por debajo de 799px
+   (`.d-top-group--audio{grid-row:2;justify-self:start}`). El anclaje
+   real ahora lo calcula JS en cada apertura (ver el comentario sobre
+   `.d-audio-pop` más arriba); acá solo queda un tope de ancho para que
+   el panel nunca sea más ancho que la pantalla (probado con Playwright
+   en viewport táctil real, CLAUDE.md §7.3 punto 11 — no alcanza con
+   achicar la ventana de escritorio). */
+@media (max-width: 480px) {
+  .d-audio-pop { max-width: calc(100vw - 16px); }
+  .d-vol-pop, .d-narr-pop { width: min(210px, calc(100vw - 24px)); }
+}
+
+/* ============================================================
+   BOTONES FLOTANTES — Ayuda + Configuración (kit-base v1.9.36,
+   CLAUDE.md §6.57). Reemplazan al botón "Ayuda" fijo del header, que
+   mezclaba instructivo con configuración de voz/velocidad — pedido
+   explícito del cliente: separarlos y bajarlos a flotantes discretos,
+   apilados abajo a la derecha, con el mismo mecanismo hover/foco/tap
+   "pinned" que ya usan Sonido/Locución (initFabPopovers,
+   coto-player.js — mismo criterio que initAudioPopovers/initHotspots,
+   CLAUDE.md §6.10.1 regla 2: en touch no existe el hover).
+   `position:fixed` contra el viewport, mismo criterio que
+   `.d-award-toast`/`.d-resume` (ya en este archivo) — nunca dentro de
+   `.d-stage`, que recorta con overflow:hidden. Anclados siempre al
+   mismo costado (abajo a la derecha) así que, a diferencia de
+   `.d-audio-pop`, no necesitan posicionamiento dinámico por JS: un
+   `max-width` alcanza para no salirse en mobile (ver media query más
+   abajo). */
+.d-fab-stack{
+  position: fixed; right: 22px; bottom: 80px; z-index: 60;
+  display: flex; flex-direction: column; gap: .7rem; align-items: flex-end;
+}
+.d-fab{ position: relative; }
+.d-fab-btn{
+  width: 52px; height: 52px; border-radius: 50%; border: none;
+  background: var(--surface); color: var(--cat-strong); cursor: pointer; padding: 0;
+  display: grid; place-items: center;
+  box-shadow: 0 2px 10px rgba(20,30,60,.14), 0 0 0 1px color-mix(in srgb, var(--cat) 35%, white);
+  transition: transform .2s cubic-bezier(.3,1.4,.4,1), box-shadow .2s ease, background .15s, color .15s;
+}
+.d-fab-btn svg{ width: 21px; height: 21px; transition: transform .35s cubic-bezier(.3,1.4,.4,1); }
+.d-fab-btn:hover, .d-fab-btn:focus-visible{
+  transform: translateY(-2px) scale(1.06);
+  box-shadow: 0 8px 22px rgba(20,30,60,.22), 0 0 0 1px var(--cat-strong);
+}
+.d-fab--config .d-fab-btn:hover svg{ transform: rotate(50deg); }
+.d-fab.is-open .d-fab-btn{
+  background: var(--cat-strong); color: #fff;
+  box-shadow: 0 8px 22px rgba(20,30,60,.28), 0 0 0 1px var(--cat-strong);
+}
+
+/* Aro de "hay algo acá": corre 1 sola vez al cargar el curso (JS le
+   agrega/saca la clase `.is-pulsing` — nunca queda en loop, sería
+   ruido permanente en vez de un llamado de atención puntual). La
+   regla global de prefers-reduced-motion (coto-base.css) ya la anula
+   sola; en reposo sin la clase el aro es invisible (opacity:0), así
+   que sin animación se ve exactamente igual que "sin pulso todavía",
+   nunca roto. */
+.d-fab-ring{
+  position:absolute; inset:-4px; border-radius:50%; border:2px solid var(--cat-strong);
+  opacity:0; pointer-events:none;
+}
+.d-fab.is-pulsing .d-fab-ring{ animation: d-fab-pulse 1.6s ease-out 2; }
+@keyframes d-fab-pulse{
+  0%{ opacity:.5; transform:scale(1); }
+  100%{ opacity:0; transform:scale(1.4); }
+}
+
+.d-fab-pop{
+  position: absolute; right: 0; bottom: calc(100% + 14px);
+  width: 320px; max-width: calc(100vw - 44px); background: var(--surface); color: var(--text);
+  border-radius: var(--r-lg); padding: 1.1rem 1.15rem; box-shadow: var(--shadow-pop);
+  opacity: 0; pointer-events: none; visibility: hidden; transform: translateY(10px) scale(.97);
+  transition: opacity .2s ease, visibility .2s, transform .32s cubic-bezier(.3,1.5,.4,1);
+}
+.d-fab-pop::before{
+  content:""; position:absolute; bottom:-6px; right: 19px;
+  width:13px; height:13px; background:var(--surface); transform:rotate(45deg);
+  box-shadow: 2px 2px 5px -3px rgba(20,30,60,.18);
+}
+.d-fab:focus-within .d-fab-pop, .d-fab.is-hover .d-fab-pop, .d-fab.is-open .d-fab-pop{
+  opacity:1; pointer-events:auto; visibility:visible; transform: translateY(0) scale(1);
+}
+.d-fab-pop--ayuda{ max-height: min(560px, calc(100vh - 140px)); overflow-y: auto; }
+
+/* `.d-instr-nav`/`.d-instr-grid`/`.d-instr-item` son del addendum
+   (coto-base-addendum-v1.8.css) — pensados para el drawer ancho de
+   "Cómo recorrer el curso" (400px+). Reusados tal cual acá se veían
+   "muy grandes" dentro de un popover de ~320px (reporte real del
+   cliente) — se achican SOLO en este contexto, sin tocar el tamaño
+   que sigue siendo correcto en el drawer/modal original. */
+.d-fab-pop .d-instr-nav{ font-size:.74rem; margin:0 0 .6rem; }
+.d-fab-pop .d-instr-nav kbd{ padding:.08rem .35rem; font-size:.68rem; min-width:1.3em; }
+.d-fab-pop .d-instr-grid{ grid-template-columns:repeat(auto-fit,minmax(78px,1fr)); gap:.4rem; margin:0 0 .6rem; }
+.d-fab-pop .d-instr-item{ padding:.55rem .35rem; gap:.3rem; }
+.d-fab-pop .d-instr-item .i{ width:19px; height:19px; }
+.d-fab-pop .d-instr-item span{ font-size:.7rem; }
+.d-fab-pop .d-instr-item small{ font-size:.62rem; }
+
+.d-fab-pop-hd{ display:flex; align-items:center; gap:.5rem; margin-bottom:.8rem; }
+.d-fab-pop-hd svg{ width:18px; height:18px; stroke:var(--cat-strong); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex: none; }
+.d-fab-pop-title{ font-family:var(--font-title); font-weight:900; font-size:.84rem; text-transform:uppercase; letter-spacing:.4px; color:var(--text); }
+
+/* ---- Ayuda: reabrir la intro + acordeón de preguntas frecuentes ---- */
+.d-fab-replay{
+  display:flex; align-items:center; gap:.5rem; width:100%; text-align:left;
+  background: color-mix(in srgb, var(--cat) 10%, var(--surface-2)); border:1px solid color-mix(in srgb, var(--cat) 30%, var(--line));
+  border-radius: var(--r); padding:.55rem .7rem; margin: .7rem 0; cursor:pointer;
+  font-family:var(--font-body); font-size:.78rem; font-weight:700; color:var(--cat-strong);
+  transition: background .15s;
+}
+.d-fab-replay:hover{ background: color-mix(in srgb, var(--cat) 18%, var(--surface-2)); }
+.d-fab-replay svg{ width:16px; height:16px; flex:none; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
+
+.d-fab-acc-item{ border-bottom:1px solid var(--line); }
+.d-fab-acc-item:last-child{ border-bottom:none; }
+.d-fab-acc-q{
+  width:100%; text-align:left; background:none; border:none; cursor:pointer;
+  padding:.6rem .1rem; display:flex; align-items:center; justify-content:space-between; gap:.5rem;
+  font-family:var(--font-body); font-size:.8rem; font-weight:700; color:var(--text);
+}
+.d-fab-acc-q svg{ width:15px; height:15px; flex:none; fill:none; stroke:var(--text-soft); stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; transition:transform .2s; }
+.d-fab-acc-item.is-open .d-fab-acc-q svg{ transform:rotate(180deg); stroke:var(--cat-strong); }
+.d-fab-acc-a{ font-size:.78rem; color:var(--text-soft); line-height:1.5; margin:0; padding:0 .1rem .7rem; }
+.d-fab-acc-item:not(.is-open) .d-fab-acc-a{ display:none; }
+
+/* ---- Configuración: escuchar ejemplo + restablecer ---- */
+.d-fab-listen{
+  display:flex; align-items:center; gap:.4rem; margin-top:.5rem;
+  background:none; border:1px solid color-mix(in srgb, var(--cat) 40%, var(--line)); color:var(--cat-strong);
+  border-radius: var(--r-pill); padding:.35rem .8rem .35rem .6rem; cursor:pointer;
+  font-family:var(--font-body); font-size:.74rem; font-weight:800; transition: background .15s;
+}
+.d-fab-listen:hover{ background: color-mix(in srgb, var(--cat) 12%, transparent); }
+.d-fab-listen svg{ width:14px; height:14px; fill:currentColor; flex:none; }
+.d-fab-reset{
+  width:100%; text-align:center; background:none; border:none; cursor:pointer;
+  font-family:var(--font-body); font-size:.74rem; font-weight:700; color:var(--text-soft);
+  padding:.5rem 0 0; text-decoration:underline; text-underline-offset:2px;
+}
+.d-fab-reset:hover{ color:var(--cat-strong); }
+
+@media (max-width: 480px) {
+  .d-fab-stack{ right: 14px; bottom: 74px; gap: .55rem; }
+  .d-fab-btn{ width: 46px; height: 46px; }
+  .d-fab-btn svg{ width: 19px; height: 19px; }
+  .d-fab-pop{ width: min(300px, calc(100vw - 28px)); padding: .9rem 1rem; }
+}
+
+/* ---- Modo cine (fx.js atenúa el chrome al reproducir un video) ---- */
+.fx-cinema ~ .d-bottom, .d-app:has(.fx-cinema) .d-top { transition: opacity .4s; }
+.d-app:has(.fx-cinema) .d-top, .d-app:has(.fx-cinema) .d-bottom { opacity: .45; }
+.d-app:has(.fx-cinema) .d-top:hover, .d-app:has(.fx-cinema) .d-bottom:hover { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .d-iconbtn, .d-top { animation: none !important; }
+}
+
+/* ============================================================
+   RESPONSIVE — 2 filas con columnas COMPARTIDAS entre fila 1 y fila 2
+   ============================================================
+   Entre ~480 y ~850px la barra no entra en una sola línea. Intentos
+   más simples (flex-wrap libre; o 2 flex rows independientes, cada una
+   con su propio justify-content:space-between) NO dan columnas
+   alineadas entre fila 1 y fila 2: cada fila, siendo un contenedor
+   flex aparte, calcula su propio "punto de corte" según el ancho de
+   SU contenido — como el contenido difiere entre filas (marca+saludo
+   arriba, grupos de controles abajo), el corte queda en un lugar
+   distinto en cada fila y las columnas no calzan verticalmente (se ve
+   "chueco" — bug real, encontrado en revisión visual).
+
+   Fix real: UNA sola grilla de 2 columnas para TODA la barra, no 2
+   filas flex independientes — columna 1 y columna 2 son las MISMAS
+   celdas compartidas por ambas filas, como una tabla:
+     Fila 1: col1 = menú+marca        · col2 = saludo+logros
+     Fila 2: col1 = 1er grupo de ctrl · col2 = 2º grupo de ctrl (+ más
+             si el curso tiene 3+ grupos — agregar clases
+             .d-top-group--<n> y asignarlas a la columna que
+             corresponda; con más de 2 grupos, evaluar si conviene una
+             3ª columna en vez de forzar todo a 2).
+   .d-top-row1 y .d-top-right dejan de ser sus propios contenedores acá
+   (display:contents) — sus hijos pasan a ser celdas DIRECTAS de la
+   grilla de .d-top. El separador visual (.d-top-sep) se oculta: con
+   columnas alineadas de verdad ya no hace falta una línea divisoria
+   para leer los grupos como bloques distintos. */
+/* ---- Tablet: sigue en 1 SOLA fila (como escritorio), pero compacta ----
+   Pedido real de cliente: en iPad (1024px) prefería la barra de 1 fila
+   "prolija" de la versión desktop antes que el layout de 2 filas — ese
+   layout de 2 filas resuelve el desborde real de CLAUDE.md §6.15 pero
+   se ve más apretado/distinto de lo esperado en un ancho donde en
+   realidad SÍ entra todo en 1 fila, si se le saca el texto de los
+   botones-ícono (mismo recorte que ya existía para celular,
+   adelantado acá). Con esto, el layout de 2 filas queda reservado para
+   anchos realmente angostos (el media query de abajo bajó de 1180px a
+   799px). */
+@media (max-width: 1180px) and (min-width: 800px) {
+  .d-top { gap: .4rem; padding: 0 clamp(.6rem, 2vw, 1rem); }
+  .d-top-left { gap: .6rem }
+  .d-top-center { gap: .4rem }
+  .d-top-right { gap: .3rem }
+  .d-brand small { display: none; }
+  .d-brand > span:last-child { max-width: 22vw; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap; display: inline-block; }
+  #d-greet { max-width: 16vw; }
+  .d-top-center .d-chip { padding: .38rem .6rem; font-size: .76rem; }
+  .d-iconbtn--labeled .lbl { display: none; }
+  .d-iconbtn--labeled { width: 38px; padding: 0; }
+  .d-top-group { gap: .05rem; padding: .15rem; }
+}
+
+@media (max-width: 799px) {
+  .d-app { grid-template-rows: auto 1fr 60px; }
+  .d-top { display: grid; grid-template-columns: auto 1fr; align-items: center;
+    height: auto; padding: .6rem .8rem; column-gap: .6rem; row-gap: .55rem; }
+  .d-top-row1, .d-top-right { display: contents; }
+  .d-top-spacer, .d-top-right .d-top-sep { display: none; }
+  .d-top-left         { grid-column: 1; grid-row: 1; justify-self: start; }
+  .d-top-center       { grid-column: 2; grid-row: 1; justify-self: end; }
+  /* Adaptar estos 2 selectores a los grupos reales del curso (mismos
+     modificadores .d-top-group--<nombre> del HTML, ver contrato
+     arriba). Si el curso tiene solo 1 grupo de controles, sacar la
+     2ª regla y dejar el único grupo en grid-column:2 (o el que
+     corresponda). */
+  .d-top-group--audio { grid-column: 1; grid-row: 2; justify-self: start; }
+  .d-top-group--help  { grid-column: 2; grid-row: 2; justify-self: end; }
+  /* .d-top-left/.d-top-center necesitan poder encogerse con elipsis
+     (flex:none/width fijo en escritorio no se puede achicar) para que
+     el texto largo corte con "…" en vez de desbordar la columna. IMPORTANTE:
+     flex-shrink/flex-wrap NO alcanzan para esto — el algoritmo de wrap
+     decide cuántos ítems entran en una línea usando el ancho SIN
+     achicar, shrink actúa recién DESPUÉS de esa decisión. Por eso acá
+     se resuelve con grid (columnas fijas) + min-width:0, no con flex. */
+  .d-top-left, .d-top-center { min-width: 0; }
+  .d-brand { min-width: 0; }
+  .d-brand > span:last-child { min-width: 0; max-width: 34vw; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap; display: inline-block; }
+}
+
+@media (max-width: 767px) {
+  .d-brand small, .d-chip .lbl, .d-iconbtn--labeled .lbl { display: none; }
+  .d-iconbtn--labeled { width: 38px; padding: 0; }
+  .d-nav-btn { min-width: 96px; padding: .6rem .9rem; }
+  .d-counter { display: none; }
+  /* Reparto de presupuesto propio de celular (más angosto que el
+     tramo tablet de arriba, donde 34vw todavía sobra lugar): el
+     nombre del curso cede bastante más para que el saludo alcance a
+     mostrar el nombre real, no solo 1 letra + "…". */
+  .d-brand > span:last-child { max-width: 20vw; }
+  #d-greet { max-width: 30vw; }
+  .d-top-center { gap: .4rem; }
+  .d-top-center .d-chip { padding: .38rem .55rem; }
+  /* Presupuesto real: aun con marca+saludo achicados al máximo
+     razonable, marca+saludo+logros no entran juntos en una fila en un
+     celular angosto (~360-400px) sin perder legibilidad. Se simplifica
+     contenido secundario en vez de seguir apretando tipografía: el
+     emoji del saludo se saca (el texto "Hola, Nombre" ya comunica lo
+     mismo) y el chip de logros muestra SOLO el ícono/contador principal
+     — sigue siendo el mismo botón clickeable, el detalle completo se
+     ve en su pop-up al tocarlo. Adaptar el selector del chip de logros
+     si el curso usa otro nombre de clase para su métrica secundaria. */
+  #d-greet .ic { display: none; }
+  .d-top-center .d-chip--achieve .d-chip-sep,
+  .d-top-center .d-chip--achieve .d-chip-sep ~ * { display: none; }
+}
+
+/* ============================================================
+   Avisos flotantes y "retomá donde dejaste"
+   kit-base v1.8 — pareja de `toast()` e `initResume()` de coto-player.js,
+   que estaban en el kit desde v1.7 con su CSS todavía en cada curso.
+   ============================================================ */
+.d-award-toast{position:fixed;bottom:82px;left:50%;transform:translateX(-50%) translateY(12px); background:var(--brand-navy);color:#fff;padding:.65rem 1.2rem;border-radius:var(--r-pill); font-family:var(--font-body);font-weight:700;font-size:.85rem;box-shadow:var(--shadow-pop); opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:95; display:flex;align-items:center;gap:.5rem}
+.d-award-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.d-resume{position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:70; display:flex;align-items:center;gap:.8rem;background:var(--surface); border:1px solid color-mix(in srgb,var(--cat) 45%,var(--line));border-radius:var(--r-pill); padding:.5rem .5rem .5rem 1.1rem;box-shadow:var(--shadow-pop); animation:d-resume-in .35s cubic-bezier(.2,.7,.2,1)}
+.d-resume-txt{font-size:.9rem;font-weight:600;color:var(--text)}
+.d-resume .btn{padding:.5rem 1rem}
+.d-resume-x{width:30px;height:30px;border-radius:50%;border:none;cursor:pointer; background:var(--surface-2);color:var(--text-soft);font-size:.9rem}
+.d-resume-x:hover{background:var(--line)}

@@ -1,0 +1,41 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 31 Aug 2026 13:43:51 +0000
+Subject: [PATCH 3/5] docs(boilerplate): checklist de migracion al fab-stack
+
+---
+ header-boilerplate.html | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+diff --git a/header-boilerplate.html b/header-boilerplate.html
+index 183b34d..0f4a70c 100644
+--- a/header-boilerplate.html
++++ b/header-boilerplate.html
+@@ -215,6 +215,27 @@
+      son EXACTOS, los necesita initVoicePicker/initRatePicker.
+      Ejemplo de referencia completo (con las 6 svg de acordeón, etc.):
+      seguridad-alimentaria/index.html, buscar [data-fab-stack].
++
++     SI EL CURSO VENÍA CON DRAWER DE AYUDA (cursos anteriores a
++     v1.9.36), adoptar el flotante NO es solo pegar este bloque —
++     hay que sacar lo que reemplaza, o quedan dos entradas compitiendo
++     y, peor, ids repetidos:
++       1. Borrar de la barra superior el botón
++          `data-popup-trigger="ayuda"`. El grupo queda con Glosario +
++          Ampliar y su aria-label pasa a "Glosario y vista", igual que
++          en la barra de acá arriba.
++       2. Borrar el modal `data-popup="ayuda"` entero.
++       3. MOVER (no copiar) al flotante de Configuración los controles
++          que vivían en ese drawer: #d-voice-field, #d-voice-select,
++          #d-voice-listen, #d-rate-field, #d-rate-range, #d-rate-value
++          y #d-config-reset. Duplicarlos es un fallo SILENCIOSO:
++          getElementById toma el primero, así que los del flotante se
++          ven pero no responden. markup-sanity lo detecta desde
++          v1.9.57; igual conviene no introducirlo.
++       4. El contenido propio del curso (sus reglas de avance, cómo se
++          aprueba el minijuego, etc.) va al acordeón [data-fab-acc].
++          Estructura, posición e iconos son IGUALES en todos los
++          cursos; lo único que cambia son esas preguntas.
+      ============================================================== -->
+ <div class="d-fab-stack" data-fab-stack>
+   <div class="d-fab d-fab--config" data-fab-ctl="config">

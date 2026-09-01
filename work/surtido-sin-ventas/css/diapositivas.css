@@ -1,0 +1,151 @@
+/* diapositivas.css — CSS propio de "Surtido sin ventas". Nunca tocar los .css del kit (CLAUDE.md §1). */
+
+/* ---- "Cómo recorrer el curso" antes del cierre: mensaje de bloqueo ----
+   coto-cierre.js/css ya ocultan .d-cierre-shot/.d-cierre-summary hasta
+   que .slide-cierre tenga la clase .unlocked (unlockCierre()) — acá solo
+   falta mostrar/ocultar el aviso de "todavía no", que es específico del
+   texto de este curso. */
+.slide-cierre .locked { display: flex; align-items: center; justify-content: center;
+  text-align: center; font-family: var(--font-title); font-weight: 700;
+  color: var(--text-soft); font-size: 1.1rem; max-width: 480px; margin: 0 auto; }
+.slide-cierre.unlocked .locked { display: none; }
+
+/* ---- Aviso de gate en "Algunos conceptos importantes" (captura +
+   data-shot-swap, ver index.html) — banner flotante sobre la imagen. ---- */
+.d-conceptos-gate { position: absolute; left: 50%; bottom: 4%; translate: -50% 0;
+  z-index: 3; max-width: 80%; padding: .7rem 1.2rem; border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--warning) 16%, var(--surface)); color: var(--warning-ink);
+  font-size: .88rem; font-weight: 700; text-align: center; box-shadow: var(--shadow-card); }
+
+.d-cierre-cta-hint { margin: .9rem 0 0; font-size: .8rem; color: var(--text-soft); }
+
+/* ---- Hitboxes sobre las tarjetas de "Lo que vimos en este video" ----
+   El `.d-shot-hit` genérico (coto-shot-stage.css) usa `--r-sm` (8px) de
+   radio — mucho más chico que el de las tarjetas reales del PDF
+   (medido contra el arte: ~22px a esta escala), así que el resaltado
+   amarillo del hover quedaba con esquinas cuadradas asomando fuera del
+   borde redondeado de la tarjeta. Pedido del cliente: que el hover
+   calce justo con el recuadro. */
+.d-shot-hit--card { border-radius: var(--r-lg); }
+
+/* ---- Pop-ups de repaso ("¿Para qué sirve el reporte?" y afines) ----
+   Estilo pedido por el cliente sobre referencia propia: ícono en
+   círculo + título con línea de acento debajo (mismo lenguaje que las
+   tarjetas de "Algunos conceptos importantes" del PDF), sin la barra
+   de encabezado oscura genérica del kit. */
+.d-recap-modal { text-align: center; padding-top: .4rem; }
+.d-recap-modal .modal-bd { padding-top: .6rem; }
+.d-recap-modal-ic { width: 64px; height: 64px; margin: 0 auto .9rem; border-radius: 50%;
+  display: grid; place-items: center; background: var(--cat-grad); color: #fff; }
+.d-recap-modal-ic svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 2; }
+.d-recap-modal h3 { margin: 0 0 .5rem; font-family: var(--font-title); font-weight: 900;
+  color: var(--cat-ink); font-size: 1.15rem; display: inline-block;
+  padding-bottom: .4rem; border-bottom: 3px solid var(--cat); }
+.d-recap-modal p { margin: .8rem 0 0; color: var(--text); font-size: .95rem; line-height: 1.5; }
+
+/* Listas con viñetas dentro del pop-up de repaso (a diferencia del
+   párrafo simple de arriba, van alineadas a la izquierda — un bullet
+   centrado no se lee bien). */
+.d-recap-list { text-align: left; list-style: none; margin: .7rem 0 0; padding: 0; }
+.d-recap-list li { position: relative; padding-left: 1.2rem; margin: .4rem 0;
+  color: var(--text); font-size: .92rem; line-height: 1.45; }
+.d-recap-list li::before { content: ""; position: absolute; left: 0; top: .55em;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--cat); }
+.d-recap-list li b { color: var(--text); }
+.d-recap-list ul { list-style: none; margin: .3rem 0 0; padding: 0; }
+.d-recap-list ul li { padding-left: 1.1rem; margin: .2rem 0; }
+.d-recap-list ul li::before { width: 5px; height: 5px; background: var(--cat-soft); }
+.d-recap-modal-important { margin-top: 1.1rem; padding-top: .8rem;
+  border-top: 1px dashed var(--line); text-align: center; }
+.d-recap-modal-important b { display: block; color: var(--cat-ink);
+  font-family: var(--font-title); font-weight: 900; margin-bottom: .25rem; }
+
+/* ============================================================
+   Mini juego — rediseño completo sobre el PDF real del cliente
+   ("Juego para curso Salón - N días"), 5 preguntas con arte propio.
+   Reusa la cáscara de chips/píldoras de coto-minijuego.css
+   (.d-mj-stats/.d-mj-stat/.d-mj-opt/.d-mj-fb — mismo lenguaje visual
+   ya usado en otros cursos del kit); el layout de tarjeta y las 2
+   pantallas finales son 100% de este curso (CLAUDE.md §1: no hay
+   patrón "mapa con líneas" acá, es opción múltiple simple, distinto
+   de la mecánica de NOA/Seguridad alimentaria).
+   ============================================================ */
+[data-slide="minijuego"] { align-items: stretch; justify-content: stretch; }
+[data-slide="minijuego"] .d-mj { height: 100%; display: flex; }
+.d-mj-panel { display: flex; align-items: center; justify-content: center;
+  overflow-y: auto; padding: 1.5rem 0; width: 100%; }
+
+/* ---- Intro ---- */
+.d-mj-intro { max-width: 720px; margin: 0 auto; text-align: center; padding: 0 1.5rem; }
+.d-mj-intro-kicker { display: inline-flex; align-items: center; gap: .5rem;
+  padding: .5rem 1.1rem; border-radius: var(--r-pill); background: var(--cat-grad);
+  color: #fff; font-weight: 800; font-size: .85rem; margin-bottom: 1.3rem; }
+.d-mj-intro-kicker svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
+.d-mj-intro-tit { font-family: var(--font-title); font-weight: 900;
+  font-size: clamp(1.6rem, 3cqw, 2.3rem); margin: 0 0 1rem; line-height: 1.15; }
+.d-mj-intro-tit span { color: var(--cat-ink); }
+.d-mj-intro-body { font-size: 1rem; color: var(--text); line-height: 1.5; margin: 0 0 1.5rem; }
+.d-mj-intro-cta { margin-bottom: 2rem; }
+.d-mj-intro-tips { list-style: none; margin: 0; padding: 0; display: flex;
+  justify-content: center; gap: 2rem; flex-wrap: wrap; }
+.d-mj-intro-tips li { display: flex; flex-direction: column; align-items: center;
+  gap: .4rem; font-size: .85rem; color: var(--text-soft); max-width: 140px; }
+.d-mj-intro-tips b { color: var(--text); font-family: var(--font-title); }
+.d-mj-intro-tip-ic { width: 44px; height: 44px; border-radius: 50%; display: grid;
+  place-items: center; background: var(--cat-wash); color: var(--cat-ink); }
+.d-mj-intro-tip-ic svg { width: 24px; height: 24px; fill: none; stroke: currentColor;
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---- Tarjeta de pregunta ---- */
+.d-mj-play { display: flex; flex-direction: column; gap: 1.1rem; width: 100%;
+  max-width: 900px; margin: 0 auto; padding: 0 1.5rem; }
+.d-mj-card { display: flex; align-items: center; gap: 1.5rem;
+  background: linear-gradient(160deg, #fff8ea, #fdf1da); border: 1px solid #f0dcae;
+  border-radius: var(--r-xl); padding: 1.6rem 1.8rem; min-height: 210px; }
+.d-mj-card-text { flex: 1 1 55%; font-size: 1.02rem; line-height: 1.5; color: var(--text); }
+.d-mj-card-text b { color: var(--cat-ink); }
+.d-mj-card-img { flex: 1 1 40%; display: flex; align-items: center; justify-content: center; }
+.d-mj-card-img img { max-width: 100%; max-height: 190px; object-fit: contain; }
+
+/* Píldoras en una sola fila — NO la grilla con líneas conectoras del
+   kit (esa es la mecánica de "mapa" de otro curso; acá es opción
+   múltiple simple, 4 opciones, una respuesta correcta). */
+.d-mj-opts { display: flex; flex-wrap: wrap; gap: .8rem; justify-content: center; }
+.d-mj-opts .d-mj-opt { flex: 1 1 200px; max-width: 260px; }
+.d-mj-next { align-self: center; }
+
+/* ---- Pantallas finales (éxito / a reintentar) ---- */
+.d-mj-fin2 { max-width: 680px; margin: 0 auto; text-align: center; padding: 0 1.5rem; }
+.d-mj-fin2 h2 { font-family: var(--font-title); font-weight: 900;
+  font-size: clamp(1.5rem, 2.8cqw, 2.1rem); margin: 0 0 .7rem; }
+.d-mj-fin2--ok h2 { color: var(--success-ink); }
+.d-mj-fin2--fail h2 { color: var(--warning-ink); }
+.d-mj-fin2 > p { margin: 0 0 1.6rem; color: var(--text); font-size: 1rem; }
+.d-mj-fin2-stats { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
+  margin-bottom: 1.8rem; }
+.d-mj-fin2-stat { flex: 1 1 160px; max-width: 200px; display: flex; flex-direction: column;
+  align-items: center; gap: .4rem; background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-lg); padding: 1.1rem .9rem; box-shadow: var(--shadow-card); }
+.d-mj-fin2-ic { width: 46px; height: 46px; border-radius: 50%; display: grid;
+  place-items: center; background: var(--cat-wash); color: var(--cat-ink); }
+.d-mj-fin2-ic svg { width: 26px; height: 26px; fill: none; stroke: currentColor;
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.d-mj-fin2-ic--solid svg { fill: currentColor; stroke: none; }
+.d-mj-fin2-ic--solid { color: #e8a628; }
+.d-mj-fin2-stat.is-ok .d-mj-fin2-ic { background: color-mix(in srgb, var(--success) 18%, var(--surface)); color: var(--success-ink); }
+.d-mj-fin2-stat.is-bad .d-mj-fin2-ic { background: color-mix(in srgb, var(--danger) 14%, var(--surface)); color: var(--danger-ink); }
+.d-mj-fin2-stat b { font-family: var(--font-title); font-weight: 900; font-size: 1.15rem; color: var(--text); }
+.d-mj-fin2-stat span { font-size: .78rem; color: var(--text-soft); }
+
+@media (max-width: 720px) {
+  .d-mj-card { flex-direction: column; text-align: center; }
+  .d-mj-opts .d-mj-opt { flex: 1 1 100%; max-width: 420px; }
+  /* Las píldoras apiladas a ancho completo (regla de arriba) quedan
+     justo donde coto-player-chrome.css ancla #d-fab-stack (engranaje +
+     ayuda, `position:fixed; right; bottom`) — sin este padding, las 2
+     últimas opciones quedan tapadas por esos botones sin forma de
+     scrollear más allá (verificado en iPhone 12: la última fila sigue
+     debajo del fab-stack incluso con el panel scrolleado al máximo).
+     174.8px alcanza al breakpoint ≤480px del kit; sumamos margen. */
+  .d-mj-play { padding-bottom: 210px; }
+}

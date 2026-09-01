@@ -1,0 +1,157 @@
+{
+  "categoria": "Seguridad alimentaria",
+  "multipleChoice": [
+    {
+      "id": "SA01 - Inocuidad",
+      "pregunta": "¿Qué es un alimento inocuo?",
+      "correcta": { "texto": "Un alimento que, al ser ingerido, no causa ningún tipo de daño a la salud del consumidor", "feedback": "¡Correcto! La inocuidad es el objetivo de todas las prácticas del curso: que el alimento no dañe a quien lo consume." },
+      "incorrectas": [
+        { "texto": "Un alimento que perdió olor, color o sabor pero todavía se puede vender", "feedback": "Incorrecto: eso describe un alimento ALTERADO, que justamente no está apto para el consumo." },
+        { "texto": "Un alimento que fue envasado en bandeja y film", "feedback": "Incorrecto: el envasado ayuda a conservar, pero por sí solo no garantiza que el alimento sea inocuo." }
+      ]
+    },
+    {
+      "id": "SA02 - Alteración vs contaminación",
+      "pregunta": "¿Cuál es la diferencia principal entre un alimento alterado y uno contaminado?",
+      "correcta": { "texto": "La alteración se nota a simple vista; la contaminación puede no notarse", "feedback": "¡Correcto! El alimento alterado cambia olor, textura, color o sabor. El contaminado puede aparentar estar perfecto." },
+      "incorrectas": [
+        { "texto": "La alteración solo ocurre en carnes; la contaminación en cualquier alimento", "feedback": "Incorrecto: la alteración puede darse en cualquier alimento, no solo en carnes." },
+        { "texto": "La alteración la producen microorganismos; la contaminación, el frío", "feedback": "Incorrecto: es al revés. La contaminación puede venir de microorganismos, y el frío es un método de conservación, no una causa de contaminación." }
+      ]
+    },
+    {
+      "id": "SA03 - Peligro biológico",
+      "pregunta": "¿Qué caracteriza a un peligro biológico?",
+      "correcta": { "texto": "La presencia de microorganismos: bacterias, virus, hongos o parásitos", "feedback": "¡Correcto! Es la causa más frecuente de las ETAs, como la hepatitis A o la gastroenteritis." },
+      "incorrectas": [
+        { "texto": "La presencia de pelos, vidrio o virutas de metal", "feedback": "Incorrecto: esos son elementos ajenos al alimento, o sea un peligro FÍSICO." },
+        { "texto": "El contacto del alimento con productos de limpieza o insecticidas", "feedback": "Incorrecto: eso es un peligro QUÍMICO, que provoca intoxicaciones." }
+      ]
+    },
+    {
+      "id": "SA04 - Peligro físico",
+      "pregunta": "Un cliente encuentra una viruta de metal dentro de un producto. ¿Qué tipo de peligro es?",
+      "correcta": { "texto": "Peligro físico", "feedback": "¡Correcto! Los elementos ajenos al alimento —pelos, vidrio, astillas de madera, virutas de metal— son peligros físicos y pueden dañar la boca y el tracto intestinal." },
+      "incorrectas": [
+        { "texto": "Peligro químico", "feedback": "Incorrecto: el peligro químico viene de sustancias como productos de limpieza, insecticidas o pesticidas." },
+        { "texto": "Peligro biológico", "feedback": "Incorrecto: el peligro biológico son microorganismos —bacterias, virus, hongos o parásitos—, no objetos." }
+      ]
+    },
+    {
+      "id": "SA05 - Contaminación cruzada indirecta",
+      "pregunta": "Se corta pollo crudo con un cuchillo y, sin lavarlo, se corta con el mismo cuchillo una fruta lista para consumir. ¿Qué ocurrió?",
+      "correcta": { "texto": "Contaminación cruzada en forma indirecta", "feedback": "¡Correcto! Es indirecta porque los microorganismos pasaron a través de un intermediario: el cuchillo." },
+      "incorrectas": [
+        { "texto": "Contaminación cruzada en forma directa", "feedback": "Incorrecto: la forma directa es cuando el alimento contaminado toca al alimento seguro, sin intermediarios." },
+        { "texto": "Alteración del alimento", "feedback": "Incorrecto: la alteración es la pérdida de olor, textura, color o sabor, y se nota a simple vista." }
+      ]
+    },
+    {
+      "id": "SA06 - Plagas",
+      "pregunta": "Encontrás excremento de roedor en un depósito. ¿Cuál es la conducta correcta?",
+      "correcta": { "texto": "Alertar a los responsables de la sucursal: jefe de sector o gerente", "feedback": "¡Correcto! Nuestra responsabilidad como colaboradores es alertar ante cualquier evidencia de plagas." },
+      "incorrectas": [
+        { "texto": "Limpiarlo uno mismo y seguir trabajando sin avisar", "feedback": "Incorrecto: limpiar no resuelve la plaga y, sin aviso, nadie puede tomar medidas de fondo." },
+        { "texto": "Esperar a ver si aparece de nuevo antes de informarlo", "feedback": "Incorrecto: la evidencia de plagas se informa siempre, en el momento — el riesgo de contaminación es serio." }
+      ]
+    },
+    {
+      "id": "SA07 - Limpieza y desinfección",
+      "pregunta": "¿Cuál es la diferencia entre limpieza y desinfección?",
+      "correcta": { "texto": "La limpieza quita la suciedad visible; la desinfección elimina las bacterias que no se ven", "feedback": "¡Correcto! Son dos pasos distintos e igual de importantes: la limpieza sola no alcanza a eliminar todo." },
+      "incorrectas": [
+        { "texto": "Son lo mismo, solo cambia el producto que se usa", "feedback": "Incorrecto: son dos pasos diferentes, y la desinfección va siempre DESPUÉS de la limpieza." },
+        { "texto": "La desinfección quita la suciedad visible y la limpieza elimina bacterias", "feedback": "Incorrecto: está al revés. La limpieza elimina lo que se ve; la desinfección, lo que no se ve." }
+      ]
+    },
+    {
+      "id": "SA08 - Pasos de limpieza",
+      "pregunta": "En el proceso de limpieza, ¿cuál es el PRIMER paso?",
+      "correcta": { "texto": "Quitar la suciedad visible: restos de alimentos, polvo, tierra y otros materiales", "feedback": "¡Correcto! Recién después se enjuaga y se aplica la solución de limpieza diluida." },
+      "incorrectas": [
+        { "texto": "Aplicar la solución de limpieza general diluida", "feedback": "Incorrecto: ese es el tercer paso, después de quitar la suciedad visible y de enjuagar." },
+        { "texto": "Realizar la acción mecánica con cepillo o esponja", "feedback": "Incorrecto: la acción mecánica va después de aplicar la solución de limpieza." }
+      ]
+    },
+    {
+      "id": "SA09 - Rango crítico",
+      "pregunta": "¿Cuál es el rango crítico de temperatura que hay que evitar para la exposición de alimentos?",
+      "correcta": { "texto": "Entre 5 °C y 65 °C", "feedback": "¡Correcto! Es el rango donde los microorganismos se multiplican más rápido." },
+      "incorrectas": [
+        { "texto": "Entre 0 °C y 5 °C", "feedback": "Incorrecto: ese es justamente el rango de refrigeración, donde el alimento está seguro." },
+        { "texto": "Por encima de 65 °C", "feedback": "Incorrecto: por encima de 65 °C es el mantenimiento en caliente, otro método de conservación válido." }
+      ]
+    },
+    {
+      "id": "SA10 - Producto vencido",
+      "pregunta": "Se detecta un producto vencido en góndola. ¿Cuál es el circuito correcto?",
+      "correcta": { "texto": "Retirarlo de inmediato, embolsarlo, validarlo con el jefe de sector y llevarlo a la cámara de decomiso y devoluciones", "feedback": "¡Correcto! Ese es el circuito completo: retirar, embolsar, controlar y separar del resto de la mercadería." },
+      "incorrectas": [
+        { "texto": "Dejarlo en góndola hasta el control diario del día siguiente", "feedback": "Incorrecto: el producto vencido se retira INMEDIATAMENTE, no se espera al próximo control." },
+        { "texto": "Retirarlo y guardarlo en la misma cámara que la mercadería en buen estado", "feedback": "Incorrecto: justamente se lleva a un sector específico para evitar que entre en contacto con alimentos en buen estado." }
+      ]
+    }
+  ],
+  "verdaderoFalso": [
+    {
+      "id": "SA11 - Responsabilidad",
+      "enunciado": "Los colaboradores somos los principales responsables de evitar la contaminación de los alimentos.",
+      "esVerdadero": true,
+      "feedback": "Verdadero. El resumen de la unidad 1 lo dice explícitamente: mantener la higiene personal, limpiar y desinfectar y controlar la temperatura es responsabilidad nuestra."
+    },
+    {
+      "id": "SA12 - Manos",
+      "enunciado": "El lavado de manos es la principal forma de combatir la contaminación alimentaria.",
+      "esVerdadero": true,
+      "feedback": "Verdadero. Las manos son el principal vehículo de transmisión de microorganismos a los alimentos."
+    },
+    {
+      "id": "SA13 - Joyas",
+      "enunciado": "En los sectores que participan de la producción de alimentos, como Elaborados, el uso de joyas está simplemente desaconsejado pero permitido.",
+      "esVerdadero": false,
+      "feedback": "Falso. En general se recomienda evitarlas, pero en los sectores de producción de alimentos su uso está PROHIBIDO."
+    },
+    {
+      "id": "SA14 - Síntomas",
+      "enunciado": "Si estamos con vómitos, diarrea, mucosidad nasal o tos, debemos informarlo a un superior.",
+      "esVerdadero": true,
+      "feedback": "Verdadero. Si entramos en contacto con alimentos estando con esos síntomas, podemos contaminarlos."
+    },
+    {
+      "id": "SA15 - Congelado",
+      "enunciado": "La temperatura de referencia para el congelado es inferior a -18 °C.",
+      "esVerdadero": true,
+      "feedback": "Verdadero. Refrigerado va de 0 °C a 5 °C; congelado, por debajo de -18 °C; y caliente, por encima de 65 °C."
+    },
+    {
+      "id": "SA16 - Fumar",
+      "enunciado": "Fumar solo es un problema por el humo: mientras no caigan cenizas sobre los alimentos, no hay riesgo.",
+      "esVerdadero": false,
+      "feedback": "Falso. Al fumar, los dedos entran en contacto con bacterias de la boca y el cigarrillo favorece la tos y los estornudos, además del riesgo de cenizas y colillas."
+    },
+    {
+      "id": "SA17 - Envasado",
+      "enunciado": "El envasado en bandeja y film reduce tanto el riesgo de contaminación como el de alteración.",
+      "esVerdadero": true,
+      "feedback": "Verdadero. Al evitar el contacto con el aire reduce la contaminación, y además demora la pérdida de olor, sabor y color."
+    },
+    {
+      "id": "SA18 - Rotación",
+      "enunciado": "En la rotación de mercadería, se retira primero lo que llegó primero, sin mirar la fecha de vencimiento.",
+      "esVerdadero": false,
+      "feedback": "Falso. La metodología se basa en la FECHA DE VENCIMIENTO: se retira primero la mercadería más próxima a vencer."
+    },
+    {
+      "id": "SA19 - Desinfección tiempo",
+      "enunciado": "La solución desinfectante diluida debe dejarse actuar 5 minutos y después hay que hacer un enjuague final con agua.",
+      "esVerdadero": true,
+      "feedback": "Verdadero. Y siempre después de la limpieza: la desinfección no reemplaza al primer paso."
+    },
+    {
+      "id": "SA20 - Cortes",
+      "enunciado": "Un corte o herida en la mano se puede dejar al aire mientras no sangre.",
+      "esVerdadero": false,
+      "feedback": "Falso. Los cortes y heridas son lugares ideales para el desarrollo de bacterias: deben protegerse con apósitos impermeables."
+    }
+  ]
+}

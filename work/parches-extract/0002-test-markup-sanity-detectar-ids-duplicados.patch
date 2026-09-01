@@ -1,0 +1,50 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 31 Aug 2026 13:43:13 +0000
+Subject: [PATCH 2/5] test(markup-sanity): detectar ids duplicados
+
+---
+ tools/tests/markup-sanity.mjs | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+
+diff --git a/tools/tests/markup-sanity.mjs b/tools/tests/markup-sanity.mjs
+index 76c7e65..69190a4 100644
+--- a/tools/tests/markup-sanity.mjs
++++ b/tools/tests/markup-sanity.mjs
+@@ -30,6 +30,7 @@
+         accesible real, no una fuga de un .sr-only mal cerrado.
+      3. Ningún elemento con clase .sr-only quedó visible en pantalla
+         (regla de CSS pisada, clase mal escrita, etc.).
++     4. Ningún id está repetido en el documento (ver el bloque 5, abajo).
+ */
+ import { openCourse, report, requireUrl } from './_shared.mjs';
+ 
+@@ -99,6 +100,28 @@ const estructura = await page.evaluate(() => {
+ });
+ fails.push(...estructura);
+ 
++/* 5 · ids duplicados.
++   Bug real al migrar "Uso de Sucursales 3 - NOA" al bloque flotante de
++   Ayuda/Configuración: los controles de voz/velocidad/reset vivían en el
++   drawer viejo y se agregaron también al flotante, así que por un rato
++   hubo dos #d-rate-range, dos #d-config-reset, etc. `getElementById`
++   devuelve SIEMPRE el primero del documento, de modo que
++   initVoicePicker/initRatePicker/initConfigReset cablearon los controles
++   VIEJOS y los del flotante quedaron muertos: el alumno los ve, los toca
++   y no pasa nada. Cero errores de consola y los 7 tests en verde — es
++   exactamente la clase de fallo silencioso que este archivo existe para
++   atrapar. Barato de chequear y sirve para cualquier curso, porque todo
++   el kit busca sus controles por id. */
++const idsDup = await page.evaluate(() => {
++  const vistos = new Set(); const dup = new Set();
++  document.querySelectorAll('[id]').forEach((el) => {
++    if (vistos.has(el.id)) dup.add(el.id); else vistos.add(el.id);
++  });
++  return Array.from(dup);
++});
++fails.push(...idsDup.map((id) => `id duplicado: #${id} — getElementById toma el primero, ` +
++  'el resto queda sin cablear (visible pero muerto)'));
++
+ if (errors.length) fails.push(...errors.map(e => 'error de consola: ' + e));
+ report('markup-sanity', fails);
+ await browser.close();

@@ -1,0 +1,409 @@
+<!--
+  header-boilerplate.html · kit-base v1.1 · Área Aprendizaje (COTO)
+  ------------------------------------------------------------
+  HTML de referencia para la barra superior (.d-top), pareja con
+  css/coto-player-chrome.css — ver el contrato de IDs/clases al
+  principio de ese archivo. Copiar este bloque dentro de <div class="d-app">,
+  antes de <main class="d-stage">, y adaptar:
+    - src del logo (img/icono-<categoria>.webp) + alt del ícono decorativo.
+    - Nombre del curso + "Área <X> · COTO" en .d-brand.
+    - Los grupos de .d-top-right: este ejemplo trae 2 (audio/vista) — si
+      el curso necesita otros/más, agregar/quitar <div class="d-top-group
+      d-top-group--NOMBRE"> y reflejar los mismos modificadores en el
+      media query de coto-player-chrome.css (grid-column por grupo).
+    - Los <button> de "Índice"/Glosario abren pop-ups que cada curso
+      ya trae armados aparte (ver spec-motor-slides.md §6). "Ayuda" y
+      "Configuración" NO van en esta barra — son los botones flotantes
+      de [data-fab-stack] al final de este bloque (kit-base v1.9.36,
+      CLAUDE.md §6.57): antes vivían acá como un botón más, mezclando
+      instructivo con configuración de voz/velocidad en el mismo
+      pop-up; ahora están separados y apilados abajo a la derecha.
+-->
+<!-- ==============================================================
+     SPRITE DE ÍCONOS MÍNIMO — copiar al <body>, ANTES de este bloque
+     (kit-base v1.9.49)
+     ==============================================================
+     Solo los 2 íconos que el kit mismo necesita para funcionar:
+     `i-check` (el tilde de "diapositiva ya visitada" en el índice
+     lateral, `.ix-ck` — ver coto-base-addendum-v1.8.css) e `i-play`
+     (el botón "Empezar mi aprendizaje" DE ESTE MISMO ARCHIVO, más
+     abajo en el pop-up de instructivo). Sin esto, un curso que
+     arranca de cero con este boilerplate tiene un `<use href="#i-...">`
+     apuntando a nada — el ícono no se rompe visualmente (queda vacío,
+     sin error de consola), así que es fácil no notarlo hasta que
+     alguien mira de cerca.
+
+     Se intentó en un momento extraer un sprite más grande ("los
+     íconos que se repiten entre cursos") pero no resistió la
+     auditoría: de 18 símbolos con el mismo id en dos cursos reales
+     (`seguridad-alimentaria`/`noa`), uno (`i-chart-pie`) tenía
+     contenido DISTINTO pese al mismo nombre (dos formas de gráfico de
+     torta distintas — nunca hubo una fuente única, cada curso lo
+     redibujó a mano) y otro (`i-gauge`) estaba definido en el sprite
+     de `noa` pero sin un solo `<use>` real que lo consumiera — sobrevivía
+     ahí solo porque un curso copió el `<svg>` sprite entero de otro
+     curso al arrancar, sin curarlo. O sea: la "coincidencia" entre
+     cursos no era un contrato del kit, era historial de copiar-pegar.
+     Los únicos 2 íconos con un contrato REAL (algo del kit los
+     referencia por id, no un curso) son estos. Cualquier ícono más
+     que un curso necesite (portada, cierre, contenido propio) es una
+     decisión de ESE curso — agregarlo al mismo `<svg>` sprite, no acá.
+     -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polygon points="10 8.5 16 12 10 15.5" fill="currentColor" stroke="none"/></symbol>
+</svg>
+
+<!-- ==============================================================
+     FAVICON — copiar al <head> del curso (kit v1.9.4)
+     ==============================================================
+     BUG REAL de proceso: sin esta línea el navegador pide
+     /favicon.ico, no existe en el paquete SCORM, y el 404 entra como
+     "error de consola" en 3 de los 6 tests del kit (deep-audit,
+     markup-sanity, full-regress). O sea: un curso recién armado desde
+     este boilerplate NO puede pasar su propia suite en verde, y quien
+     lo audita pierde el tiempo buscando un archivo que falta cuando
+     en realidad no falta ninguno. Va como data-URI para no sumar un
+     archivo más al paquete; el color se cambia por el --cat del curso.
+-->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%23<COLOR-CAT-SIN-NUMERAL>'/%3E%3C/svg%3E">
+
+<header class="d-top">
+  <div class="d-top-row1">
+    <div class="d-top-left">
+      <button class="d-iconbtn" type="button" data-popup-trigger="sidenav" aria-haspopup="dialog" aria-label="Índice del curso" title="Índice">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <span class="d-brand">
+        <span class="lg" aria-hidden="true"><img src="img/icono-<CATEGORIA>.webp" alt=""></span>
+        <span><NOMBRE DEL CURSO><small>Área <CATEGORÍA> · COTO</small></span>
+      </span>
+    </div>
+
+    <span class="d-top-spacer" aria-hidden="true"></span>
+
+    <div class="d-top-center">
+      <span class="d-chip" id="d-greet" hidden></span>
+      <button class="d-chip d-chip--achieve" type="button" data-popup-trigger="logros" aria-haspopup="dialog" aria-label="Logros y puntos: ver mis logros" title="Logros y puntos ganados en el curso">
+        <span aria-hidden="true">🏆</span><span id="d-badge-count">0/N</span> <span class="lbl">logros</span>
+        <span class="d-chip-sep" aria-hidden="true"></span>
+        <span aria-hidden="true">✦</span><span class="v" id="d-points">0</span> <span class="lbl">ptos</span>
+      </button>
+    </div>
+  </div>
+
+  <span class="d-top-spacer" aria-hidden="true"></span>
+
+  <div class="d-top-right">
+    <div class="d-top-group d-top-group--audio" role="group" aria-label="Sonido y locución">
+      <!-- Panel de volumen (initSoundToggle, coto-player.js — kit-base
+           v1.9.35): se despliega al pasar el mouse/dar foco sobre TODO
+           `.d-audio-ctl` (botón + panel juntos, así el mouse puede
+           bajar del botón al slider sin que se cierre) y también con
+           un tap/clic (`.is-open`, mismo criterio "pinned" que
+           initHotspots — en touch no existe el hover, CLAUDE.md
+           §6.10.1 regla 2). El botón sigue siendo el toggle de mute de
+           siempre; el panel SUMA control fino de volumen, no lo
+           reemplaza. -->
+      <div class="d-audio-ctl" data-audio-ctl="sonido">
+        <button class="d-iconbtn d-iconbtn--labeled" id="d-sound" type="button" aria-label="Silenciar sonido" aria-pressed="true" title="Sonido">
+          <svg class="ic-on" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.2 9.3a3.6 3.6 0 0 1 0 5.4"/></svg>
+          <svg class="ic-off" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><line x1="17" y1="9" x2="23" y2="15"/><line x1="23" y1="9" x2="17" y2="15"/></svg>
+          <span class="lbl">Sonido</span>
+        </button>
+        <div class="d-audio-pop d-vol-pop" role="group" aria-label="Volumen del sonido">
+          <div class="d-vol-hd"><span class="d-vol-title">Volumen</span><span class="d-vol-pct" id="d-vol-pct">100%</span></div>
+          <div class="d-vol-row">
+            <button class="d-vol-mute" id="d-vol-mute-btn" type="button" aria-label="Silenciar sonido" aria-pressed="false">
+              <svg class="ic-on" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.2 9.3a3.6 3.6 0 0 1 0 5.4"/></svg>
+              <svg class="ic-off" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><line x1="17" y1="9" x2="23" y2="15"/><line x1="23" y1="9" x2="17" y2="15"/></svg>
+            </button>
+            <input class="d-vol-slider" id="d-vol-range" type="range" min="0" max="100" value="100" step="1" aria-label="Nivel de volumen">
+          </div>
+          <div class="d-vol-bars" id="d-vol-bars" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+      </div>
+      <!-- ícono de micrófono: apagado = mic simple (invita a tocarlo);
+           prendido = mic con ondas de sonido + pulso CSS (se está
+           escuchando ahora). NO usar un ícono de play/stop genérico —
+           se confunde con controles de video.
+           Panel de locución (initNarrateTimeline, coto-player.js):
+           línea de tiempo por FRASE narrada (no por palabra — Web
+           Speech API no da esa precisión de forma confiable con las
+           voces de red que ya usa el curso, ver CLAUDE.md §6.55) +
+           botón de repetir. Mismo mecanismo hover/foco/tap que el de
+           volumen. -->
+      <div class="d-audio-ctl" data-audio-ctl="locucion">
+        <button class="d-iconbtn d-iconbtn--labeled" id="d-narrate" type="button" aria-label="Escuchar la diapositiva" aria-pressed="false" title="Locución" hidden>
+          <svg class="ic-off" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          <svg class="ic-on" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/><path d="M4.5 8a7.5 7.5 0 0 0 0 5"/><path d="M19.5 8a7.5 7.5 0 0 1 0 5"/></svg>
+          <span class="lbl">Locución</span>
+        </button>
+        <div class="d-audio-pop d-narr-pop" role="group" aria-label="Progreso de la locución">
+          <div class="d-narr-hd">
+            <span class="d-narr-title">Locución</span>
+            <span class="d-narr-status" id="d-narr-status" hidden><span class="dot" aria-hidden="true"></span>En curso</span>
+          </div>
+          <input class="d-narr-range" id="d-narr-range" type="range" min="0" max="0" value="0" step="1" disabled aria-label="Progreso de la locución, por frase">
+          <div class="d-narr-foot">
+            <button class="d-narr-replay" id="d-narr-replay" type="button" disabled>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2.1-9.4L1 10"/></svg>
+              Repetir
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <span class="d-top-sep" aria-hidden="true"></span>
+
+    <div class="d-top-group d-top-group--help" role="group" aria-label="Glosario y vista">
+      <button class="d-iconbtn d-iconbtn--labeled" type="button" data-popup-trigger="glosario" aria-label="Glosario" title="Glosario">
+        <svg viewBox="0 0 24 24"><path d="M4 19V6a2 2 0 0 1 2-2h13v14H6a2 2 0 0 0-2 2z"/><path d="M4 19a2 2 0 0 0 2 2h13"/><path d="M8 8h7M8 12h5"/></svg>
+        <span class="lbl">Glosario</span>
+      </button>
+      <button class="d-iconbtn d-iconbtn--labeled" id="d-fullscreen" type="button" aria-label="Pantalla completa" aria-pressed="false" title="Pantalla completa" hidden>
+        <svg class="ic-expand" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M21 16v3a2 2 0 0 1-2 2h-3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/></svg>
+        <svg class="ic-compress" viewBox="0 0 24 24"><path d="M9 3v3a2 2 0 0 1-2 2H4"/><path d="M15 3v3a2 2 0 0 0 2 2h3"/><path d="M21 15h-3a2 2 0 0 0-2 2v3"/><path d="M9 21v-3a2 2 0 0 0-2-2H4"/></svg>
+        <span class="lbl">Ampliar</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ==============================================================
+     BANNER "RETOMÁ DONDE DEJASTE" (kit-base v1.9.52)
+     ==============================================================
+     GAP REAL cerrado acá: `initResume()` (coto-player.js) existe desde
+     v1.7 y su CSS (`.d-resume*`, coto-player-chrome.css) desde v1.8 —
+     pero el MARCADO no estaba en ningún archivo del kit, ni acá ni en
+     spec-motor-slides.md. `initResume()` arranca con
+     `document.getElementById('d-resume')`, así que sin este bloque
+     salía por el `if (!bar)` de la primera línea: la función corría en
+     todos los cursos y no hacía nada, en silencio, desde que existe.
+
+     Va DENTRO de <div class="d-app"> y fuera de <header> (es
+     position:fixed contra el viewport, igual que .d-award-toast y que
+     el [data-fab-stack] de abajo). Los 3 IDs son EXACTOS — los busca
+     initResume() por getElementById. Arranca `hidden`: solo se muestra
+     si el LMS devuelve un `cmi.core.lesson_location` que además
+     corresponde a una diapositiva REAL de este curso y no es la
+     primera. NUNCA navega solo (decisión de producto, ver el
+     comentario de initResume): ofrece y el alumno decide; se
+     autooculta a los 9s.
+     ============================================================== -->
+<div class="d-resume" id="d-resume" role="status" hidden>
+  <span class="d-resume-txt">Podés seguir donde lo dejaste.</span>
+  <button class="btn btn-cat" type="button" id="d-resume-go">Retomar</button>
+  <button class="d-resume-x" type="button" id="d-resume-x" aria-label="Cerrar este aviso">✕</button>
+</div>
+
+<!-- ==============================================================
+     BOTONES FLOTANTES — Ayuda + Configuración (kit-base v1.9.36,
+     CLAUDE.md §6.57). Van DENTRO de <div class="d-app">, pero fuera
+     de <header> — position:fixed contra el viewport (mismo criterio
+     que .d-award-toast/.d-resume, ya en coto-player-chrome.css),
+     apilados abajo a la derecha, arriba de la barra inferior. Lo
+     cablea initFabPopovers() (coto-player.js): mismo mecanismo
+     "pinned" hover/foco/tap que initAudioPopovers. El acordeón de
+     "Ayuda" y el contenido de "Configuración" son ejemplo — cada
+     curso reemplaza las preguntas frecuentes por las suyas, pero los
+     3 IDs de voz/velocidad (d-voice-field/d-voice-select/d-rate-*)
+     son EXACTOS, los necesita initVoicePicker/initRatePicker.
+     Ejemplo de referencia completo (con las 6 svg de acordeón, etc.):
+     seguridad-alimentaria/index.html, buscar [data-fab-stack].
+
+     SI EL CURSO VENÍA CON DRAWER DE AYUDA (cursos anteriores a
+     v1.9.36), adoptar el flotante NO es solo pegar este bloque —
+     hay que sacar lo que reemplaza, o quedan dos entradas compitiendo
+     y, peor, ids repetidos:
+       1. Borrar de la barra superior el botón
+          `data-popup-trigger="ayuda"`. El grupo queda con Glosario +
+          Ampliar y su aria-label pasa a "Glosario y vista", igual que
+          en la barra de acá arriba.
+       2. Borrar el modal `data-popup="ayuda"` entero.
+       3. MOVER (no copiar) al flotante de Configuración los controles
+          que vivían en ese drawer: #d-voice-field, #d-voice-select,
+          #d-voice-listen, #d-rate-field, #d-rate-range, #d-rate-value
+          y #d-config-reset. Duplicarlos es un fallo SILENCIOSO:
+          getElementById toma el primero, así que los del flotante se
+          ven pero no responden. markup-sanity lo detecta desde
+          v1.9.57; igual conviene no introducirlo.
+       4. El contenido propio del curso (sus reglas de avance, cómo se
+          aprueba el minijuego, etc.) va al acordeón [data-fab-acc].
+          Estructura, posición e iconos son IGUALES en todos los
+          cursos; lo único que cambia son esas preguntas.
+     ============================================================== -->
+<div class="d-fab-stack" data-fab-stack>
+  <div class="d-fab d-fab--config" data-fab-ctl="config">
+    <span class="d-fab-ring" aria-hidden="true"></span>
+    <button class="d-fab-btn" type="button" aria-label="Configuración" aria-haspopup="dialog" title="Configuración">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 0 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 0 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 0 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 0 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg>
+    </button>
+    <div class="d-fab-pop" role="dialog" aria-label="Configuración">
+      <div class="d-fab-pop-hd">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83"/></svg>
+        <span class="d-fab-pop-title">Configuración</span>
+      </div>
+      <div class="field" id="d-voice-field" hidden>
+        <label for="d-voice-select">Voz de la locución</label>
+        <select id="d-voice-select"></select>
+        <button class="d-fab-listen" type="button" id="d-voice-listen">
+          <svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8V4z"/></svg>
+          Escuchar un ejemplo
+        </button>
+        <span class="hint">Se guarda en este dispositivo. Si no elegís ninguna, el curso usa la voz recomendada.</span>
+      </div>
+      <div class="field" id="d-rate-field" hidden>
+        <label for="d-rate-range">Velocidad de la locución</label>
+        <input type="range" id="d-rate-range" min="0.75" max="1.3" step="0.05" value="1">
+        <span class="hint" id="d-rate-value">1.00x (normal)</span>
+      </div>
+      <button class="d-fab-reset" type="button" id="d-config-reset">Restablecer a los valores recomendados</button>
+    </div>
+  </div>
+
+  <div class="d-fab d-fab--ayuda" data-fab-ctl="ayuda">
+    <span class="d-fab-ring" aria-hidden="true"></span>
+    <button class="d-fab-btn" type="button" aria-label="Ayuda" aria-haspopup="dialog" title="Ayuda">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.4c-.8.4-1.4 1-1.4 2.1"/><line x1="12" y1="17" x2="12" y2="17"/></svg>
+    </button>
+    <div class="d-fab-pop d-fab-pop--ayuda" role="dialog" aria-label="Ayuda">
+      <div class="d-fab-pop-hd">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.4c-.8.4-1.4 1-1.4 2.1"/></svg>
+        <span class="d-fab-pop-title">Ayuda</span>
+      </div>
+      <p class="d-instr-nav">Avanzá con <kbd>←</kbd> <kbd>→</kbd> o con los botones <strong>"Anterior"</strong> / <strong>"Siguiente"</strong>. Desde <strong>"Índice" (☰)</strong> podés volver a cualquier diapositiva que ya hayas visto, y también arrastrar el punto de la barra de progreso. <strong>Esc</strong> cierra cualquier ventana emergente.</p>
+      <button class="d-fab-replay" type="button" data-popup-trigger="instrucciones">
+        <svg viewBox="0 0 24 24"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2.1-9.4L1 10"/></svg>
+        Volver a ver la introducción
+      </button>
+      <div class="d-fab-acc" data-fab-acc>
+        <div class="d-fab-acc-item">
+          <button class="d-fab-acc-q" type="button">¿Qué tengo que hacer para avanzar?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+          <p class="d-fab-acc-a">En las diapositivas con interacción vas a tener que <strong>abrir o recorrer todo</strong> para poder avanzar. Si te falta algo, el curso te lo señala.</p>
+        </div>
+        <div class="d-fab-acc-item">
+          <button class="d-fab-acc-q" type="button">¿Cómo veo el curso más grande?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+          <p class="d-fab-acc-a">Usá el botón de <strong>pantalla completa</strong> de la barra superior.</p>
+        </div>
+        <div class="d-fab-acc-item">
+          <button class="d-fab-acc-q" type="button">¿Puedo silenciar la narración?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+          <p class="d-fab-acc-a">Sí — el curso narra en voz alta cada diapositiva, podés silenciarlo con el botón de <strong>"Locución"</strong>.</p>
+        </div>
+        <div class="d-fab-acc-item">
+          <button class="d-fab-acc-q" type="button">¿Dónde está la evaluación?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+          <p class="d-fab-acc-a">La <strong>evaluación</strong> es un <strong>cuestionario aparte</strong>, que vas a encontrar en la plataforma cuando termines de ver todo el contenido.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--
+  JS de referencia (curso.js) para el saludo — el emoji va en su
+  propio <span class="ic"> (no pegado al texto) para poder ocultarlo
+  aparte en mobile sin tocar el nombre real. Se arma con
+  createElement/createTextNode, NO innerHTML: "n" viene del LMS
+  (cmi.core.student_name), no hay que confiar en que nunca traiga
+  caracteres raros.
+
+  function initGreeting() {
+    var el = document.getElementById('d-greet'); if (!el || !window.SCORM) return;
+    var n = window.SCORM.getFirstName();
+    if (!n) return;
+    el.textContent = '';
+    var ic = document.createElement('span');
+    ic.className = 'ic'; ic.setAttribute('aria-hidden', 'true'); ic.textContent = '👋';
+    el.appendChild(ic);
+    el.appendChild(document.createTextNode(' Hola, ' + n));
+    el.hidden = false;
+  }
+
+  NOTA: se evaluó y se sacó a propósito un botón "Automático"/
+  "Reproducir todo" (autoavance al terminar cada locución) — bajo
+  valor real frente al ruido visual que sumaba. La función todavía
+  puede existir en curso.js (initAutoplay) como no-op seguro sin botón
+  en el DOM; no agregarlo de nuevo al header sin que el cliente lo
+  pida explícitamente.
+-->
+
+<!-- ==============================================================
+     POP-UP "CÓMO RECORRER EL CURSO" — plantilla genérica (kit v1.9)
+     ==============================================================
+     No se abre solo: la diapositiva "índice" lo marca con
+     `data-gate-popup="instrucciones"` (mismo mecanismo que cualquier
+     otro gate-popup, ej. "control-factores") — recién aparece cuando
+     el alumno toca "Siguiente" desde el índice, y cerrarlo completa
+     ese avance. Se re-arma cada vez que se vuelve a entrar al índice
+     (comportamiento estándar de `data-gate-popup`, ver motor-slides.js
+     `_advance`/`go`), así que quien vuelve a pasar por ahí lo puede
+     volver a ver.
+
+     ⚠️ Tres versiones, tres correcciones reales, no repetirlas:
+     1. La v1 decía que desde el índice se podía "saltar a CUALQUIER
+        diapositiva". Es FALSO en todo curso con avance bloqueado por
+        contenido — el índice sirve para VOLVER a lo ya visto, no para
+        adelantarse.
+     2. La v2 tenía 2 grillas de 4 y 3 íconos (controles de la barra +
+        tipos de interacción) Y se abría sola al llegar al índice, sin
+        que el alumno la pidiera — quedó "recargada" en la revisión del
+        cliente.
+     3. La v3 (esta) es un rediseño pedido por el cliente sobre una
+        referencia visual de otro curso: grilla 2x2 de tarjetas
+        ícono+texto con acentos decorativos de color en las esquinas.
+        Armada 100% con tokens del sistema de diseño
+        (--cat/--cat-strong/--cat-soft/--cat-grad) — cambia de color
+        solo con `data-cat` en el `<body>`, sin tocar una línea de este
+        bloque. El detalle de CONTROLES de la barra superior sigue sin
+        estar acá: ya vive en los flotantes de Ayuda/Configuración (siempre accesibles,
+        todas las diapositivas), no hace falta duplicarlo.
+
+     El contenido es el mismo para cualquier curso del molde: habla de
+     la DINÁMICA (interactivo, hay que ver todo, suma puntos, se puede
+     bajar el volumen/cambiar la voz), nunca de diapositivas concretas
+     de un curso puntual. CSS en coto-base-addendum-v1.8.css (o copiar
+     `.d-instr-modal` / `.d-instr-hd` / `.d-instr-kicker` /
+     `.d-instr-cardgrid` / `.d-instr-card` / `.d-instr-card-ic` al CSS
+     propio del curso si todavía no consume el addendum, ver
+     CLAUDE.md §6.10.8). -->
+<div class="modal" data-popup="instrucciones" role="dialog" aria-modal="true" aria-label="Cómo recorrer el curso">
+  <div class="modal-back" data-popup-close></div>
+  <div class="modal-card d-instr-modal">
+    <button class="modal-x" data-popup-close aria-label="Cerrar">✕</button>
+    <div class="d-instr-hd">
+      <span class="d-instr-kicker">Antes de empezar</span>
+      <h3>Cómo recorrer el curso</h3>
+    </div>
+    <div class="modal-bd">
+      <div class="d-instr-cardgrid">
+        <div class="d-instr-card">
+          <div class="d-instr-card-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13 3a1 1 0 0 0-2 0v7"/><path d="M11 10V8a1 1 0 0 0-2 0v2.5"/><path d="M9 10.2a1 1 0 0 0-2 .3c.3 4 1.6 9.5 7 9.5a5 5 0 0 0 5-5v-5.5a1 1 0 0 0-2 0V11"/><path d="M15 9V7a1 1 0 0 1 2 0v2.3"/><circle cx="12" cy="2.3" r="1" fill="currentColor" stroke="none"/><path d="M18.5 4.5l1.8-1.2M20 8h2.2M18.5 11l1.8 1.2" stroke-width="1.6"/></svg></div>
+          <div><b>Es interactivo</b><span>Mirá los videos, tocá los gráficos y respondé las actividades.</span></div>
+        </div>
+        <div class="d-instr-card">
+          <div class="d-instr-card-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></div>
+          <div><b>Hay que ver todo</b><span>Para avanzar necesitás completar cada interacción — si te falta algo, te lo señalamos.</span></div>
+        </div>
+        <div class="d-instr-card">
+          <div class="d-instr-card-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M15.3 9a4.3 4.3 0 0 1 0 6"/><path d="M18 6.3a8.2 8.2 0 0 1 0 11.4"/></svg></div>
+          <div><b>Subí el volumen</b><span>El curso se narra solo; silenciala desde <strong>"Locución"</strong> o cambiá la voz desde <strong>"Configuración"</strong>.</span></div>
+        </div>
+        <div class="d-instr-card">
+          <div class="d-instr-card-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="5.2"/><path d="M9 12.8 7.3 21l4.7-2.8 4.7 2.8-1.7-8.2"/></svg></div>
+          <div><b>Sumás puntos</b><span>Ganás logros a medida que avanzás y una medalla final.</span></div>
+        </div>
+      </div>
+
+      <div class="d-instr-cta">
+        <button class="btn btn-cat btn-ic" type="button" data-popup-close>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-play"/></svg>
+          Empezar mi aprendizaje
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

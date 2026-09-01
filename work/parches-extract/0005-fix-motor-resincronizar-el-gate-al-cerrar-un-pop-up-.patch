@@ -1,0 +1,38 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 31 Aug 2026 13:44:04 +0000
+Subject: [PATCH 5/5] fix(motor): resincronizar el gate al cerrar un pop-up con
+ Esc
+
+---
+ js/motor-slides.js | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/js/motor-slides.js b/js/motor-slides.js
+index 7c2a1be..37a43de 100644
+--- a/js/motor-slides.js
++++ b/js/motor-slides.js
+@@ -881,7 +881,23 @@
+     if (this._pendingNav !== null) {
+       var n = this._pendingNav; this._pendingNav = null;
+       this.go(n);
++      return; // `go()` -> `_syncNav()` -> `_syncGate()`, no hace falta de nuevo
+     }
++    /* Resincronizar el gate al cerrar. El listener de clic diferido de
++       `_init()` cubre el caso normal (el alumno cierra con el botón X o
++       con "Continuar", que son clics DENTRO de this.root), pero no el
++       cierre por Esc: ahí no hay clic, así que `.is-gated` del botón
++       "Siguiente" quedaba con el valor viejo hasta el próximo
++       `_syncNav()`. Se ve en cualquier curso donde abrir la última
++       ficha destraba el avance: el alumno la mira, cierra con Esc, ya
++       cumplió el requisito y sin embargo "Siguiente" sigue mostrándose
++       bloqueado.
++
++       Va DESPUÉS de `_emit('popupclose')` a propósito: es ese evento el
++       que los cursos usan para marcar la ficha como vista, o sea el
++       estado que `canAdvance()` lee acá. Al revés leería el estado
++       viejo — la misma trampa que documenta el listener diferido. */
++    this._syncGate(true);
+   };
+   Motor.prototype._trapFocus = function (e) {
+     // `select`/`textarea` sumados en v1.9.52: sin ellos, un control de

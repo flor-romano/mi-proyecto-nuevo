@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Evaluación — "Surtido sin ventas"
+ Formato Moodle XML, generado con tools/build-evaluacion-xml.mjs
+ Importar en Moodle: Banco de preguntas > Importar > formato "Moodle XML"
+ 10 opción múltiple + 10 Verdadero/Falso = 20 preguntas
+-->
+<quiz>
+  <question type="category">
+    <category><text>$course$/top/Surtido sin ventas</text></category>
+  </question>
+  <question type="multichoice">
+    <name><text>MC01 - SSV01 - Definición del reporte</text></name>
+    <questiontext format="html"><text><![CDATA[¿Qué es el reporte de control de surtido sin venta?]]></text></questiontext>
+    <defaultgrade>1</defaultgrade>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>abc</answernumbering>
+    <correctfeedback format="html"><text><![CDATA[¡Correcto! Es un reporte que, según la cantidad de días que elijas, muestra los productos que no se vendieron en ese tiempo — es decir, los que están hace varios días sin movimiento.]]></text></correctfeedback>
+    <partiallycorrectfeedback format="html"><text></text></partiallycorrectfeedback>
+    <incorrectfeedback format="html"><text><![CDATA[Incorrecto. Es un reporte que, según la cantidad de días que elijas, muestra los productos que no se vendieron en ese tiempo — es decir, los que están hace varios días sin movimiento.]]></text></incorrectfeedback>
+    <answer fraction="100" format="html">
+      <text><![CDATA[Un reporte que muestra los productos que no se vendieron en un período de días elegido]]></text>
+    </answer>
+    <answer fraction="0" format="html">
+      <text><![CDATA[Un listado de precios desactualizados en el sistema]]></text>
+    </answer>
+    <answer fraction="0" format="html">
+      <text><![CDATA[Un reporte de productos vencidos únicamente]]></text>
+    </answer>
+  </question>
+  <question type="multichoice">
+    <name><text>MC02 - SSV02 - PLU</text></name>
+    <questiontext format="html"><text><![CDATA[¿Qué es el PLU de un producto?]]></text></questiontext>
+    <defaultgrade>1</defaultgrade>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>abc</answernumbering>
+    <correctfeedback format="html"><text><![CDATA[¡Correcto! El PLU es el código interno que COTO le asigna a cada producto dentro de su sistema. No aparece en el envase — eso es el EAN.]]></text></correctfeedback>
+    <partiallycorrectfeedback format="html"><text></text></partiallycorrectfeedback>
+    <incorrectfeedback format="html"><text><![CDATA[Incorrecto. El PLU es el código interno que COTO le asigna a cada producto dentro de su sistema. No aparece en el envase — eso es el EAN.]]></text></incorrectfeedback>
+    <answer fraction="100" format="html">
+      <text><![CDATA[El código interno que COTO le asigna a cada producto, no aparece en el envase]]></text>
+    </answer>
+    <answer fraction="0" format="html">
+      <text><![CDATA[El código de barras que pone el fabricante en el envase]]></text>
+    </answer>
+    <answer fraction="0" format="html">
+      <text><![CDATA[El número de la sucursal donde se vende el producto]]></text>
+    </answer>
+  </question>
+  <question type="multichoice">
+    <name><text>MC03 - SSV03 - EAN</text></name>
+    <questiontext format="html"><text><![CDATA[¿Qué es el EAN de un producto?]]></text></questiontext>
+    <defaultgrade>1</defaultgrade>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>abc</answernumbering>
+    <correctfeedback format="html"><text><![CDATA[¡Correcto! El EAN es el código de barras que está en el envase, el mismo en todos los supermercados porque lo pone el fabricante.]]></text></correctfeedback>
+    <partiallycorrectfeedback format="html"><text></text></partiallycorrectfeedback>
+    <incorrectfeedback format="html"><text><![CDATA[Incorrecto. El EAN es el código de barras que está en el envase, el mismo en todos los supermercados porque lo pone el fabricante.]]></text></incorrectfeedback>
+    <answer fraction="100" format="html">
+      <text><![CDATA[El código de barras del envase, igual en todos los supermercados]]></text>
+    </answer>
+    <answer fraction="0" format="html">
+      <text><![CDATA[El código interno que le asigna COTO a cada producto]]></text>
+    </answer>
+    <answer fraction="0" format="html">
+      <text><![CDATA[El código del sector de salón donde está exhibido]]></text>
+    </answer>
+  </question>
+  <question type="multichoice">
+    <name><text>MC04 - SSV04 - Cálculo del stock</text></name>
+    <questiontext format="html"><text><![CDATA[¿Cómo se calcula el stock total de un producto?]]></text></questiontext>
+    <defaultgrade>1</defaultgrade>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>abc</answernumbering>
+    <correctfeedback format="html"><text><![CDATA[¡Correcto! El stock es la cantidad de unidades que tenemos de un producto, sumando lo que hay en góndola y en depósito.]]></text></correctfeedback>
+    <partiallycorrectfeedback format="html"><text></text></partiallycorrectfeedback>
+    <incorrectfeedback format="html"><text><![CDATA[Incorrecto. El stock es la cantidad de unidades que tenemos de un producto, sumando lo que hay en góndola y en depósito.]]></text></incorrectfeedback>
+    <answer fraction="100" format="html">
+      <text><![CDATA[Sumando las unidades en góndola y en depósito]]></text>
+    </answer>
+    <answer fraction="0" format="html">
+      <text><![CDATA[Contando solo lo que hay exhibido en góndola]]></text>
+    </answer>
+    <answer fraction="0" format="html">
+      <text><![CDATA[Contando solo lo que hay guardado en depósito]]></text>
+    </answer>
+  </question>
+  <question type="multichoice">
+    <name><text>MC05 - SSV05 - Falso stock</text></name>
+    <questiontext format="html"><text><![CDATA[¿Qué es el falso stock?]]></text></questiontext>
+    <defaultgrade>1</defaultgrade>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>abc</answernumbering>
+    <correctfeedback format="html"><text><![CDATA[¡Correcto! Es cuando el sistema indica una cantidad de unidades que no coincide con la que hay realmente en góndola y depósito — un error que hay que analizar y corregir.]]></text></correctfeedback>
+    <partiallycorrectfeedback format="html"><text></text></partiallycorrectfeedback>
+    <incorrectfeedback format="html"><text><![CDATA[Incorrecto. Es cuando el sistema indica una cantidad de unidades que no coincide con la que hay realmente en góndola y depósito — un error que hay que analizar y corregir.]]></text></incorrectfeedback>
+    <answer fraction="100" format="html">
+      <text><![CDATA[Cuando el sistema indica una cantidad de unidades distinta a la real en góndola y depósito]]></text>
+    </answer>
+    <answer fraction="0" format="html">
+      <text><![CDATA[Cuando un producto tiene dos precios distintos cargados]]></text>
+    </answer>
+    <answer fraction="0" format="html">
+      <text><![CDATA[Cuando un producto está cargado dos veces en el sistema]]></text>
+    </answer>
+  </question>
+  <question type="multichoice">
+    <name><text>MC06 - SSV06 - Rotación alta</text></name>
+    <questiontext format="html"><text><![CDATA[¿Qué significa que un producto tenga rotación alta?]]></text></questiontext>
+    <defaultgrade>1</defaultgrade>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>abc</answernumbering>
+    <correctfeedback format="html"><text><![CDATA[¡Correcto! La rotación indica qué tan rápido se vende un producto. Alta significa que se vende mucho y seguido.]]></text></correctfeedback>
+    <partiallycorrectfeedback format="html"><text></text></partiallycorrectfeedback>
+    <incorrectfeedback format="html"><text><![CDATA[Incorrecto. La rotación indica qué tan rápido se vende un producto. Alta significa que se vende mucho y seguido.]]></text></incorrectfeedback>
+    <answer fraction="100" format="html">
+      <text><![CDATA[Que se vende mucho y seguido]]></text>
+    </answer>
+    <answer fraction="0" format="html">
+      <text><![CDATA[Que tiene mucho stock acumulado en depósito]]></text>
+    </answer>
+    <answer fraction="0" format="html">
+      <text><![CDATA[Que está mal exhibido en el salón]]></text>
+    </answer>
+  </question>
+  <question type="multichoice">
+    <name><text>MC07 - SSV07 - Buena exhibición</text></name>
+    <questiontext format="html"><text><![CDATA[¿Cuál de estas opciones describe una buena exhibición?]]></text></questiontext>
+    <defaultgrade>1</defaultgrade>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>abc</answernumbering>
+    <correctfeedback format="html"><text><![CDATA[¡Correcto! Una buena exhibición es un producto bien ubicado, a la altura de los ojos, con el frente visible y con precio — eso hace que se vea y se venda.]]></text></correctfeedback>
+    <partiallycorrectfeedback format="html"><text></text></partiallycorrectfeedback>
+    <incorrectfeedback format="html"><text><![CDATA[Incorrecto. Una buena exhibición es un producto bien ubicado, a la altura de los ojos, con el frente visible y con precio — eso hace que se vea y se venda.]]></text></incorrectfeedback>
+    <answer fraction="100" format="html">
+      <text><![CDATA[Producto bien ubicado, a la altura de los ojos, con el frente visible y con precio]]></text>
+    </answer>
+    <answer fraction="0" format="html">
+      <text><![CDATA[Producto guardado en el depósito hasta que un cliente lo pida]]></text>
+    </answer>
+    <answer fraction="0" format="html">
+      <text><![CDATA[Producto exhibido con el precio tapado]]></text>
+    </answer>
+  </question>
+  <question type="multichoice">
+    <name><text>MC08 - SSV08 - Dónde se genera el reporte</text></name>
+    <questiontext format="html"><text><![CDATA[¿En qué sistema se genera el reporte de surtido sin venta?]]></text></questiontext>
+    <defaultgrade>1</defaultgrade>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>abc</answernumbering>
+    <correctfeedback format="html"><text><![CDATA[¡Correcto! El reporte se genera en GESCOM, el sistema interno de COTO para consultar reportes y ver el stock de cada producto.]]></text></correctfeedback>
+    <partiallycorrectfeedback format="html"><text></text></partiallycorrectfeedback>
+    <incorrectfeedback format="html"><text><![CDATA[Incorrecto. El reporte se genera en GESCOM, el sistema interno de COTO para consultar reportes y ver el stock de cada producto.]]></text></incorrectfeedback>
+    <answer fraction="100" format="html">
+      <text><![CDATA[En GESCOM]]></text>
+    </answer>
+    <answer fraction="0" format="html">
+      <text><![CDATA[En la PDA]]></text>
+    </answer>
+    <answer fraction="0" format="html">
+      <text><![CDATA[En el sistema de cajas]]></text>
+    </answer>
+  </question>
+  <question type="multichoice">
+    <name><text>MC09 - SSV09 - Acción ante baja rotación</text></name>
+    <questiontext format="html"><text><![CDATA[Si un producto del reporte tiene baja rotación, ¿qué corresponde hacer?]]></text></questiontext>
+    <defaultgrade>1</defaultgrade>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>abc</answernumbering>
+    <correctfeedback format="html"><text><![CDATA[¡Correcto! Corresponde aplicar acciones para mejorar su venta — por ejemplo, pedir más espacio en góndola, exhibirlo como novedad o sumarlo a la línea de cajas.]]></text></correctfeedback>
+    <partiallycorrectfeedback format="html"><text></text></partiallycorrectfeedback>
+    <incorrectfeedback format="html"><text><![CDATA[Incorrecto. Corresponde aplicar acciones para mejorar su venta — por ejemplo, pedir más espacio en góndola, exhibirlo como novedad o sumarlo a la línea de cajas.]]></text></incorrectfeedback>
+    <answer fraction="100" format="html">
+      <text><![CDATA[Aplicar acciones para mejorar su venta, como pedir más espacio en góndola]]></text>
+    </answer>
+    <answer fraction="0" format="html">
+      <text><![CDATA[Retirarlo del salón sin avisar a nadie]]></text>
+    </answer>
+    <answer fraction="0" format="html">
+      <text><![CDATA[Dejarlo igual hasta la próxima auditoría]]></text>
+    </answer>
+  </question>
+  <question type="multichoice">
+    <name><text>MC10 - SSV10 - Surtido</text></name>
+    <questiontext format="html"><text><![CDATA[¿Qué es el surtido?]]></text></questiontext>
+    <defaultgrade>1</defaultgrade>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>abc</answernumbering>
+    <correctfeedback format="html"><text><![CDATA[¡Correcto! El surtido es la totalidad de los productos que tenemos disponibles para vender en los diferentes sectores de una sucursal.]]></text></correctfeedback>
+    <partiallycorrectfeedback format="html"><text></text></partiallycorrectfeedback>
+    <incorrectfeedback format="html"><text><![CDATA[Incorrecto. El surtido es la totalidad de los productos que tenemos disponibles para vender en los diferentes sectores de una sucursal.]]></text></incorrectfeedback>
+    <answer fraction="100" format="html">
+      <text><![CDATA[La totalidad de los productos disponibles para la venta en los diferentes sectores de una sucursal]]></text>
+    </answer>
+    <answer fraction="0" format="html">
+      <text><![CDATA[Solo los productos que están en promoción]]></text>
+    </answer>
+    <answer fraction="0" format="html">
+      <text><![CDATA[Solo los productos con baja rotación]]></text>
+    </answer>
+  </question>
+  <question type="truefalse">
+    <name><text>VF01 - SSV11 - Para qué sirve el control</text></name>
+    <questiontext format="html"><text><![CDATA[El control de surtido sin venta nos permite ver qué productos no se están vendiendo.]]></text></questiontext>
+    <defaultgrade>1</defaultgrade>
+    <answer fraction="100" format="moodle_auto_format">
+      <text>true</text>
+      <feedback format="html"><text><![CDATA[¡Correcto! Es justamente su propósito: detectar productos sin movimiento para poder actuar sobre ellos.]]></text></feedback>
+    </answer>
+    <answer fraction="0" format="moodle_auto_format">
+      <text>false</text>
+      <feedback format="html"><text><![CDATA[Incorrecto. Es justamente su propósito: detectar productos sin movimiento para poder actuar sobre ellos.]]></text></feedback>
+    </answer>
+  </question>
+  <question type="truefalse">
+    <name><text>VF02 - SSV12 - GESCOM</text></name>
+    <questiontext format="html"><text><![CDATA[GESCOM es el sistema donde armamos y leemos el reporte de surtido sin venta.]]></text></questiontext>
+    <defaultgrade>1</defaultgrade>
+    <answer fraction="100" format="moodle_auto_format">
+      <text>true</text>
+      <feedback format="html"><text><![CDATA[¡Correcto! GESCOM (Gestión Comercial) es el sistema interno de COTO usado para esto, entre otras cosas.]]></text></feedback>
+    </answer>
+    <answer fraction="0" format="moodle_auto_format">
+      <text>false</text>
+      <feedback format="html"><text><![CDATA[Incorrecto. GESCOM (Gestión Comercial) es el sistema interno de COTO usado para esto, entre otras cosas.]]></text></feedback>
+    </answer>
+  </question>
+  <question type="truefalse">
+    <name><text>VF03 - SSV13 - PLU en el envase</text></name>
+    <questiontext format="html"><text><![CDATA[El PLU aparece impreso en el envase del producto.]]></text></questiontext>
+    <defaultgrade>1</defaultgrade>
+    <answer fraction="0" format="moodle_auto_format">
+      <text>true</text>
+      <feedback format="html"><text><![CDATA[Incorrecto. El PLU no aparece en el envase — es un código interno de COTO. El que sí aparece en el envase es el EAN.]]></text></feedback>
+    </answer>
+    <answer fraction="100" format="moodle_auto_format">
+      <text>false</text>
+      <feedback format="html"><text><![CDATA[¡Correcto! El PLU no aparece en el envase — es un código interno de COTO. El que sí aparece en el envase es el EAN.]]></text></feedback>
+    </answer>
+  </question>
+  <question type="truefalse">
+    <name><text>VF04 - SSV14 - Rotación media</text></name>
+    <questiontext format="html"><text><![CDATA[Un producto con rotación media se vende con frecuencia moderada.]]></text></questiontext>
+    <defaultgrade>1</defaultgrade>
+    <answer fraction="100" format="moodle_auto_format">
+      <text>true</text>
+      <feedback format="html"><text><![CDATA[¡Correcto! Así se define la rotación media: ni tan rápido como la alta, ni tan lento como la baja.]]></text></feedback>
+    </answer>
+    <answer fraction="0" format="moodle_auto_format">
+      <text>false</text>
+      <feedback format="html"><text><![CDATA[Incorrecto. Así se define la rotación media: ni tan rápido como la alta, ni tan lento como la baja.]]></text></feedback>
+    </answer>
+  </question>
+  <question type="truefalse">
+    <name><text>VF05 - SSV15 - Corregir el falso stock</text></name>
+    <questiontext format="html"><text><![CDATA[El falso stock nunca hace falta corregirlo, es solo informativo.]]></text></questiontext>
+    <defaultgrade>1</defaultgrade>
+    <answer fraction="0" format="moodle_auto_format">
+      <text>true</text>
+      <feedback format="html"><text><![CDATA[Incorrecto. El falso stock es un error real que hay que analizar y corregir, no un dato informativo para ignorar.]]></text></feedback>
+    </answer>
+    <answer fraction="100" format="moodle_auto_format">
+      <text>false</text>
+      <feedback format="html"><text><![CDATA[¡Correcto! El falso stock es un error real que hay que analizar y corregir, no un dato informativo para ignorar.]]></text></feedback>
+    </answer>
+  </question>
+  <question type="truefalse">
+    <name><text>VF06 - SSV16 - Efecto de una mala exhibición</text></name>
+    <questiontext format="html"><text><![CDATA[Una mala exhibición puede hacer que un producto no se venda aunque tenga stock.]]></text></questiontext>
+    <defaultgrade>1</defaultgrade>
+    <answer fraction="100" format="moodle_auto_format">
+      <text>true</text>
+      <feedback format="html"><text><![CDATA[¡Correcto! Un producto no visible, dado vuelta o sin precio puede no venderse aunque haya stock disponible.]]></text></feedback>
+    </answer>
+    <answer fraction="0" format="moodle_auto_format">
+      <text>false</text>
+      <feedback format="html"><text><![CDATA[Incorrecto. Un producto no visible, dado vuelta o sin precio puede no venderse aunque haya stock disponible.]]></text></feedback>
+    </answer>
+  </question>
+  <question type="truefalse">
+    <name><text>VF07 - SSV17 - Frecuencia del reporte</text></name>
+    <questiontext format="html"><text><![CDATA[El reporte de surtido sin venta debería generarse una sola vez, al iniciar el año.]]></text></questiontext>
+    <defaultgrade>1</defaultgrade>
+    <answer fraction="0" format="moodle_auto_format">
+      <text>true</text>
+      <feedback format="html"><text><![CDATA[Incorrecto. Uno de los últimos consejos del curso es generar el reporte cada semana, no una sola vez al año.]]></text></feedback>
+    </answer>
+    <answer fraction="100" format="moodle_auto_format">
+      <text>false</text>
+      <feedback format="html"><text><![CDATA[¡Correcto! Uno de los últimos consejos del curso es generar el reporte cada semana, no una sola vez al año.]]></text></feedback>
+    </answer>
+  </question>
+  <question type="truefalse">
+    <name><text>VF08 - SSV18 - Reportar situaciones</text></name>
+    <questiontext format="html"><text><![CDATA[Reportar las situaciones que se encuentren es parte de las buenas prácticas de este proceso.]]></text></questiontext>
+    <defaultgrade>1</defaultgrade>
+    <answer fraction="100" format="moodle_auto_format">
+      <text>true</text>
+      <feedback format="html"><text><![CDATA[¡Correcto! Es uno de los últimos consejos del curso: reportar las situaciones que puedan encontrarse.]]></text></feedback>
+    </answer>
+    <answer fraction="0" format="moodle_auto_format">
+      <text>false</text>
+      <feedback format="html"><text><![CDATA[Incorrecto. Es uno de los últimos consejos del curso: reportar las situaciones que puedan encontrarse.]]></text></feedback>
+    </answer>
+  </question>
+  <question type="truefalse">
+    <name><text>VF09 - SSV19 - Pedir espacio en góndola</text></name>
+    <questiontext format="html"><text><![CDATA[Pedir espacio en góndola es una acción válida para mejorar la venta de un producto.]]></text></questiontext>
+    <defaultgrade>1</defaultgrade>
+    <answer fraction="100" format="moodle_auto_format">
+      <text>true</text>
+      <feedback format="html"><text><![CDATA[¡Correcto! Es una de las acciones que puede tomar el sector para mejorar la venta de un producto con baja rotación.]]></text></feedback>
+    </answer>
+    <answer fraction="0" format="moodle_auto_format">
+      <text>false</text>
+      <feedback format="html"><text><![CDATA[Incorrecto. Es una de las acciones que puede tomar el sector para mejorar la venta de un producto con baja rotación.]]></text></feedback>
+    </answer>
+  </question>
+  <question type="truefalse">
+    <name><text>VF10 - SSV20 - Objetivo del curso</text></name>
+    <questiontext format="html"><text><![CDATA[El objetivo del curso es aprender a detectar productos sin ventas y aplicar acciones para mejorarlas.]]></text></questiontext>
+    <defaultgrade>1</defaultgrade>
+    <answer fraction="100" format="moodle_auto_format">
+      <text>true</text>
+      <feedback format="html"><text><![CDATA[¡Correcto! Es exactamente lo que plantean los 3 objetivos de aprendizaje del curso: detectar, identificar y aplicar acciones.]]></text></feedback>
+    </answer>
+    <answer fraction="0" format="moodle_auto_format">
+      <text>false</text>
+      <feedback format="html"><text><![CDATA[Incorrecto. Es exactamente lo que plantean los 3 objetivos de aprendizaje del curso: detectar, identificar y aplicar acciones.]]></text></feedback>
+    </answer>
+  </question>
+</quiz>

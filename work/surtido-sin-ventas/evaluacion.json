@@ -1,0 +1,167 @@
+{
+  "categoria": "Surtido sin ventas",
+  "multipleChoice": [
+    {
+      "id": "SSV01 - Definición del reporte",
+      "pregunta": "¿Qué es el reporte de control de surtido sin venta?",
+      "explicacion": "Es un reporte que, según la cantidad de días que elijas, muestra los productos que no se vendieron en ese tiempo — es decir, los que están hace varios días sin movimiento.",
+      "correcta": { "texto": "Un reporte que muestra los productos que no se vendieron en un período de días elegido" },
+      "incorrectas": [
+        { "texto": "Un listado de precios desactualizados en el sistema" },
+        { "texto": "Un reporte de productos vencidos únicamente" }
+      ]
+    },
+    {
+      "id": "SSV02 - PLU",
+      "pregunta": "¿Qué es el PLU de un producto?",
+      "explicacion": "El PLU es el código interno que COTO le asigna a cada producto dentro de su sistema. No aparece en el envase — eso es el EAN.",
+      "correcta": { "texto": "El código interno que COTO le asigna a cada producto, no aparece en el envase" },
+      "incorrectas": [
+        { "texto": "El código de barras que pone el fabricante en el envase" },
+        { "texto": "El número de la sucursal donde se vende el producto" }
+      ]
+    },
+    {
+      "id": "SSV03 - EAN",
+      "pregunta": "¿Qué es el EAN de un producto?",
+      "explicacion": "El EAN es el código de barras que está en el envase, el mismo en todos los supermercados porque lo pone el fabricante.",
+      "correcta": { "texto": "El código de barras del envase, igual en todos los supermercados" },
+      "incorrectas": [
+        { "texto": "El código interno que le asigna COTO a cada producto" },
+        { "texto": "El código del sector de salón donde está exhibido" }
+      ]
+    },
+    {
+      "id": "SSV04 - Cálculo del stock",
+      "pregunta": "¿Cómo se calcula el stock total de un producto?",
+      "explicacion": "El stock es la cantidad de unidades que tenemos de un producto, sumando lo que hay en góndola y en depósito.",
+      "correcta": { "texto": "Sumando las unidades en góndola y en depósito" },
+      "incorrectas": [
+        { "texto": "Contando solo lo que hay exhibido en góndola" },
+        { "texto": "Contando solo lo que hay guardado en depósito" }
+      ]
+    },
+    {
+      "id": "SSV05 - Falso stock",
+      "pregunta": "¿Qué es el falso stock?",
+      "explicacion": "Es cuando el sistema indica una cantidad de unidades que no coincide con la que hay realmente en góndola y depósito — un error que hay que analizar y corregir.",
+      "correcta": { "texto": "Cuando el sistema indica una cantidad de unidades distinta a la real en góndola y depósito" },
+      "incorrectas": [
+        { "texto": "Cuando un producto tiene dos precios distintos cargados" },
+        { "texto": "Cuando un producto está cargado dos veces en el sistema" }
+      ]
+    },
+    {
+      "id": "SSV06 - Rotación alta",
+      "pregunta": "¿Qué significa que un producto tenga rotación alta?",
+      "explicacion": "La rotación indica qué tan rápido se vende un producto. Alta significa que se vende mucho y seguido.",
+      "correcta": { "texto": "Que se vende mucho y seguido" },
+      "incorrectas": [
+        { "texto": "Que tiene mucho stock acumulado en depósito" },
+        { "texto": "Que está mal exhibido en el salón" }
+      ]
+    },
+    {
+      "id": "SSV07 - Buena exhibición",
+      "pregunta": "¿Cuál de estas opciones describe una buena exhibición?",
+      "explicacion": "Una buena exhibición es un producto bien ubicado, a la altura de los ojos, con el frente visible y con precio — eso hace que se vea y se venda.",
+      "correcta": { "texto": "Producto bien ubicado, a la altura de los ojos, con el frente visible y con precio" },
+      "incorrectas": [
+        { "texto": "Producto guardado en el depósito hasta que un cliente lo pida" },
+        { "texto": "Producto exhibido con el precio tapado" }
+      ]
+    },
+    {
+      "id": "SSV08 - Dónde se genera el reporte",
+      "pregunta": "¿En qué sistema se genera el reporte de surtido sin venta?",
+      "explicacion": "El reporte se genera en GESCOM, el sistema interno de COTO para consultar reportes y ver el stock de cada producto.",
+      "correcta": { "texto": "En GESCOM" },
+      "incorrectas": [
+        { "texto": "En la PDA" },
+        { "texto": "En el sistema de cajas" }
+      ]
+    },
+    {
+      "id": "SSV09 - Acción ante baja rotación",
+      "pregunta": "Si un producto del reporte tiene baja rotación, ¿qué corresponde hacer?",
+      "explicacion": "Corresponde aplicar acciones para mejorar su venta — por ejemplo, pedir más espacio en góndola, exhibirlo como novedad o sumarlo a la línea de cajas.",
+      "correcta": { "texto": "Aplicar acciones para mejorar su venta, como pedir más espacio en góndola" },
+      "incorrectas": [
+        { "texto": "Retirarlo del salón sin avisar a nadie" },
+        { "texto": "Dejarlo igual hasta la próxima auditoría" }
+      ]
+    },
+    {
+      "id": "SSV10 - Surtido",
+      "pregunta": "¿Qué es el surtido?",
+      "explicacion": "El surtido es la totalidad de los productos que tenemos disponibles para vender en los diferentes sectores de una sucursal.",
+      "correcta": { "texto": "La totalidad de los productos disponibles para la venta en los diferentes sectores de una sucursal" },
+      "incorrectas": [
+        { "texto": "Solo los productos que están en promoción" },
+        { "texto": "Solo los productos con baja rotación" }
+      ]
+    }
+  ],
+  "verdaderoFalso": [
+    {
+      "id": "SSV11 - Para qué sirve el control",
+      "enunciado": "El control de surtido sin venta nos permite ver qué productos no se están vendiendo.",
+      "esVerdadero": true,
+      "explicacion": "Es justamente su propósito: detectar productos sin movimiento para poder actuar sobre ellos."
+    },
+    {
+      "id": "SSV12 - GESCOM",
+      "enunciado": "GESCOM es el sistema donde armamos y leemos el reporte de surtido sin venta.",
+      "esVerdadero": true,
+      "explicacion": "GESCOM (Gestión Comercial) es el sistema interno de COTO usado para esto, entre otras cosas."
+    },
+    {
+      "id": "SSV13 - PLU en el envase",
+      "enunciado": "El PLU aparece impreso en el envase del producto.",
+      "esVerdadero": false,
+      "explicacion": "El PLU no aparece en el envase — es un código interno de COTO. El que sí aparece en el envase es el EAN."
+    },
+    {
+      "id": "SSV14 - Rotación media",
+      "enunciado": "Un producto con rotación media se vende con frecuencia moderada.",
+      "esVerdadero": true,
+      "explicacion": "Así se define la rotación media: ni tan rápido como la alta, ni tan lento como la baja."
+    },
+    {
+      "id": "SSV15 - Corregir el falso stock",
+      "enunciado": "El falso stock nunca hace falta corregirlo, es solo informativo.",
+      "esVerdadero": false,
+      "explicacion": "El falso stock es un error real que hay que analizar y corregir, no un dato informativo para ignorar."
+    },
+    {
+      "id": "SSV16 - Efecto de una mala exhibición",
+      "enunciado": "Una mala exhibición puede hacer que un producto no se venda aunque tenga stock.",
+      "esVerdadero": true,
+      "explicacion": "Un producto no visible, dado vuelta o sin precio puede no venderse aunque haya stock disponible."
+    },
+    {
+      "id": "SSV17 - Frecuencia del reporte",
+      "enunciado": "El reporte de surtido sin venta debería generarse una sola vez, al iniciar el año.",
+      "esVerdadero": false,
+      "explicacion": "Uno de los últimos consejos del curso es generar el reporte cada semana, no una sola vez al año."
+    },
+    {
+      "id": "SSV18 - Reportar situaciones",
+      "enunciado": "Reportar las situaciones que se encuentren es parte de las buenas prácticas de este proceso.",
+      "esVerdadero": true,
+      "explicacion": "Es uno de los últimos consejos del curso: reportar las situaciones que puedan encontrarse."
+    },
+    {
+      "id": "SSV19 - Pedir espacio en góndola",
+      "enunciado": "Pedir espacio en góndola es una acción válida para mejorar la venta de un producto.",
+      "esVerdadero": true,
+      "explicacion": "Es una de las acciones que puede tomar el sector para mejorar la venta de un producto con baja rotación."
+    },
+    {
+      "id": "SSV20 - Objetivo del curso",
+      "enunciado": "El objetivo del curso es aprender a detectar productos sin ventas y aplicar acciones para mejorarlas.",
+      "esVerdadero": true,
+      "explicacion": "Es exactamente lo que plantean los 3 objetivos de aprendizaje del curso: detectar, identificar y aplicar acciones."
+    }
+  ]
+}

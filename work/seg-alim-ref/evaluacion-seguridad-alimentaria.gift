@@ -1,0 +1,112 @@
+// ============================================================
+// Evaluación — "Seguridad alimentaria"
+// Formato GIFT, generado con tools/build-evaluacion-gift.mjs
+// Importar en Moodle: Banco de preguntas > Importar > formato "GIFT"
+// 10 opción múltiple + 10 Verdadero/Falso = 20 preguntas
+// ============================================================
+
+$CATEGORY: Seguridad alimentaria
+
+// ---------- Opción múltiple ----------
+
+::MC01 - SA01 - Inocuidad::¿Qué es un alimento inocuo? {
+	=Un alimento que, al ser ingerido, no causa ningún tipo de daño a la salud del consumidor #¡Correcto! La inocuidad es el objetivo de todas las prácticas del curso: que el alimento no dañe a quien lo consume.
+	~Un alimento que perdió olor, color o sabor pero todavía se puede vender #Incorrecto: eso describe un alimento ALTERADO, que justamente no está apto para el consumo.
+	~Un alimento que fue envasado en bandeja y film #Incorrecto: el envasado ayuda a conservar, pero por sí solo no garantiza que el alimento sea inocuo.
+}
+
+::MC02 - SA02 - Alteración vs contaminación::¿Cuál es la diferencia principal entre un alimento alterado y uno contaminado? {
+	=La alteración se nota a simple vista; la contaminación puede no notarse #¡Correcto! El alimento alterado cambia olor, textura, color o sabor. El contaminado puede aparentar estar perfecto.
+	~La alteración solo ocurre en carnes; la contaminación en cualquier alimento #Incorrecto: la alteración puede darse en cualquier alimento, no solo en carnes.
+	~La alteración la producen microorganismos; la contaminación, el frío #Incorrecto: es al revés. La contaminación puede venir de microorganismos, y el frío es un método de conservación, no una causa de contaminación.
+}
+
+::MC03 - SA03 - Peligro biológico::¿Qué caracteriza a un peligro biológico? {
+	=La presencia de microorganismos: bacterias, virus, hongos o parásitos #¡Correcto! Es la causa más frecuente de las ETAs, como la hepatitis A o la gastroenteritis.
+	~La presencia de pelos, vidrio o virutas de metal #Incorrecto: esos son elementos ajenos al alimento, o sea un peligro FÍSICO.
+	~El contacto del alimento con productos de limpieza o insecticidas #Incorrecto: eso es un peligro QUÍMICO, que provoca intoxicaciones.
+}
+
+::MC04 - SA04 - Peligro físico::Un cliente encuentra una viruta de metal dentro de un producto. ¿Qué tipo de peligro es? {
+	=Peligro físico #¡Correcto! Los elementos ajenos al alimento —pelos, vidrio, astillas de madera, virutas de metal— son peligros físicos y pueden dañar la boca y el tracto intestinal.
+	~Peligro químico #Incorrecto: el peligro químico viene de sustancias como productos de limpieza, insecticidas o pesticidas.
+	~Peligro biológico #Incorrecto: el peligro biológico son microorganismos —bacterias, virus, hongos o parásitos—, no objetos.
+}
+
+::MC05 - SA05 - Contaminación cruzada indirecta::Se corta pollo crudo con un cuchillo y, sin lavarlo, se corta con el mismo cuchillo una fruta lista para consumir. ¿Qué ocurrió? {
+	=Contaminación cruzada en forma indirecta #¡Correcto! Es indirecta porque los microorganismos pasaron a través de un intermediario: el cuchillo.
+	~Contaminación cruzada en forma directa #Incorrecto: la forma directa es cuando el alimento contaminado toca al alimento seguro, sin intermediarios.
+	~Alteración del alimento #Incorrecto: la alteración es la pérdida de olor, textura, color o sabor, y se nota a simple vista.
+}
+
+::MC06 - SA06 - Plagas::Encontrás excremento de roedor en un depósito. ¿Cuál es la conducta correcta? {
+	=Alertar a los responsables de la sucursal: jefe de sector o gerente #¡Correcto! Nuestra responsabilidad como colaboradores es alertar ante cualquier evidencia de plagas.
+	~Limpiarlo uno mismo y seguir trabajando sin avisar #Incorrecto: limpiar no resuelve la plaga y, sin aviso, nadie puede tomar medidas de fondo.
+	~Esperar a ver si aparece de nuevo antes de informarlo #Incorrecto: la evidencia de plagas se informa siempre, en el momento — el riesgo de contaminación es serio.
+}
+
+::MC07 - SA07 - Limpieza y desinfección::¿Cuál es la diferencia entre limpieza y desinfección? {
+	=La limpieza quita la suciedad visible; la desinfección elimina las bacterias que no se ven #¡Correcto! Son dos pasos distintos e igual de importantes: la limpieza sola no alcanza a eliminar todo.
+	~Son lo mismo, solo cambia el producto que se usa #Incorrecto: son dos pasos diferentes, y la desinfección va siempre DESPUÉS de la limpieza.
+	~La desinfección quita la suciedad visible y la limpieza elimina bacterias #Incorrecto: está al revés. La limpieza elimina lo que se ve; la desinfección, lo que no se ve.
+}
+
+::MC08 - SA08 - Pasos de limpieza::En el proceso de limpieza, ¿cuál es el PRIMER paso? {
+	=Quitar la suciedad visible: restos de alimentos, polvo, tierra y otros materiales #¡Correcto! Recién después se enjuaga y se aplica la solución de limpieza diluida.
+	~Aplicar la solución de limpieza general diluida #Incorrecto: ese es el tercer paso, después de quitar la suciedad visible y de enjuagar.
+	~Realizar la acción mecánica con cepillo o esponja #Incorrecto: la acción mecánica va después de aplicar la solución de limpieza.
+}
+
+::MC09 - SA09 - Rango crítico::¿Cuál es el rango crítico de temperatura que hay que evitar para la exposición de alimentos? {
+	=Entre 5 °C y 65 °C #¡Correcto! Es el rango donde los microorganismos se multiplican más rápido.
+	~Entre 0 °C y 5 °C #Incorrecto: ese es justamente el rango de refrigeración, donde el alimento está seguro.
+	~Por encima de 65 °C #Incorrecto: por encima de 65 °C es el mantenimiento en caliente, otro método de conservación válido.
+}
+
+::MC10 - SA10 - Producto vencido::Se detecta un producto vencido en góndola. ¿Cuál es el circuito correcto? {
+	=Retirarlo de inmediato, embolsarlo, validarlo con el jefe de sector y llevarlo a la cámara de decomiso y devoluciones #¡Correcto! Ese es el circuito completo: retirar, embolsar, controlar y separar del resto de la mercadería.
+	~Dejarlo en góndola hasta el control diario del día siguiente #Incorrecto: el producto vencido se retira INMEDIATAMENTE, no se espera al próximo control.
+	~Retirarlo y guardarlo en la misma cámara que la mercadería en buen estado #Incorrecto: justamente se lleva a un sector específico para evitar que entre en contacto con alimentos en buen estado.
+}
+
+// ---------- Verdadero / Falso ----------
+
+::VF01 - SA11 - Responsabilidad::Los colaboradores somos los principales responsables de evitar la contaminación de los alimentos. {
+	TRUE#Verdadero. El resumen de la unidad 1 lo dice explícitamente: mantener la higiene personal, limpiar y desinfectar y controlar la temperatura es responsabilidad nuestra.
+}
+
+::VF02 - SA12 - Manos::El lavado de manos es la principal forma de combatir la contaminación alimentaria. {
+	TRUE#Verdadero. Las manos son el principal vehículo de transmisión de microorganismos a los alimentos.
+}
+
+::VF03 - SA13 - Joyas::En los sectores que participan de la producción de alimentos, como Elaborados, el uso de joyas está simplemente desaconsejado pero permitido. {
+	FALSE#Falso. En general se recomienda evitarlas, pero en los sectores de producción de alimentos su uso está PROHIBIDO.
+}
+
+::VF04 - SA14 - Síntomas::Si estamos con vómitos, diarrea, mucosidad nasal o tos, debemos informarlo a un superior. {
+	TRUE#Verdadero. Si entramos en contacto con alimentos estando con esos síntomas, podemos contaminarlos.
+}
+
+::VF05 - SA15 - Congelado::La temperatura de referencia para el congelado es inferior a -18 °C. {
+	TRUE#Verdadero. Refrigerado va de 0 °C a 5 °C; congelado, por debajo de -18 °C; y caliente, por encima de 65 °C.
+}
+
+::VF06 - SA16 - Fumar::Fumar solo es un problema por el humo: mientras no caigan cenizas sobre los alimentos, no hay riesgo. {
+	FALSE#Falso. Al fumar, los dedos entran en contacto con bacterias de la boca y el cigarrillo favorece la tos y los estornudos, además del riesgo de cenizas y colillas.
+}
+
+::VF07 - SA17 - Envasado::El envasado en bandeja y film reduce tanto el riesgo de contaminación como el de alteración. {
+	TRUE#Verdadero. Al evitar el contacto con el aire reduce la contaminación, y además demora la pérdida de olor, sabor y color.
+}
+
+::VF08 - SA18 - Rotación::En la rotación de mercadería, se retira primero lo que llegó primero, sin mirar la fecha de vencimiento. {
+	FALSE#Falso. La metodología se basa en la FECHA DE VENCIMIENTO: se retira primero la mercadería más próxima a vencer.
+}
+
+::VF09 - SA19 - Desinfección tiempo::La solución desinfectante diluida debe dejarse actuar 5 minutos y después hay que hacer un enjuague final con agua. {
+	TRUE#Verdadero. Y siempre después de la limpieza: la desinfección no reemplaza al primer paso.
+}
+
+::VF10 - SA20 - Cortes::Un corte o herida en la mano se puede dejar al aire mientras no sangre. {
+	FALSE#Falso. Los cortes y heridas son lugares ideales para el desarrollo de bacterias: deben protegerse con apósitos impermeables.
+}

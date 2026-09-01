@@ -1,0 +1,107 @@
+{
+  "categoria": "Uso de Sucursales 3 - NOA",
+  "multipleChoice": [
+    {
+      "id": "Reporte 191",
+      "pregunta": "¿Para qué sirve el reporte 191, \"Evolución de ventas\"?",
+      "correcta": { "texto": "Para comparar las ventas del sector con las del año anterior, en unidades y en tickeado", "feedback": "¡Correcto! El 191 compara la evolución de ventas contra el mismo período del año anterior." },
+      "incorrectas": [
+        { "texto": "Para consultar el stock y el kardex de un producto puntual", "feedback": "Incorrecto, eso lo resuelve el reporte 196, Consulta PLU." },
+        { "texto": "Para ver el ranking de ventas frente a otras sucursales", "feedback": "Incorrecto, el ranking frente a otras sucursales aparece en el reporte 194, Comparativo ventas sector." }
+      ]
+    },
+    {
+      "id": "Reporte 194",
+      "pregunta": "El reporte 194, \"Comparativo ventas sector\", además de las ventas en pesos y unidades, ¿qué otro dato agrega que el 191 no tiene?",
+      "correcta": { "texto": "El ranking de la sucursal frente a otras sucursales", "feedback": "¡Correcto! El 194 suma la comparación contra otras sucursales, no solo contra el año anterior." },
+      "incorrectas": [
+        { "texto": "La comparación contra el año anterior", "feedback": "Incorrecto, esa comparación es la función principal del reporte 191." },
+        { "texto": "El detalle de kardex por producto", "feedback": "Incorrecto, el detalle de kardex se consulta desde el reporte 196." }
+      ]
+    },
+    {
+      "id": "Reporte 219",
+      "pregunta": "¿Qué muestra el reporte 219, \"Productos sin stock\"?",
+      "correcta": { "texto": "Los productos que quedaron con stock negativo", "feedback": "¡Correcto! El 219 lista específicamente los productos en stock negativo." },
+      "incorrectas": [
+        { "texto": "Los productos con muy pocas unidades disponibles", "feedback": "Incorrecto, ese es el reporte 285, Últimas unidades." },
+        { "texto": "Los productos sin movimiento hace más de 120 días", "feedback": "Incorrecto, ese es el reporte 222, Antigüedad sin venta." }
+      ]
+    },
+    {
+      "id": "Reporte 285",
+      "pregunta": "¿Qué controla el reporte 285, \"Últimas unidades\"?",
+      "correcta": { "texto": "Los productos a los que les quedan muy pocas unidades en stock", "feedback": "¡Correcto! El 285 alerta sobre productos con stock bajo antes de que se agoten." },
+      "incorrectas": [
+        { "texto": "Los productos con stock negativo", "feedback": "Incorrecto, esos aparecen en el reporte 219." },
+        { "texto": "Los productos sin ventas hace más de un año", "feedback": "Incorrecto, esos son los \"clavos\" del reporte 281." }
+      ]
+    },
+    {
+      "id": "Reporte 222",
+      "pregunta": "Según el criterio de gestión de Sucursales 3, ¿a partir de cuántos días sin venta hay que accionar un producto del reporte 222?",
+      "correcta": { "texto": "120 días", "feedback": "¡Correcto! Los productos que superan los 120 días sin venta hay que accionarlos sin esperar más." },
+      "incorrectas": [
+        { "texto": "30 días", "feedback": "Incorrecto, 30 días es el límite para la mercadería no apta (reporte 210), no para la antigüedad sin venta." },
+        { "texto": "365 días", "feedback": "Incorrecto, al año sin ventas el producto ya se considera \"clavo\" (reporte 281), un caso más grave." }
+      ]
+    },
+    {
+      "id": "Reporte 281",
+      "pregunta": "¿Cuál es el objetivo respecto al listado de \"Clavos\" (reporte 281)?",
+      "correcta": { "texto": "Que el listado esté siempre en cero", "feedback": "¡Correcto! Cada clavo requiere una acción concreta; el listado no debería tener productos." },
+      "incorrectas": [
+        { "texto": "Que no supere el 5% del surtido total", "feedback": "Incorrecto, no es un porcentaje admitido: el objetivo es que no haya ningún clavo." },
+        { "texto": "Que se revise una vez al año", "feedback": "Incorrecto, los reportes de control se revisan a diario, no una vez al año." }
+      ]
+    },
+    {
+      "id": "Reporte 197",
+      "pregunta": "¿Qué permite controlar el reporte 197, \"Surtido\"?",
+      "correcta": { "texto": "Qué productos deberían estar en el sector y cuáles son PLU nuevos", "feedback": "¡Correcto! El 197 controla el surtido definido y el ingreso de mercadería nueva." },
+      "incorrectas": [
+        { "texto": "El stock negativo de la sucursal", "feedback": "Incorrecto, el stock negativo se controla desde el reporte 219." },
+        { "texto": "El cumplimiento semanal de exhibición", "feedback": "Incorrecto, ese control lo hace el reporte 220, Relevamiento de clases." }
+      ]
+    },
+    {
+      "id": "Reporte 196",
+      "pregunta": "Desde el reporte 196, \"Consulta PLU\", ¿qué se puede ver de un producto?",
+      "correcta": { "texto": "Stock, precio, kardex, surtido y ofertas", "feedback": "¡Correcto! Es la ficha completa de un producto puntual." },
+      "incorrectas": [
+        { "texto": "Solamente el precio de lista", "feedback": "Incorrecto, el 196 muestra mucha más información que solo el precio." },
+        { "texto": "Únicamente el ranking de ventas de la sucursal", "feedback": "Incorrecto, el ranking frente a otras sucursales está en el reporte 194." }
+      ]
+    },
+    {
+      "id": "Reporte 210",
+      "pregunta": "¿Cuántos días como máximo puede estar la mercadería no apta sin resolverse, según el reporte 210?",
+      "correcta": { "texto": "30 días", "feedback": "¡Correcto! La mercadería no apta no puede superar los 30 días sin gestionarse (decomiso o devolución)." },
+      "incorrectas": [
+        { "texto": "120 días", "feedback": "Incorrecto, 120 días corresponde al criterio de antigüedad sin venta del reporte 222." },
+        { "texto": "No tiene un límite de días", "feedback": "Incorrecto, sí tiene un límite: 30 días." }
+      ]
+    },
+    {
+      "id": "Reporte 220",
+      "pregunta": "¿Cuál es el mínimo de cumplimiento requerido en el reporte 220, \"Relevamiento de clases\"?",
+      "correcta": { "texto": "95%", "feedback": "¡Correcto! El relevamiento semanal de productos exhibidos tiene que llegar como mínimo al 95%." },
+      "incorrectas": [
+        { "texto": "100%", "feedback": "Incorrecto, el mínimo exigido es 95%, no 100%." },
+        { "texto": "80%", "feedback": "Incorrecto, el mínimo real es más alto: 95%." }
+      ]
+    }
+  ],
+  "verdaderoFalso": [
+    { "id": "Clavos, antigüedad", "enunciado": "El reporte 281 (\"Clavos\") lista productos sin ventas hace más de 6 meses.", "esVerdadero": false, "feedback": "Falso. El criterio de \"clavo\" es más de 1 año sin ventas, no 6 meses." },
+    { "id": "Mercadería no apta", "enunciado": "La mercadería no apta puede quedarse más de 30 días si se justifica el motivo.", "esVerdadero": false, "feedback": "Falso. La mercadería no apta no puede superar los 30 días bajo ningún motivo: hay que resolverla con decomiso o devolución." },
+    { "id": "App Sucursales 3", "enunciado": "Sucursales 3 es la app de gestión que se usa desde el iPad para acceder, en tiempo real, a la información de la sucursal.", "esVerdadero": true, "feedback": "Verdadero. Así se define la app en la introducción del curso." },
+    { "id": "Relevamiento de clases", "enunciado": "El relevamiento de clases (reporte 220) se completa una vez por mes.", "esVerdadero": false, "feedback": "Falso. El relevamiento de clases es semanal, no mensual." },
+    { "id": "Consulta PLU", "enunciado": "Desde el reporte 196 se puede consultar el kardex de un producto.", "esVerdadero": true, "feedback": "Verdadero. El kardex (historial de movimientos) es uno de los datos que muestra la Consulta PLU." },
+    { "id": "Glosario CD", "enunciado": "La sigla \"CD\" se refiere al Centro de Distribución desde donde se abastece la sucursal.", "esVerdadero": true, "feedback": "Verdadero. El CD es el centro de distribución que abastece a la sucursal." },
+    { "id": "Ranking de sucursales", "enunciado": "El ranking de ventas frente a otras sucursales aparece en el reporte 191, \"Evolución de ventas\".", "esVerdadero": false, "feedback": "Falso. El ranking frente a otras sucursales aparece en el reporte 194, Comparativo ventas sector — el 191 compara contra el año anterior, no contra otras sucursales." },
+    { "id": "Antigüedad sin venta", "enunciado": "El reporte 222 ordena los productos por cantidad de días sin movimiento.", "esVerdadero": true, "feedback": "Verdadero. La antigüedad sin venta se ordena justamente por los días que un producto lleva sin registrar movimiento." },
+    { "id": "Unidades reservadas", "enunciado": "Las unidades \"reservadas\" de un producto están disponibles para la venta en el salón.", "esVerdadero": false, "feedback": "Falso. Las unidades reservadas ya están comprometidas (por ejemplo, un pedido online sin retirar) y NO están disponibles para la venta en salón." },
+    { "id": "Objetivo del relevamiento", "enunciado": "El objetivo del reporte 220 es alcanzar un mínimo del 95% de cumplimiento en la exhibición.", "esVerdadero": true, "feedback": "Verdadero. 95% es el mínimo requerido de cumplimiento en el relevamiento de clases." }
+  ]
+}

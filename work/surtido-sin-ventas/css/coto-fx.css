@@ -1,0 +1,35 @@
+/* ============================================================
+   coto-fx.css · Estilos de los efectos que fabrica fx.js
+   kit-base v1.6 · Área Aprendizaje (COTO) — genérico, sin contenido
+   de curso. Copiar tal cual a cada curso nuevo, sin editar.
+   ------------------------------------------------------------
+   fx.js crea nodos con estas clases (ripple al hacer clic, partículas
+   de fondo en diapositivas HTML, "moneda" que vuela hacia el contador
+   de puntos) pero nunca trajo su propio CSS — vivía copiado a mano en
+   el `assets.css` de cada curso, así que un curso nuevo que copiara
+   `fx.js` sin acordarse de este bloque perdía los 3 efectos en
+   silencio (el DOM los crea, pero no se ven). Extraído tal cual (sin
+   cambios) del `assets.css` de "Prevención cardiovascular" — no usa
+   ninguna variable ni clase propia de ese curso, solo las variables de
+   categoría genéricas de `coto-base.css` (`--cat`, `--cat-strong`,
+   `--brand`), así que viaja igual a cualquier curso.
+   ============================================================ */
+.fx-ripple{position:absolute;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,color-mix(in srgb,var(--cat-strong) 45%,transparent),transparent 70%);
+  transform:scale(0);opacity:.9;animation:fx-ripple-go .6s ease-out forwards}
+@keyframes fx-ripple-go{to{transform:scale(1);opacity:0}}
+
+.fx-particles{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.fx-particles span{position:absolute;bottom:-20px;border-radius:50%;
+  background:var(--cat,var(--brand));animation:fx-float linear infinite}
+@keyframes fx-float{
+  0%{transform:translateY(0) scale(1)}
+  100%{transform:translateY(-110vh) scale(1.25)}
+}
+
+.fx-coin{position:fixed;transform:translate(-50%,0);font-size:1.4rem;color:var(--cat-ink);
+  pointer-events:none;z-index:98;transition:transform .65s cubic-bezier(.2,.7,.3,1),opacity .65s}
+
+@media (prefers-reduced-motion:reduce){
+  .fx-ripple,.fx-particles span,.fx-coin{animation:none!important;transition:none!important;display:none}
+}

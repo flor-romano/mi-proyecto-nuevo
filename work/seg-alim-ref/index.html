@@ -1,0 +1,1586 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Seguridad alimentaria</title>
+<!-- Favicon embebido como data-URI: sin él el navegador pide
+     /favicon.ico y ese 404 entra como "error de consola" en
+     deep-audit / markup-sanity / full-regress — 3 fallos que no son
+     del curso (kit-base, CLAUDE.md §6.18 punto 3). -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%23006EA0'/%3E%3C/svg%3E">
+
+<link rel="stylesheet" href="css/coto-base.css">
+<link rel="stylesheet" href="css/coto-base-addendum-v1.8.css">
+<link rel="stylesheet" href="css/coto-player-chrome.css">
+<link rel="stylesheet" href="css/coto-player-bottom.css">
+<link rel="stylesheet" href="css/coto-shot-stage.css">
+<link rel="stylesheet" href="css/coto-media.css">
+<link rel="stylesheet" href="css/coto-fx.css">
+<link rel="stylesheet" href="css/coto-minijuego.css">
+<link rel="stylesheet" href="css/coto-cierre.css">
+<link rel="stylesheet" href="css/assets.css">
+<link rel="stylesheet" href="css/diapositivas.css">
+<link rel="stylesheet" href="css/pulido.css">
+</head>
+<body data-cat="control-de-calidad">
+
+
+<!-- Sprite de íconos: mismo set genérico que usa el molde. Los
+     `<use href="#i-...">` del índice, la ayuda y los botones dependen
+     de que estos símbolos existan. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="i-flag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="3" x2="5" y2="21"/><path d="M5 4h14l-4 4 4 4H5"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1"/><rect x="13.5" y="3.5" width="7" height="7" rx="1"/><rect x="3.5" y="13.5" width="7" height="7" rx="1"/><rect x="13.5" y="13.5" width="7" height="7" rx="1"/></symbol>
+    <symbol id="i-boxes" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="12" width="8" height="8" rx="1"/><rect x="13" y="12" width="8" height="8" rx="1"/><rect x="8" y="3.5" width="8" height="8" rx="1"/><path d="M7 12v-.5M12 20v-8"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="7.5" r="1" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="i-medal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3 4 9l3.5 1.5"/><path d="M17 3l3 6-3.5 1.5"/><circle cx="12" cy="13" r="6.5"/><polyline points="9.2 13.2 11 15 15 10.5"/></symbol>
+    <symbol id="i-bulb" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1.1 1.3 1.1 2.2h5c0-.9.4-1.7 1.1-2.2A6 6 0 0 0 12 3z"/><path d="M9 18h6"/><path d="M10 21h4"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polygon points="10 8.5 16 12 10 15.5" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-list-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><polyline points="3.5 6.5 4.5 7.5 6.5 5"/><polyline points="3.5 12.5 4.5 13.5 6.5 11"/><polyline points="3.5 18.5 4.5 19.5 6.5 17"/></symbol>
+    <symbol id="i-examen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6v2H9zM8 4H6a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2"/><polyline points="8.5 13 10.5 15 15.5 10"/></symbol>
+    <!-- 3 gajos (biológico/físico/químico) en vez de 1 sola línea — con
+         una sola línea se leía como un reloj, no como un gráfico de
+         torta (ver CLAUDE.md, revisión de íconos del índice). Único
+         uso: "Contaminación", que reparte justamente en esos 3 tipos. -->
+    <symbol id="i-chart-pie" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 12L12 3"/><path d="M12 12L19.8 16.5"/><path d="M12 12L4.2 16.5"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v16H6.5A2.5 2.5 0 0 0 4 20.5z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="14" y2="11"/></symbol>
+    <symbol id="i-cursor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l6.5 16 2.2-6.3L20 10.5z"/><line x1="13.5" y1="13.5" x2="19" y2="19"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="21"/></symbol>
+    <symbol id="i-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 3 3 3 3 9"/><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><polyline points="15 21 21 21 21 15"/></symbol>
+    <symbol id="i-gauge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16a8 8 0 1 1 16 0"/><line x1="12" y1="16" x2="15.5" y2="10.5"/><circle cx="12" cy="16" r="1.2" fill="currentColor" stroke="none"/></symbol>
+    <!-- Íconos sumados para que el índice represente mejor cada
+         sección (pedido explícito: "la mayoría no tienen nada que ver
+         con lo que dicen representar") — mismo estilo línea/24x24 que
+         el resto del sprite. -->
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><polyline points="9 12 11 14 15 9.5"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2z"/><line x1="12" y1="9.5" x2="12" y2="14"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></symbol>
+    <symbol id="i-x-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></symbol>
+    <symbol id="i-droplet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c4 5 6.5 8.5 6.5 11.5a6.5 6.5 0 0 1-13 0C5.5 11.5 8 8 12 3z"/></symbol>
+    <symbol id="i-rotate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 14-5.3"/><polyline points="18 3 18 7 14 7"/><path d="M20 12a8 8 0 0 1-14 5.3"/><polyline points="6 21 6 17 10 17"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 3 21 8.5 12 14 3 8.5"/><polyline points="3 13.5 12 19 21 13.5"/></symbol>
+</svg>
+
+<div class="d-app">
+
+  <!-- ============ BARRA SUPERIOR (kit-base header-boilerplate v1.9) ============ -->
+  <header class="d-top">
+    <div class="d-top-row1">
+      <div class="d-top-left">
+        <button class="d-iconbtn" type="button" data-popup-trigger="sidenav" aria-haspopup="dialog" aria-label="Índice del curso" title="Índice">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <span class="d-brand">
+          <span class="lg" aria-hidden="true"><img src="img/icono-control-calidad.webp" alt=""></span>
+          <span>Seguridad alimentaria<small>Área Control de Calidad · COTO</small></span>
+        </span>
+      </div>
+
+      <span class="d-top-spacer" aria-hidden="true"></span>
+
+      <div class="d-top-center">
+        <span class="d-chip" id="d-greet" hidden></span>
+        <button class="d-chip d-chip--achieve" type="button" data-popup-trigger="logros" aria-haspopup="dialog" aria-label="Logros y puntos: ver mis logros" title="Logros y puntos ganados en el curso">
+          <span aria-hidden="true">🏆</span><span id="d-badge-count">0/5</span> <span class="lbl">logros</span>
+          <span class="d-chip-sep" aria-hidden="true"></span>
+          <span aria-hidden="true">✦</span><span class="v" id="d-points">0</span> <span class="lbl">ptos</span>
+        </button>
+      </div>
+    </div>
+
+    <span class="d-top-spacer" aria-hidden="true"></span>
+
+    <div class="d-top-right">
+      <div class="d-top-group d-top-group--audio" role="group" aria-label="Sonido y locución">
+        <!-- Panel de volumen (initSoundToggle, coto-player.js — kit-base
+             v1.9.35): se despliega al pasar el mouse/dar foco sobre TODO
+             `.d-audio-ctl` (botón + panel juntos, así el mouse puede
+             bajar del botón al slider sin que se cierre) y también con
+             un tap/clic (`.is-open`, mismo criterio "pinned" que
+             initHotspots — en touch no existe el hover, CLAUDE.md
+             §6.10.1 regla 2). El botón sigue siendo el toggle de mute de
+             siempre; el panel SUMA control fino de volumen, no lo
+             reemplaza. -->
+        <div class="d-audio-ctl" data-audio-ctl="sonido">
+          <button class="d-iconbtn d-iconbtn--labeled" id="d-sound" type="button" aria-label="Silenciar sonido" aria-pressed="true" title="Sonido">
+            <svg class="ic-on" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.2 9.3a3.6 3.6 0 0 1 0 5.4"/></svg>
+            <svg class="ic-off" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><line x1="17" y1="9" x2="23" y2="15"/><line x1="23" y1="9" x2="17" y2="15"/></svg>
+            <span class="lbl">Sonido</span>
+          </button>
+          <div class="d-audio-pop d-vol-pop" role="group" aria-label="Volumen del sonido">
+            <div class="d-vol-hd"><span class="d-vol-title">Volumen</span><span class="d-vol-pct" id="d-vol-pct">100%</span></div>
+            <div class="d-vol-row">
+              <button class="d-vol-mute" id="d-vol-mute-btn" type="button" aria-label="Silenciar sonido" aria-pressed="false">
+                <svg class="ic-on" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.2 9.3a3.6 3.6 0 0 1 0 5.4"/></svg>
+                <svg class="ic-off" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><line x1="17" y1="9" x2="23" y2="15"/><line x1="23" y1="9" x2="17" y2="15"/></svg>
+              </button>
+              <input class="d-vol-slider" id="d-vol-range" type="range" min="0" max="100" value="100" step="1" aria-label="Nivel de volumen">
+            </div>
+            <div class="d-vol-bars" id="d-vol-bars" aria-hidden="true">
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+        </div>
+        <!-- ícono de micrófono: apagado = mic simple (invita a tocarlo);
+             prendido = mic con ondas de sonido + pulso CSS (se está
+             escuchando ahora). NO usar un ícono de play/stop genérico —
+             se confunde con controles de video.
+             Panel de locución (initNarrateTimeline, coto-player.js):
+             línea de tiempo por FRASE narrada (no por palabra — Web
+             Speech API no da esa precisión de forma confiable con las
+             voces de red que ya usa el curso, ver CLAUDE.md §6.55) +
+             botón de repetir. Mismo mecanismo hover/foco/tap que el de
+             volumen. -->
+        <div class="d-audio-ctl" data-audio-ctl="locucion">
+          <button class="d-iconbtn d-iconbtn--labeled" id="d-narrate" type="button" aria-label="Escuchar la diapositiva" aria-pressed="false" title="Locución" hidden>
+            <svg class="ic-off" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            <svg class="ic-on" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/><path d="M4.5 8a7.5 7.5 0 0 0 0 5"/><path d="M19.5 8a7.5 7.5 0 0 1 0 5"/></svg>
+            <span class="lbl">Locución</span>
+          </button>
+          <div class="d-audio-pop d-narr-pop" role="group" aria-label="Progreso de la locución">
+            <div class="d-narr-hd">
+              <span class="d-narr-title">Locución</span>
+              <span class="d-narr-status" id="d-narr-status" hidden><span class="dot" aria-hidden="true"></span>En curso</span>
+            </div>
+            <input class="d-narr-range" id="d-narr-range" type="range" min="0" max="0" value="0" step="1" disabled aria-label="Progreso de la locución, por frase">
+            <div class="d-narr-foot">
+              <button class="d-narr-replay" id="d-narr-replay" type="button" disabled>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2.1-9.4L1 10"/></svg>
+                Repetir
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <span class="d-top-sep" aria-hidden="true"></span>
+
+      <div class="d-top-group d-top-group--help" role="group" aria-label="Glosario y vista">
+        <button class="d-iconbtn d-iconbtn--labeled" type="button" data-popup-trigger="glosario" aria-label="Glosario" title="Glosario">
+          <svg viewBox="0 0 24 24"><path d="M4 19V6a2 2 0 0 1 2-2h13v14H6a2 2 0 0 0-2 2z"/><path d="M4 19a2 2 0 0 0 2 2h13"/><path d="M8 8h7M8 12h5"/></svg>
+          <span class="lbl">Glosario</span>
+        </button>
+        <button class="d-iconbtn d-iconbtn--labeled" id="d-fullscreen" type="button" aria-label="Pantalla completa" aria-pressed="false" title="Pantalla completa" hidden>
+          <svg class="ic-expand" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M21 16v3a2 2 0 0 1-2 2h-3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/></svg>
+          <svg class="ic-compress" viewBox="0 0 24 24"><path d="M9 3v3a2 2 0 0 1-2 2H4"/><path d="M15 3v3a2 2 0 0 0 2 2h3"/><path d="M21 15h-3a2 2 0 0 0-2 2v3"/><path d="M9 21v-3a2 2 0 0 0-2-2H4"/></svg>
+          <span class="lbl">Ampliar</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ ESCENARIO DE DIAPOSITIVAS ============ -->
+  <main class="d-stage">
+
+    <div class="d-rotate-notice" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="7" y="2" width="10" height="16" rx="2"/>
+        <path d="M12 15h.01"/>
+        <path d="M20 9a8 8 0 0 1-1.5 7"/>
+        <path d="M20 5v4h-4"/>
+      </svg>
+      <b>Girá tu dispositivo</b>
+      <span>Este curso se ve mejor en horizontal.</span>
+    </div>
+
+    <!-- 0 · Portada -->
+    <section class="slide d-shot-slide d-shot-slide--bg-video" data-slide="portada" data-slide-index="0" data-autoadvance>
+      <h2 data-slide-title class="sr-only">Seguridad alimentaria</h2>
+      <div class="d-shot" data-shot>
+        <video class="d-shot-video" playsinline preload="auto" poster="img/portada.webp">
+          <source src="video/portada.mp4" type="video/mp4">
+        </video>
+        <button type="button" class="d-shot-video-tap" hidden>Reproducir el video con sonido</button>
+        <!-- Coordenadas MEDIDAS en píxeles sobre el render de 2520×1260
+             (detección del color de la píldora + bounding box), nunca a
+             ojo — CLAUDE.md §3.4.
+             OJO con `data-nav="next"` acá: `_syncNav` le agrega
+             `.d-nav-btn--cta` a CUALQUIER elemento con ese atributo, y
+             esa clase pinta `background:var(--cat-strong)` — sobre una
+             hitbox invisible eso sería un bloque de color tapando el
+             botón que el arte ya dibuja. `data-goto` hace lo mismo
+             (el motor lo cablea igual) sin ese efecto. -->
+        <button class="d-shot-hit d-shot-hit--cta" data-hit data-goto="introduccion" data-l="75.04" data-t="80.32" data-w="11.83" data-h="8.10">
+          <span class="sr-only">Empezar el curso</span>
+        </button>
+      </div>
+      <div class="sr-only">
+        <p>Curso Seguridad alimentaria, Área Control de Calidad.</p>
+      </div>
+    </section>
+
+    <!-- 1 · Introducción -->
+    <section class="slide d-shot-slide d-shot-slide--bg-layered" data-slide="introduccion" data-slide-index="1">
+      <h2 data-slide-title class="sr-only">Introducción</h2>
+      <div class="d-shot" data-shot>
+        <img class="d-shot-img" src="img/introduccion.webp" alt="" aria-hidden="true">
+      </div>
+      <div class="sr-only">
+        <p>Introducción. En COTO trabajamos con una gran variedad de alimentos: productos lácteos, carne, pollo, pescado, frutas, verduras, entre otros. Como colaboradores de la compañía, es nuestra responsabilidad comprometernos con la inocuidad de los productos que ponemos a la venta.</p>
+        <p>Vamos a identificar cuáles son los peligros asociados a un mal manejo de los alimentos y las consecuencias que producen en las personas. También vamos a aprender las prácticas y procedimientos de seguridad alimentaria que garantizan la inocuidad de los alimentos.</p>
+      </div>
+    </section>
+
+    <!-- 2 · Objetivos de aprendizaje -->
+    <section class="slide d-shot-slide d-shot-slide--bg-layered" data-slide="objetivos" data-slide-index="2">
+      <h2 data-slide-title class="sr-only">Objetivos de aprendizaje</h2>
+      <div class="d-shot" data-shot>
+        <img class="d-shot-img" src="img/objetivos.webp" alt="" aria-hidden="true">
+      </div>
+      <div class="sr-only">
+        <p>Objetivos de aprendizaje. A: Identificar los tipos de riesgo alimentario y sus principales causas. B: Conocer las prácticas de manipulación e higiene que garantizan la inocuidad de los alimentos. C: Aplicar correctamente los procedimientos de conservación y control de vencimientos.</p>
+      </div>
+    </section>
+
+    <!-- 3 · Índice de contenidos.
+         `data-gate-popup`: el instructivo aparece al intentar avanzar
+         DESDE esta diapositiva, no al entrar — es un paso más del
+         recorrido y no una interrupción (CLAUDE.md §6.12 punto 1). -->
+    <section class="slide d-shot-slide d-shot-slide--bg-layered" data-slide="indice" data-slide-index="3"
+      data-gate-popup="instrucciones">
+      <h2 data-slide-title class="sr-only">Índice de contenidos</h2>
+      <!-- Sin hitboxes: esta diapositiva es 100% informativa. Un botón
+           que "se habilitaría más adelante" y nunca se habilita es peor
+           que no tenerlo (CLAUDE.md §7.3 punto 4). -->
+      <div class="d-shot" data-shot>
+        <img class="d-shot-img" src="img/indice.webp" alt="" aria-hidden="true">
+      </div>
+      <div class="sr-only">
+        <p>Unidad 1, Riesgo alimentario: inocuidad, qué es el riesgo alimentario, alteración, contaminación, cómo se contaminan los alimentos y resumen de la unidad 1.</p>
+        <p>Unidad 2, Manipulación segura e higiene: qué es la seguridad alimentaria, malas prácticas en el manejo de alimentos, buenas prácticas en el manejo de alimentos, limpieza y desinfección, el proceso de limpieza y desinfección y resumen de la unidad 2.</p>
+        <p>Unidad 3, Conservación y control: envasado, temperatura alimentaria, rotación y control de vencimientos, resumen de la unidad 3 y mini juego.</p>
+      </div>
+    </section>
+
+    <!-- 4 · Separador Unidad 1 -->
+    <section class="slide d-shot-slide d-shot-slide--bg-video" data-slide="unidad1" data-slide-index="4" data-autoadvance>
+      <h2 data-slide-title class="sr-only">Unidad 1 — Riesgo alimentario</h2>
+      <div class="d-shot" data-shot>
+        <video class="d-shot-video" playsinline preload="auto" poster="img/unidad1.webp">
+          <source src="video/unidad1.mp4" type="video/mp4">
+        </video>
+        <button type="button" class="d-shot-video-tap" hidden>Reproducir el video con sonido</button>
+      </div>
+      <div class="sr-only">
+        <p>Arranca la Unidad 1: Riesgo alimentario.</p>
+      </div>
+    </section>
+
+    <!-- 5 · Inocuidad -->
+    <section class="slide d-shot-slide d-shot-slide--bg-layered" data-slide="inocuidad" data-slide-index="5">
+      <h2 data-slide-title class="sr-only">Inocuidad</h2>
+      <div class="d-shot" data-shot>
+        <img class="d-shot-img" src="img/inocuidad.webp" alt="" aria-hidden="true">
+        <div class="d-inocuidad-zona" data-inocuidad-zona>
+          <button class="d-shot-hit d-shot-hit--circle" data-hit data-inocuidad-tip="regla" data-l="63.8" data-t="38.3" data-w="12.9" data-h="25.7">
+            <span class="sr-only">Cómo se aplica la inocuidad en la práctica</span>
+          </button>
+        </div>
+        <div class="d-info-panel" data-place data-narrate-last data-l="13" data-t="72" data-w="34" data-h="22">
+          <p class="d-info-hint" data-inocuidad-hint>Tocá el ícono para ver cómo se aplica esto en la práctica.</p>
+          <div class="d-info-cartel" data-inocuidad-cartel hidden>
+            <b data-inocuidad-name></b>
+            <p data-inocuidad-txt></p>
+          </div>
+        </div>
+      </div>
+      <div class="sr-only">
+        <p>Un alimento inocuo es aquel que al ser ingerido no causará ningún tipo de daño a la salud del consumidor.</p>
+        <p>Nuestro compromiso con la inocuidad alimentaria implica respetar las normas, prácticas y procedimientos que evitan la alteración y contaminación de los alimentos. Si no lo hacemos, nuestros clientes o incluso nosotros mismos podríamos enfermarnos al ingerir productos en mal estado.</p>
+        <p>A continuación, vamos a identificar cuáles son los peligros asociados a un mal manejo de los alimentos y a aprender las prácticas y procedimientos de seguridad alimentaria que garantizan la inocuidad de nuestros productos.</p>
+      </div>
+    </section>
+
+    <!-- 6 · ¿Qué es el riesgo alimentario? -->
+    <!-- Las 2 tarjetas ya muestran su respuesta horneada — no hay nada
+         que revelar (a diferencia de "seguridad"/"temperatura"). El
+         valor real acá es otro: quien vuelve a esta diapo desde el
+         índice (§6.10, el índice sirve para VOLVER) ve un tilde real
+         si ya recorrió esa sección — no una decoración, un estado
+         vivo. Ver marcarRiesgoVisto() en curso.js. -->
+    <section class="slide d-shot-slide d-shot-slide--bg-layered" data-slide="riesgo" data-slide-index="6">
+      <h2 data-slide-title class="sr-only">¿Qué es el riesgo alimentario?</h2>
+      <div class="d-shot" data-shot>
+        <img class="d-shot-img" src="img/riesgo.webp" alt="" aria-hidden="true">
+        <span class="d-riesgo-check" data-place data-riesgo-check="produce" data-l="42.5" data-t="38.4" data-w="2.6" data-h="5.2" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+        </span>
+        <span class="d-riesgo-check" data-place data-riesgo-check="contaminan" data-l="42.5" data-t="61.5" data-w="2.6" data-h="5.2" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+        </span>
+      </div>
+      <div class="sr-only">
+        <p>Todo alimento, si no es manejado adecuadamente, está expuesto a dos riesgos: alteración y contaminación.</p>
+        <p>En esta unidad vamos a ver: cómo se produce cada uno de estos riesgos. Vas a aprender a diferenciar un alimento alterado de uno contaminado.</p>
+        <p>Y también: cómo se contaminan los alimentos. Vas a conocer las principales vías de contaminación: personas, ambiente, plagas y contaminación cruzada.</p>
+      </div>
+    </section>
+
+    <!-- 7 · Alteración — zona interactiva sobre la carne.
+         El PDF entrega 2 versiones de la MISMA página (carne en buen
+         estado / carne alterada) y su propia consigna dibujada:
+         "Deslizá el mouse sobre la carne". Se resuelve con la zona
+         genérica del kit (initHotspots): escucha mouseenter + focus +
+         click, porque en tablet no existe el hover (CLAUDE.md §6.10.1
+         regla 2). El swap es de la imagen entera: las 2 páginas están
+         registradas pixel a pixel, es la misma maqueta. -->
+    <section class="slide d-shot-slide d-shot-slide--bg-layered" data-slide="alteracion" data-slide-index="7"
+      data-require-hotspot="carne">
+      <h2 data-slide-title class="sr-only">Alteración</h2>
+      <div class="d-shot" data-shot data-alteracion-shot>
+        <img class="d-shot-img" src="img/alteracion.webp" alt="" aria-hidden="true" data-alteracion-img>
+        <button class="d-shot-hit d-shot-hit--carne" data-hit data-carne="mal" data-l="54.13" data-t="41.59" data-w="30.44" data-h="37.06">
+          <span class="sr-only">Ver cómo se observa la alteración en la carne</span>
+        </button>
+        <span class="d-carne-flag" data-place data-l="59.35" data-t="81" data-w="20" data-h="6" data-carne-flag role="status" aria-live="polite">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/></svg>
+          Alterado
+        </span>
+      </div>
+      <div class="sr-only">
+        <p>Un alimento alterado es aquel que no tiene buen olor, textura, color y/o sabor. A simple vista puede observarse que no está apto para el consumo.</p>
+        <p>La alteración puede darse, entre otros motivos, por una mala conservación del alimento, al someterlo a temperaturas muy altas o muy bajas. En otros casos, se produce cuando finaliza la vida útil del alimento, la fecha de vencimiento.</p>
+        <p>Deslizá el mouse sobre la carne, o tocala, para observar la alteración en el alimento.</p>
+      </div>
+    </section>
+
+    <!-- 8 · Contaminación — 3 tarjetas que abren los pop-ups que el
+         diseñador exportó aparte, con alfa real y su ✕ dibujada. -->
+    <section class="slide d-shot-slide d-shot-slide--bg-layered" data-slide="contaminacion" data-slide-index="8"
+      data-require-popups="peligro-biologico peligro-fisico peligro-quimico">
+      <h2 data-slide-title class="sr-only">Contaminación</h2>
+      <div class="d-shot" data-shot>
+        <img class="d-shot-img" src="img/contaminacion.webp" alt="" aria-hidden="true">
+        <button class="d-shot-hit d-shot-hit--peligro" data-hit data-popup-trigger="peligro-biologico" data-peligro-trigger="peligro-biologico" data-l="13.06" data-t="52.86" data-w="20.04" data-h="24.13">
+          <span class="sr-only">Abrir la ficha: peligro biológico</span>
+          <span class="d-peligro-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span>
+        </button>
+        <button class="d-shot-hit d-shot-hit--peligro" data-hit data-popup-trigger="peligro-fisico" data-peligro-trigger="peligro-fisico" data-l="40.12" data-t="52.86" data-w="20.04" data-h="24.13">
+          <span class="sr-only">Abrir la ficha: peligro físico</span>
+          <span class="d-peligro-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span>
+        </button>
+        <button class="d-shot-hit d-shot-hit--peligro" data-hit data-popup-trigger="peligro-quimico" data-peligro-trigger="peligro-quimico" data-l="67.22" data-t="52.86" data-w="19.99" data-h="24.13">
+          <span class="sr-only">Abrir la ficha: peligro químico</span>
+          <span class="d-peligro-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span>
+        </button>
+        <div class="d-u2-prog" data-place data-l="30" data-t="80" data-w="40" data-h="7" role="status" aria-live="polite">
+          <span class="d-u2-prog-lbl" data-vistos-lbl="peligros">0 de 3 peligros vistos</span>
+          <span class="d-u2-dots" data-vistos-dots="peligros">
+            <span class="d-u2-tick" data-item="peligro-biologico"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span>
+            <span class="d-u2-tick" data-item="peligro-fisico"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span>
+            <span class="d-u2-tick" data-item="peligro-quimico"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span>
+          </span>
+        </div>
+      </div>
+      <div class="sr-only">
+        <p>Un alimento contaminado es aquel que a simple vista puede aparentar estar apto para consumir, pero internamente presenta un peligro para la salud de la persona que lo ingiera.</p>
+        <p>Existen diferentes tipos de peligros: biológico, físico y químico. Tocá cada tarjeta para conocerlos.</p>
+      </div>
+    </section>
+
+    <!-- 9 · ¿Cómo se contaminan los alimentos? — 4 pestañas.
+         Cada pestaña es una página completa del PDF: el swap de la
+         imagen entera lo maneja `initShotSwap` del kit (coto-media.js),
+         la generalización de "tabs que cambian la captura de fondo". -->
+    <section class="slide d-shot-slide d-shot-slide--bg-layered" data-slide="contaminan" data-slide-index="9"
+      data-require-swap="contaminan">
+      <h2 data-slide-title class="sr-only">¿Cómo se contaminan los alimentos?</h2>
+      <div class="d-shot" data-shot
+        data-shot-swap="contaminan"
+        data-shot-swap-srcs="img/contaminan-personas.webp|img/contaminan-ambiente.webp|img/contaminan-plagas.webp|img/contaminan-cruzada.webp">
+        <img class="d-shot-img" src="img/contaminan-personas.webp" alt="" aria-hidden="true">
+        <button class="d-shot-hit d-shot-hit--tab" data-hit data-shot-swap-go="0" data-l="31.51" data-t="33.73" data-w="9.68" data-h="6.75"><span class="sr-only">Personas</span></button>
+        <button class="d-shot-hit d-shot-hit--tab" data-hit data-shot-swap-go="1" data-l="41.23" data-t="33.73" data-w="9.68" data-h="6.75"><span class="sr-only">Medio ambiente</span></button>
+        <button class="d-shot-hit d-shot-hit--tab" data-hit data-shot-swap-go="2" data-l="50.95" data-t="33.73" data-w="9.72" data-h="6.75"><span class="sr-only">Plagas</span></button>
+        <button class="d-shot-hit d-shot-hit--tab" data-hit data-shot-swap-go="3" data-l="60.67" data-t="33.73" data-w="9.72" data-h="6.75"><span class="sr-only">Contaminación cruzada</span></button>
+      </div>
+      <div class="sr-only" data-swap-lead>
+        <p>El principal peligro alimentario es la contaminación, que puede ocurrir tanto en el proceso de producción del alimento, como también durante el traslado hacia los mercados, el almacenamiento y la exhibición.</p>
+        <p>¿De qué manera los microorganismos o las sustancias químicas llegan a los alimentos? Tocá cada pestaña: personas, medio ambiente, plagas y contaminación cruzada.</p>
+      </div>
+      <div class="sr-only" data-swap-body="contaminan" aria-live="polite"></div>
+    </section>
+
+    <!-- 10 · Resumen de la unidad 1 — repaso rápido de 2 preguntas V/F
+         (propuesta 6/10). No es evaluación ni bloquea el avance: es
+         puro refuerzo, mismo criterio que un mini-práctica sin nota
+         (CLAUDE.md §3.11). Ver initRepasoRapido() en curso.js. -->
+    <section class="slide d-shot-slide d-shot-slide--bg-layered" data-slide="resumen1" data-slide-index="10">
+      <h2 data-slide-title class="sr-only">Resumen de la unidad 1</h2>
+      <div class="d-shot" data-shot>
+        <img class="d-shot-img" src="img/resumen1.webp" alt="" aria-hidden="true">
+        <div class="d-info-panel" data-place data-narrate-last data-l="13" data-t="69.5" data-w="42" data-h="26">
+          <div class="d-repaso" data-repaso>
+            <b class="d-repaso-title"><span class="d-repaso-title-ic" aria-hidden="true">🔍</span>Repaso rápido<span class="d-repaso-nav">
+              <button type="button" class="d-repaso-arrow" data-repaso-prev aria-label="Pregunta anterior">‹</button>
+              <span class="d-repaso-count" data-repaso-count>0 de 2</span>
+              <button type="button" class="d-repaso-arrow" data-repaso-nextq aria-label="Pregunta siguiente">›</button>
+            </span></b>
+            <div class="d-repaso-item" data-repaso-item data-repaso-n="1" data-repaso-id="u1-alteracion" data-repaso-ok="true">
+              <p class="d-repaso-q" data-narrate-prefix="Verdadero o falso">La alteración de un alimento se puede notar a simple vista.</p>
+              <div class="d-repaso-btns">
+                <button type="button" data-repaso-ans="true">Verdadero</button>
+                <button type="button" data-repaso-ans="false">Falso</button>
+              </div>
+              <p class="d-repaso-fb" data-repaso-fb hidden>Verdadero. A diferencia de la contaminación, la alteración se nota a simple vista: cambia el olor, la textura, el color o el sabor.</p>
+              <button type="button" class="d-repaso-next" data-repaso-next>Siguiente<span aria-hidden="true">→</span></button>
+            </div>
+            <div class="d-repaso-item" data-repaso-item data-repaso-n="2" data-repaso-id="u1-barbijo" data-repaso-ok="false">
+              <p class="d-repaso-q" data-narrate-prefix="Verdadero o falso">El barbijo debajo de la nariz protege igual que si estuviera bien puesto.</p>
+              <div class="d-repaso-btns">
+                <button type="button" data-repaso-ans="true">Verdadero</button>
+                <button type="button" data-repaso-ans="false">Falso</button>
+              </div>
+              <p class="d-repaso-fb" data-repaso-fb hidden>Falso. Si no tapa la nariz, no filtra lo que exhalamos al hablar, toser o estornudar.</p>
+            </div>
+            <span class="d-repaso-done" data-repaso-done>✨ Repaso completo</span>
+          </div>
+        </div>
+      </div>
+      <div class="sr-only">
+        <p>Como pudimos ver, nosotros somos los principales responsables de evitar la contaminación de los alimentos. Es nuestra responsabilidad mantener una correcta higiene personal, limpiar y desinfectar los ambientes donde se acondicionan los alimentos para evitar la proliferación de plagas y microorganismos, controlar la temperatura de los alimentos que requieren refrigeración.</p>
+        <p>En otras palabras, los colaboradores de COTO debemos respetar cada una de las prácticas y procedimientos de seguridad alimentaria que garantizan la inocuidad de nuestros productos.</p>
+      </div>
+    </section>
+
+    <!-- 11 · Separador Unidad 2 -->
+    <section class="slide d-shot-slide d-shot-slide--bg-video" data-slide="unidad2" data-slide-index="11" data-autoadvance>
+      <h2 data-slide-title class="sr-only">Unidad 2 — Manipulación segura e higiene</h2>
+      <div class="d-shot" data-shot>
+        <video class="d-shot-video" playsinline preload="auto" poster="img/unidad2.webp">
+          <source src="video/unidad2.mp4" type="video/mp4">
+        </video>
+        <button type="button" class="d-shot-video-tap" hidden>Reproducir el video con sonido</button>
+      </div>
+      <div class="sr-only">
+        <p>Arranca la Unidad 2: Manipulación segura e higiene.</p>
+      </div>
+    </section>
+
+    <!-- 12 · ¿Qué es la seguridad alimentaria? — los 3 íconos revelan un
+         adelanto de lo que viene (initHotspots, mismo patrón que la
+         carne/los peligros). Nunca data-goto: saltar adelante rompería
+         el gate secuencial (CLAUDE.md §7.3 punto 8). -->
+    <section class="slide d-shot-slide d-shot-slide--bg-layered" data-slide="seguridad" data-slide-index="12">
+      <h2 data-slide-title class="sr-only">¿Qué es la seguridad alimentaria?</h2>
+      <div class="d-shot" data-shot>
+        <img class="d-shot-img" src="img/seguridad.webp" alt="" aria-hidden="true">
+        <div class="d-seg-icons" data-seg-icons>
+          <button class="d-shot-hit d-shot-hit--circle" data-hit data-seg-tema="manipulacion" data-l="55.91" data-t="27.30" data-w="8.89" data-h="17.78">
+            <span class="sr-only">Manipulación segura de alimentos</span>
+          </button>
+          <button class="d-shot-hit d-shot-hit--circle" data-hit data-seg-tema="ambientes" data-l="73.53" data-t="27.30" data-w="8.89" data-h="17.78">
+            <span class="sr-only">Limpieza y desinfección de ambientes</span>
+          </button>
+          <button class="d-shot-hit d-shot-hit--circle" data-hit data-seg-tema="utensilios" data-l="64.68" data-t="58.17" data-w="8.89" data-h="17.78">
+            <span class="sr-only">Limpieza y desinfección de utensilios y máquinas</span>
+          </button>
+        </div>
+        <div class="d-info-panel" data-place data-narrate-last data-l="13" data-t="58" data-w="32" data-h="30">
+          <p class="d-info-hint" data-seg-hint>Pasá el mouse (o tocá) cada ícono para conocer qué vamos a ver en esta unidad.</p>
+          <div class="d-info-cartel" data-seg-cartel hidden>
+            <b data-seg-name></b>
+            <p data-seg-txt></p>
+          </div>
+        </div>
+      </div>
+      <div class="sr-only">
+        <p>Cuando hablamos de seguridad alimentaria, nos referimos a todas aquellas rutinas, prácticas y/o procedimientos que deben realizarse al manipular alimentos, con el objetivo de prevenir posibles daños a la salud de los consumidores y garantizar la inocuidad de los productos.</p>
+        <p>Un alimento contaminado puede producir enfermedades como las intoxicaciones, la gastroenteritis o la hepatitis, entre otras. Para evitar que esto suceda, los alimentos deben ser manipulados de forma segura, siguiendo una serie de prácticas y procedimientos que aseguran su inocuidad.</p>
+        <p>En esta unidad vamos a ver: manipulación segura de alimentos, limpieza y desinfección de ambientes, y limpieza y desinfección de utensilios y máquinas.</p>
+      </div>
+    </section>
+
+    <!-- 13 · Malas prácticas — carrusel de 5 páginas completas.
+         Las flechas están DIBUJADAS en el arte y solo en las páginas
+         donde existen (la 1ª no tiene "anterior", la 5ª no tiene
+         "siguiente"): `initShotSwap` oculta sola la hitbox que se iría
+         de rango, así nunca queda un botón invisible sobre una flecha
+         que no está dibujada. -->
+    <section class="slide d-shot-slide d-shot-slide--bg-layered" data-slide="malas" data-slide-index="13"
+      data-require-swap="malas">
+      <h2 data-slide-title class="sr-only">Malas prácticas en el manejo de alimentos</h2>
+      <div class="d-shot" data-shot
+        data-shot-swap="malas"
+        data-shot-swap-srcs="img/malas-1.webp|img/malas-2.webp|img/malas-3.webp|img/malas-4.webp|img/malas-5.webp">
+        <img class="d-shot-img" src="img/malas-1.webp" alt="" aria-hidden="true">
+        <button class="d-shot-hit d-shot-hit--circle d-shot-hit--flecha" data-hit data-shot-swap-step="-1" data-l="17.42" data-t="52.62" data-w="3.33" data-h="6.67"><span class="sr-only">Práctica anterior</span></button>
+        <button class="d-shot-hit d-shot-hit--circle d-shot-hit--flecha" data-hit data-shot-swap-step="1" data-l="79.44" data-t="52.62" data-w="3.33" data-h="6.67"><span class="sr-only">Práctica siguiente</span></button>
+        <div class="d-u2-prog" data-place data-l="29" data-t="84" data-w="42" data-h="6.5" role="status" aria-live="polite">
+          <span class="d-u2-prog-lbl" data-vistos-lbl="malas">1 de 5 conductas vistas</span>
+          <span class="d-u2-dots" data-vistos-dots="malas">
+            <span class="d-u2-tick" data-item="0"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span>
+            <span class="d-u2-tick" data-item="1"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span>
+            <span class="d-u2-tick" data-item="2"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span>
+            <span class="d-u2-tick" data-item="3"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span>
+            <span class="d-u2-tick" data-item="4"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span>
+          </span>
+        </div>
+      </div>
+      <div class="sr-only" data-swap-lead>
+        <p>Malas prácticas en el manejo de alimentos. Hacé clic en las flechas para conocer las conductas que ponen en riesgo la inocuidad de los alimentos.</p>
+      </div>
+      <div class="sr-only" data-swap-body="malas" aria-live="polite"></div>
+    </section>
+
+    <!-- 14 · Buenas prácticas — carrusel de 4 páginas completas -->
+    <section class="slide d-shot-slide d-shot-slide--bg-layered" data-slide="buenas" data-slide-index="14"
+      data-require-swap="buenas">
+      <h2 data-slide-title class="sr-only">Buenas prácticas en el manejo de alimentos</h2>
+      <div class="d-shot" data-shot
+        data-shot-swap="buenas"
+        data-shot-swap-srcs="img/buenas-1.webp|img/buenas-2.webp|img/buenas-3.webp|img/buenas-4.webp">
+        <img class="d-shot-img" src="img/buenas-1.webp" alt="" aria-hidden="true">
+        <button class="d-shot-hit d-shot-hit--circle d-shot-hit--flecha" data-hit data-shot-swap-step="-1" data-l="17.42" data-t="52.62" data-w="3.33" data-h="6.67"><span class="sr-only">Práctica anterior</span></button>
+        <button class="d-shot-hit d-shot-hit--circle d-shot-hit--flecha" data-hit data-shot-swap-step="1" data-l="79.44" data-t="52.62" data-w="3.33" data-h="6.67"><span class="sr-only">Práctica siguiente</span></button>
+        <div class="d-u2-prog" data-place data-l="29" data-t="84" data-w="42" data-h="6.5" role="status" aria-live="polite">
+          <span class="d-u2-prog-lbl" data-vistos-lbl="buenas">1 de 4 prácticas vistas</span>
+          <span class="d-u2-dots" data-vistos-dots="buenas">
+            <span class="d-u2-tick" data-item="0"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span>
+            <span class="d-u2-tick" data-item="1"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span>
+            <span class="d-u2-tick" data-item="2"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span>
+            <span class="d-u2-tick" data-item="3"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span>
+          </span>
+        </div>
+      </div>
+      <div class="sr-only" data-swap-lead>
+        <p>Buenas prácticas en el manejo de alimentos. Hacé clic en las flechas para conocer las prácticas que garantizan la inocuidad de los alimentos que manipulamos.</p>
+      </div>
+      <div class="sr-only" data-swap-body="buenas" aria-live="polite"></div>
+    </section>
+
+    <!-- 15 · Limpieza y desinfección — 2 tarjetas con pop-up exportado -->
+    <section class="slide d-shot-slide d-shot-slide--bg-layered" data-slide="limpieza" data-slide-index="15"
+      data-require-popups="como-limpiar como-desinfectar">
+      <h2 data-slide-title class="sr-only">Limpieza y desinfección</h2>
+      <div class="d-shot" data-shot>
+        <img class="d-shot-img" src="img/limpieza.webp" alt="" aria-hidden="true">
+        <button class="d-shot-hit d-shot-hit--peligro" data-hit data-popup-trigger="como-limpiar" data-peligro-trigger="como-limpiar" data-l="18.33" data-t="43.25" data-w="24.21" data-h="19.76">
+          <span class="sr-only">Abrir la ficha: ¿cómo limpiar?</span>
+          <span class="d-peligro-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span>
+        </button>
+        <button class="d-shot-hit d-shot-hit--peligro" data-hit data-popup-trigger="como-desinfectar" data-peligro-trigger="como-desinfectar" data-l="57.50" data-t="43.25" data-w="24.21" data-h="19.76">
+          <span class="sr-only">Abrir la ficha: ¿cómo desinfectar?</span>
+          <span class="d-peligro-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span>
+        </button>
+      </div>
+      <div class="sr-only">
+        <p>Este proceso aplica tanto a los ambientes, depósitos, cámaras, como a los utensilios, tablas, bachas, y máquinas. En primer lugar, es importante comprender que limpieza y desinfección no son lo mismo.</p>
+        <p>Tocá cada tarjeta para ver cómo limpiar y cómo desinfectar.</p>
+      </div>
+    </section>
+
+    <!-- 16 · El proceso de limpieza y desinfección (video).
+         `img/posters/proceso-poster.webp` es un recorte EXACTO (medido
+         en píxeles contra el PDF real que pasó el cliente,
+         "Diapo_limpieza_y_desinfeccion.pdf") del recuadro del video tal
+         como lo entregó el diseñador — el marco/pausa/siguiente/
+         volumen/barra/config/pantalla-completa dibujados son SU arte,
+         no un mockup genérico armado acá. El único elemento que NO
+         viene horneado en esa imagen es el play: el cliente pasó aparte
+         (`elementos.zip`) los íconos reales del reproductor
+         ("Reproductor play 01/02.png", "Reproductor cierre 01/02.png")
+         para usar como botones HTML reales, no dibujados — acá se usa
+         "play 01" (`img/reproductor-play.webp`) dentro de
+         `.d-shot-hit-play.d-shot-hit-play--art` (mismo componente que
+         usa el círculo de "Prevención cardiovascular", con el círculo
+         genérico del kit apagado vía el modificador `--art` porque el
+         ícono del cliente ya trae su propio círculo).
+         `initInlineCircleVideos` (kit, coto-media.js) soporta carátula
+         real + botón real a la vez desde esta vuelta (ver el
+         comentario "3 combinaciones válidas" arriba de la función):
+         inserta la carátula como siempre, sin exigir que la imagen
+         traiga su propio play dibujado. `controls` nativos se agregan
+         recién al reproducir — mismo criterio que el resto del curso
+         ("como ya definimos", pedido explícito del cliente: el video
+         tiene que comportarse igual que en los demás cursos del kit).
+         El archivo de video sigue siendo el placeholder de 0 bytes
+         (CLAUDE.md §3.9) — reproducir todavía no dispara nada, así que
+         la barra de progreso real (la nativa del navegador, una vez que
+         arranca) va a aparecer sola en cuanto el cliente suba el .mp4
+         final con el mismo nombre, sin tocar código.
+         Sin botón "Ampliar" (pedido explícito del cliente, esta vuelta):
+         se sacó el pop-up del patrón 2 (`initVideoPlayer`) y su
+         disparador — el único botón sobre el video es el de play. La
+         pantalla completa NATIVA queda habilitada (pedido explícito del
+         cliente: la carátula ya dibuja su propio ícono) — el bug real
+         de layout al salir de fullscreen (`_initShots()` no se
+         recalculaba solo, ver coto-media.js) se corrigió con un
+         listener de `fullscreenchange`, no evitando el botón.
+         `data-intro-popup` + `data-intro-once` (kit, motor-slides.js):
+         al entrar por primera vez se abre sola la pregunta de
+         predicción "prediccion-proceso" ANTES de que el alumno mire
+         el video — pop-up de texto plano, mismo molde que "logros"
+         (.modal-card sin --art), sin puntos ni estilo especial: no es
+         la excepción de diseño de §6.10.2.2 de otro curso (esa
+         llevaba arte propio del diseñador), acá no hay respaldo del
+         PDF para inventar un look distinto. -->
+    <section class="slide d-shot-slide d-shot-slide--bg-layered" data-slide="proceso" data-slide-index="16"
+      data-require-seen="video/Proceso de limpieza y desinfeccion.mp4"
+      data-intro-popup="prediccion-proceso" data-intro-once>
+      <h2 data-slide-title class="sr-only">El proceso de limpieza y desinfección</h2>
+      <div class="d-shot" data-shot>
+        <img class="d-shot-img" src="img/proceso.webp" alt="" aria-hidden="true">
+        <div class="d-shot-hit d-shot-hit--videobox d-shot-hit--video" data-place data-inline-video
+             data-video="video/Proceso de limpieza y desinfeccion.mp4"
+             data-video-title="El proceso de limpieza y desinfección"
+             data-l="55.08" data-t="32.86" data-w="29.52" data-h="34.29">
+          <video class="d-shot-hit-video" playsinline preload="metadata"
+                 poster="img/posters/proceso-poster.webp"
+                 controlslist="nodownload noremoteplayback" disablepictureinpicture
+                 aria-label="Video: el proceso de limpieza y desinfección">
+            <source src="video/Proceso de limpieza y desinfeccion.mp4" type="video/mp4">
+          </video>
+          <button type="button" class="d-shot-hit-play d-shot-hit-play--art">
+            <span class="sr-only">Reproducir</span>
+            <img src="img/reproductor-play.webp" alt="" aria-hidden="true">
+          </button>
+        </div>
+      </div>
+      <div class="sr-only">
+        <p>Ya vimos en qué consiste el proceso de limpieza y desinfección, y por qué son dos pasos distintos e igual de importantes. Este proceso se aplica en depósitos, cámaras de refrigeración, góndolas, utensilios —cuchillos, tablas, bachas— y máquinas.</p>
+        <p>Mirá el siguiente video para ver los pasos del proceso de limpieza y desinfección que acabamos de explicar.</p>
+      </div>
+    </section>
+
+    <!-- 17 · Resumen de la unidad 2 -->
+    <section class="slide d-shot-slide d-shot-slide--bg-layered" data-slide="resumen2" data-slide-index="17">
+      <h2 data-slide-title class="sr-only">Resumen de la unidad 2</h2>
+      <div class="d-shot" data-shot>
+        <img class="d-shot-img" src="img/resumen2.webp" alt="" aria-hidden="true">
+        <div class="d-info-panel" data-place data-narrate-last data-l="13" data-t="69.5" data-w="42" data-h="26">
+          <div class="d-repaso" data-repaso>
+            <b class="d-repaso-title"><span class="d-repaso-title-ic" aria-hidden="true">🔍</span>Repaso rápido<span class="d-repaso-nav">
+              <button type="button" class="d-repaso-arrow" data-repaso-prev aria-label="Pregunta anterior">‹</button>
+              <span class="d-repaso-count" data-repaso-count>0 de 2</span>
+              <button type="button" class="d-repaso-arrow" data-repaso-nextq aria-label="Pregunta siguiente">›</button>
+            </span></b>
+            <div class="d-repaso-item" data-repaso-item data-repaso-n="1" data-repaso-id="u2-tabla" data-repaso-ok="false">
+              <p class="d-repaso-q" data-narrate-prefix="Verdadero o falso">Usar la tabla de corte para cortar carne cruda es una mala práctica.</p>
+              <div class="d-repaso-btns">
+                <button type="button" data-repaso-ans="true">Verdadero</button>
+                <button type="button" data-repaso-ans="false">Falso</button>
+              </div>
+              <p class="d-repaso-fb" data-repaso-fb hidden>Falso. Usar la tabla está bien — lo que está mal es que la carne cruda comparta la misma mesada que otros alimentos listos para consumir.</p>
+              <button type="button" class="d-repaso-next" data-repaso-next>Siguiente<span aria-hidden="true">→</span></button>
+            </div>
+            <div class="d-repaso-item" data-repaso-item data-repaso-n="2" data-repaso-id="u2-limpiar-desinfectar" data-repaso-ok="false">
+              <p class="d-repaso-q" data-narrate-prefix="Verdadero o falso">Limpiar y desinfectar son lo mismo.</p>
+              <div class="d-repaso-btns">
+                <button type="button" data-repaso-ans="true">Verdadero</button>
+                <button type="button" data-repaso-ans="false">Falso</button>
+              </div>
+              <p class="d-repaso-fb" data-repaso-fb hidden>Falso. Limpiar quita la suciedad visible; desinfectar elimina las bacterias que no se ven. La limpieza sola no alcanza.</p>
+            </div>
+            <span class="d-repaso-done" data-repaso-done>✨ Repaso completo</span>
+          </div>
+        </div>
+      </div>
+      <div class="sr-only">
+        <p>En esta unidad vimos que la seguridad alimentaria depende de nuestras acciones diarias: mantener buenas prácticas en el manejo de los alimentos, respetar la higiene personal y realizar correctamente la limpieza y desinfección de ambientes, utensilios y máquinas.</p>
+        <p>Cada uno de estos hábitos es clave para evitar la contaminación y garantizar la inocuidad de los productos que ofrecemos a nuestros clientes.</p>
+      </div>
+    </section>
+
+    <!-- 18 · Separador Unidad 3 -->
+    <section class="slide d-shot-slide d-shot-slide--bg-video" data-slide="unidad3" data-slide-index="18" data-autoadvance>
+      <h2 data-slide-title class="sr-only">Unidad 3 — Conservación y control</h2>
+      <div class="d-shot" data-shot>
+        <video class="d-shot-video" playsinline preload="auto" poster="img/unidad3.webp">
+          <source src="video/unidad3.mp4" type="video/mp4">
+        </video>
+        <button type="button" class="d-shot-video-tap" hidden>Reproducir el video con sonido</button>
+      </div>
+      <div class="sr-only">
+        <p>Arranca la Unidad 3: Conservación y control.</p>
+      </div>
+    </section>
+
+    <!-- 19 · Envasado -->
+    <section class="slide d-shot-slide d-shot-slide--bg-layered" data-slide="envasado" data-slide-index="19">
+      <h2 data-slide-title class="sr-only">Envasado</h2>
+      <div class="d-shot" data-shot>
+        <img class="d-shot-img" src="img/envasado.webp" alt="" aria-hidden="true">
+        <div class="d-envasado-zona" data-envasado-zona>
+          <button class="d-shot-hit d-shot-hit--rango" data-hit data-envasado-tip="bandeja" data-l="66" data-t="38" data-w="10" data-h="12">
+            <span class="sr-only">Cómo se envasa correctamente la bandeja</span>
+          </button>
+        </div>
+        <div class="d-info-panel" data-place data-narrate-last data-l="13" data-t="66" data-w="34" data-h="16">
+          <p class="d-info-hint" data-envasado-hint>Tocá la bandeja para ver un tip práctico.</p>
+          <div class="d-info-cartel" data-envasado-cartel hidden>
+            <b data-envasado-name></b>
+            <p data-envasado-txt></p>
+          </div>
+        </div>
+      </div>
+      <div class="sr-only">
+        <p>El alimento se coloca en una bandeja y se envuelve en film. De esta forma, evitamos el contacto del alimento con el medio ambiente, donde hay millones de microorganismos que se dispersan por el aire.</p>
+        <p>Si el envasado se realiza correctamente, el riesgo de contaminación se reduce porque el aire no puede entrar en contacto con el alimento. Además, el film reduce también los riesgos de alteración: pérdida de olor, sabor, color.</p>
+        <p>Generalmente, el envasado se combina con otros métodos de conservación como la refrigeración y la congelación.</p>
+      </div>
+    </section>
+
+    <!-- 20 · Temperatura alimentaria -->
+    <section class="slide d-shot-slide d-shot-slide--bg-layered" data-slide="temperatura" data-slide-index="20">
+      <h2 data-slide-title class="sr-only">Temperatura alimentaria</h2>
+      <div class="d-shot" data-shot>
+        <img class="d-shot-img" src="img/temperatura.webp" alt="" aria-hidden="true">
+        <div class="d-temp-rangos" data-temp-rangos>
+          <button class="d-shot-hit d-shot-hit--rango" data-hit data-temp-rango="refrigerado" data-l="13.1" data-t="32.24" data-w="28.4" data-h="6">
+            <span class="sr-only">Refrigerado: 0° a 5°C</span>
+          </button>
+          <button class="d-shot-hit d-shot-hit--rango" data-hit data-temp-rango="congelado" data-l="13.1" data-t="37.16" data-w="28.4" data-h="6">
+            <span class="sr-only">Congelado: temperaturas inferiores a -18°C</span>
+          </button>
+          <button class="d-shot-hit d-shot-hit--rango" data-hit data-temp-rango="caliente" data-l="13.1" data-t="42.4" data-w="28.4" data-h="6">
+            <span class="sr-only">Caliente: temperaturas superiores a 65°C</span>
+          </button>
+        </div>
+        <div class="d-info-panel" data-place data-narrate-last data-l="51" data-t="20" data-w="26" data-h="24">
+          <p class="d-info-hint" data-temp-hint>Pasá el mouse (o tocá) cada rango para ver un ejemplo real de la sucursal.</p>
+          <div class="d-info-cartel" data-temp-cartel hidden>
+            <b data-temp-name></b>
+            <p data-temp-txt></p>
+          </div>
+        </div>
+      </div>
+      <div class="sr-only">
+        <p>La refrigeración, la congelación y el mantenimiento en caliente son métodos de conservación de los alimentos. Estos son los rangos de temperatura de referencia: refrigerado, de 0 a 5 grados. Congelado, temperaturas inferiores a 18 grados bajo cero. Caliente, temperaturas superiores a 65 grados.</p>
+        <p>El frío combate la proliferación de los microorganismos: la refrigeración reduce la velocidad de crecimiento de las bacterias, mientras que la congelación evita su desarrollo. Además, las bajas temperaturas demoran la pérdida de calidad de los alimentos, prolongando su vida útil.</p>
+        <p>Por lo tanto, es muy importante que realicemos controles de frío en la sucursal: un aumento mínimo de temperatura puede ocasionar la alteración de los productos y facilitar el desarrollo de bacterias peligrosas para la salud.</p>
+        <p>Es sumamente importante evitar la exposición de alimentos en el rango crítico de temperatura de 5 a 65 grados, ya que favorece la proliferación de microorganismos.</p>
+      </div>
+    </section>
+
+    <!-- 21 · Rotación y control de vencimientos — barra de 4 pasos.
+         La barra está dibujada en el arte y muestra cuál es el paso
+         activo; las 4 hitboxes son los 4 tramos de esa barra, medidos
+         en píxeles (960..1559, 4 tramos de 150). -->
+    <section class="slide d-shot-slide d-shot-slide--bg-layered" data-slide="rotacion" data-slide-index="21"
+      data-require-swap="rotacion">
+      <h2 data-slide-title class="sr-only">Rotación y control de vencimientos</h2>
+      <div class="d-shot" data-shot
+        data-shot-swap="rotacion"
+        data-shot-swap-srcs="img/rotacion-1.webp|img/rotacion-2.webp|img/rotacion-3.webp|img/rotacion-4.webp">
+        <img class="d-shot-img" src="img/rotacion-1.webp" alt="" aria-hidden="true">
+        <button class="d-shot-hit d-shot-hit--paso" data-hit data-shot-swap-go="0" data-l="38.10" data-t="77.38" data-w="5.95" data-h="6.83"><span class="sr-only">Paso 1 de 4</span></button>
+        <button class="d-shot-hit d-shot-hit--paso" data-hit data-shot-swap-go="1" data-l="44.05" data-t="77.38" data-w="5.95" data-h="6.83"><span class="sr-only">Paso 2 de 4</span></button>
+        <button class="d-shot-hit d-shot-hit--paso" data-hit data-shot-swap-go="2" data-l="50.00" data-t="77.38" data-w="5.95" data-h="6.83"><span class="sr-only">Paso 3 de 4</span></button>
+        <button class="d-shot-hit d-shot-hit--paso" data-hit data-shot-swap-go="3" data-l="55.95" data-t="77.38" data-w="5.91" data-h="6.83"><span class="sr-only">Paso 4 de 4</span></button>
+        <span class="d-swap-hint" data-place data-l="38.10" data-t="86.5" data-w="23.76" data-h="6">Arrastrá o mové la barra</span>
+      </div>
+      <div class="sr-only" data-swap-lead>
+        <p>Se debe implementar una metodología de rotación de mercadería basada en la fecha de vencimiento tanto en cámaras, depósitos y ventas: la mercadería más próxima a vencer se retira primero. Además, se debe implementar una metodología de control de vencimientos.</p>
+      </div>
+      <div class="sr-only" data-swap-body="rotacion" aria-live="polite"></div>
+    </section>
+
+    <!-- 22 · Resumen de la unidad 3 -->
+    <section class="slide d-shot-slide d-shot-slide--bg-layered" data-slide="resumen3" data-slide-index="22">
+      <h2 data-slide-title class="sr-only">Resumen de la unidad 3</h2>
+      <div class="d-shot" data-shot>
+        <img class="d-shot-img" src="img/resumen3.webp" alt="" aria-hidden="true">
+        <div class="d-info-panel" data-place data-narrate-last data-l="13" data-t="69.5" data-w="42" data-h="26">
+          <div class="d-repaso" data-repaso>
+            <b class="d-repaso-title"><span class="d-repaso-title-ic" aria-hidden="true">🔍</span>Repaso rápido<span class="d-repaso-nav">
+              <button type="button" class="d-repaso-arrow" data-repaso-prev aria-label="Pregunta anterior">‹</button>
+              <span class="d-repaso-count" data-repaso-count>0 de 2</span>
+              <button type="button" class="d-repaso-arrow" data-repaso-nextq aria-label="Pregunta siguiente">›</button>
+            </span></b>
+            <div class="d-repaso-item" data-repaso-item data-repaso-n="1" data-repaso-id="u3-critico" data-repaso-ok="true">
+              <p class="d-repaso-q" data-narrate-prefix="Verdadero o falso">El rango de 5° a 65°C es el más crítico para la multiplicación de microorganismos.</p>
+              <div class="d-repaso-btns">
+                <button type="button" data-repaso-ans="true">Verdadero</button>
+                <button type="button" data-repaso-ans="false">Falso</button>
+              </div>
+              <p class="d-repaso-fb" data-repaso-fb hidden>Verdadero. Por eso hay que evitar que los alimentos pasen tiempo en ese rango de temperatura.</p>
+              <button type="button" class="d-repaso-next" data-repaso-next>Siguiente<span aria-hidden="true">→</span></button>
+            </div>
+            <div class="d-repaso-item" data-repaso-item data-repaso-n="2" data-repaso-id="u3-envasado" data-repaso-ok="true">
+              <p class="d-repaso-q" data-narrate-prefix="Verdadero o falso">Envasar el alimento en film ayuda a evitar el contacto con el aire.</p>
+              <div class="d-repaso-btns">
+                <button type="button" data-repaso-ans="true">Verdadero</button>
+                <button type="button" data-repaso-ans="false">Falso</button>
+              </div>
+              <p class="d-repaso-fb" data-repaso-fb hidden>Verdadero. Sin aire en contacto con el alimento, se reduce el riesgo de contaminación y de alteración.</p>
+            </div>
+            <span class="d-repaso-done" data-repaso-done>✨ Repaso completo</span>
+          </div>
+        </div>
+      </div>
+      <div class="sr-only">
+        <p>En esta unidad vimos que conservar correctamente los alimentos depende de respetar los rangos de temperatura adecuados para cada método de conservación, y de aplicar una rotación y control de vencimientos constante en góndolas, cámaras y depósitos.</p>
+        <p>Estas prácticas son clave para evitar que los alimentos lleguen alterados o vencidos a manos de nuestros clientes.</p>
+      </div>
+    </section>
+
+    <!-- 23 · Minijuego · 3 capas del motor: intro / jugar / fin.
+         Intro y fin son diapositivas-captura del propio PDF; la capa de
+         juego es HTML real (el contenido cambia con la partida, no
+         puede estar horneado). La cáscara visual vive en el kit
+         (coto-minijuego.css); acá solo la topología del mapa de 12
+         opciones y el contenido. -->
+    <section class="slide slide-minijuego d-shot-slide" data-slide="minijuego" data-slide-index="23">
+      <h2 data-slide-title class="sr-only">Mini juego: ¿qué está mal en esta imagen?</h2>
+
+      <div class="slide-inner d-mj" data-layers>
+        <button class="sr-only" type="button" data-target="mj-intro">Volver a la portada del minijuego</button>
+        <button class="sr-only" type="button" data-target="mj-jugar">Ir al minijuego</button>
+        <button class="sr-only" type="button" data-target="mj-fin">Ver el resultado del minijuego</button>
+
+        <!-- capa 1 · portada del juego (captura íntegra, botón dibujado) -->
+        <div class="d-mj-panel d-mj-shot" data-panel="mj-intro">
+          <div class="d-shot" data-shot>
+            <img class="d-shot-img" src="img/minijuego-intro.webp" alt="" aria-hidden="true">
+            <button class="d-shot-hit d-mj-start" data-hit data-mj-start data-l="43.73" data-t="62.54" data-w="12.62" data-h="6.83">
+              <span class="sr-only">Empecemos el mini juego</span>
+            </button>
+          </div>
+          <div class="sr-only">
+            <p>¡Bienvenido a este mini juego! En este juego vas a tener que seleccionar todo lo que observes que esté mal en la imagen. Observá cada situación, pensá antes de elegir y aprendé mientras jugás.</p>
+          </div>
+        </div>
+
+        <!-- capa 2 · el juego -->
+        <div class="d-mj-panel d-mj-play" data-panel="mj-jugar" hidden>
+          <div class="d-mj-body">
+            <div class="d-mj-escena-col">
+              <img class="d-mj-kicker" src="img/mj-kicker.webp" alt="" aria-hidden="true">
+              <figure class="d-mj-escena">
+                <img src="img/mj-escena.webp" alt="Un colaborador manipula una ensalada con las manos descubiertas, en una mesada donde también hay carne cruda sobre una tabla; el barbijo le queda debajo de la nariz, hay una mancha de suciedad en la mesada y una mosca sobre la pared.">
+                <!-- Al acertar una opción, se resalta la zona real del
+                     dibujo que la explica (pedido explícito del cliente).
+                     Coordenadas en % medidas contra el .webp real
+                     (834×706, Python/PIL — detección de píxel, no a
+                     ojo), no contra el contenedor: `--mj-escena-ratio`
+                     es EXACTO a esa proporción y `object-fit:cover` no
+                     recorta nada, así que el % del archivo mapea 1:1 al
+                     % del contenedor sin importar el tamaño de pantalla
+                     (mismo criterio que cualquier `[data-hit]` del
+                     kit). data-mj-hotspot coincide 1:1 con el `id` de
+                     `MJ_OPCIONES` (curso.js) — no hace falta tabla de
+                     mapeo aparte. -->
+                <span class="d-mj-hotspot" data-mj-hotspot="plagas" aria-hidden="true" style="--l:70.98%; --t:26.06%; --w:3.72%; --h:4.39%"><span class="d-mj-hotspot-lbl">Plagas</span></span>
+                <span class="d-mj-hotspot" data-mj-hotspot="higiene" aria-hidden="true" style="--l:84.77%; --t:72.52%; --w:10.79%; --h:9.92%"><span class="d-mj-hotspot-lbl">Mala higiene</span></span>
+                <span class="d-mj-hotspot" data-mj-hotspot="alterado" aria-hidden="true" style="--l:27.82%; --t:70.82%; --w:13.19%; --h:11.61%"><span class="d-mj-hotspot-lbl">Producto alterado</span></span>
+                <span class="d-mj-hotspot" data-mj-hotspot="practicas" aria-hidden="true" style="--l:49.40%; --t:37.11%; --w:10.79%; --h:9.21%"><span class="d-mj-hotspot-lbl">Malas prácticas</span></span>
+                <span class="d-mj-hotspot" data-mj-hotspot="toca" aria-hidden="true" style="--l:67.27%; --t:62.18%; --w:8.15%; --h:9.63%"><span class="d-mj-hotspot-lbl">Toca los alimentos</span></span>
+                <!-- "cruzada" y "alterado" comparten la misma zona (la
+                     tabla con las 2 piezas de carne) — si las 2 se
+                     aciertan a la vez, las etiquetas colisionarían
+                     arriba de la caja; "cruzada" va abajo (hay lugar,
+                     el mostrador sigue debajo en el arte). -->
+                <span class="d-mj-hotspot" data-mj-hotspot="cruzada" data-mj-hotspot-lbl-pos="abajo" aria-hidden="true" style="--l:10.55%; --t:69.55%; --w:31.05%; --h:13.60%"><span class="d-mj-hotspot-lbl">Contaminación cruzada</span></span>
+              </figure>
+            </div>
+
+            <div class="d-mj-choose">
+              <div class="d-mj-stats">
+                <div class="d-mj-stat">
+                  <span class="d-mj-stat-lbl">Encontrados</span>
+                  <b data-mj-found>0/6</b>
+                </div>
+                <div class="d-mj-stat d-mj-stat--pts">
+                  <span class="d-mj-stat-lbl">Puntos</span>
+                  <b><span class="d-mj-trophy" aria-hidden="true">🏆</span><span data-mj-score>0</span></b>
+                </div>
+                <div class="d-mj-stat">
+                  <span class="d-mj-stat-lbl">Vidas</span>
+                  <span class="d-mj-lives" data-mj-lives></span>
+                </div>
+                <button class="d-mj-stat d-mj-rules" type="button" data-popup-trigger="mj-reglas" aria-haspopup="dialog">
+                  <span class="d-mj-stat-lbl">Reglas</span>
+                  <span class="d-mj-rules-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="7.5" r="1" fill="currentColor" stroke="none"/></svg></span>
+                </button>
+              </div>
+
+              <p class="d-mj-consigna">¿Qué observás en esta imagen que esté <b>mal</b>?</p>
+              <p class="d-mj-remedy" data-mj-remedy hidden>💡 Te destacamos primero lo que más te costó la vez pasada.</p>
+              <div class="d-mj-grid" data-mj-grid></div>
+              <p class="d-mj-fb" data-mj-fb role="status" aria-live="polite"></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- capa 3 · resultado (arte real del PDF con los 2 números
+             dinámicos blanqueados y HTML real encima, §6.19 punto 5) -->
+        <div class="d-mj-panel d-mj-fin" data-panel="mj-fin" hidden>
+          <div class="d-shot" data-shot>
+            <img class="d-shot-img" src="img/minijuego-fin-exito.webp" alt="" aria-hidden="true" data-mj-fin-img>
+            <div class="d-mj-fin-stat" data-place data-l="30.16" data-t="71.43" data-w="9.52" data-h="3.41">
+              <b data-mj-fin-found>6/6</b>
+            </div>
+            <div class="d-mj-fin-stat" data-place data-l="43.65" data-t="71.43" data-w="12.70" data-h="3.41">
+              <b data-mj-fin-score>0</b>
+            </div>
+            <!-- Botón PINTADO (no hitbox transparente): las DOS artes
+                 de cierre del PDF traen "Reintentar" dibujado, también
+                 la de aprobado, así que el texto tiene que ser HTML
+                 real para poder decir "Continuar" cuando el alumno
+                 pasa. Se repinta con la misma forma, tamaño y colores
+                 medidos sobre el arte (relleno #50BDE6, trazo #046E9F
+                 de 3px, píldora x 1105–1414 / y 1033–1120), así que
+                 cubre el dibujado sin blanquear nada: un rectángulo
+                 blanco sobre una píldora redondeada deja las esquinas
+                 asomando (CLAUDE.md §6.22 punto 5) y acá el botón cae
+                 justo sobre el borde entre el fondo blanco y el piso
+                 gris del dibujo.
+                 `data-hit-label-visible`: opt-out explícito de
+                 markup-sanity — este texto visible sobre un [data-hit]
+                 es a propósito, no una fuga de sr-only (§6.19 p.6). -->
+            <button class="d-shot-hit d-mj-fin-cta" data-hit data-hit-label-visible data-mj-retry
+                    data-l="43.77" data-t="81.83" data-w="12.46" data-h="7.30">Reintentar</button>
+          </div>
+          <div class="sr-only" data-mj-fin-say aria-live="polite"></div>
+        </div>
+
+        <!-- El repaso (entre terminar la partida y ver el resultado)
+             pasó a ser un pop-up real — ver `[data-popup="mj-repaso"]`
+             más abajo en el documento, junto a los demás pop-ups del
+             curso. Pedido explícito: que no sea una diapo/capa nueva a
+             pantalla completa, sino un pop-up sobre el juego. -->
+      </div>
+    </section>
+
+    <!-- 24 · Últimos consejos -->
+    <section class="slide d-shot-slide d-shot-slide--bg-layered" data-slide="consejos" data-slide-index="24">
+      <h2 data-slide-title class="sr-only">Últimos consejos</h2>
+      <div class="d-shot" data-shot>
+        <img class="d-shot-img" src="img/consejos.webp" alt="" aria-hidden="true">
+      </div>
+      <div class="sr-only">
+        <p>Últimos consejos. Lavate las manos con frecuencia. Limpiá y desinfectá antes de empezar. Retirá los productos vencidos de inmediato. Controlá el frío y el calor de los alimentos. Retirá los productos con calidad alterada.</p>
+      </div>
+    </section>
+
+    <!-- 25 · Cierre -->
+    <section class="slide slide-cierre d-shot-slide" data-slide="cierre" data-slide-index="25" data-slide-end>
+      <h2 data-slide-title class="sr-only">¡Felicitaciones!</h2>
+
+      <div class="d-cierre-shot" data-cierre-step="shot">
+        <div class="d-shot" data-shot>
+          <img class="d-shot-img" src="img/cierre.webp" alt="" aria-hidden="true">
+        </div>
+        <div class="sr-only">
+          <p>¡Felicitaciones! Completaste con éxito el curso "Seguridad alimentaria" y ahora conocés los riesgos alimentarios y las prácticas y procedimientos que garantizan la inocuidad de los productos que ofrecemos. ¡Gracias por tu compromiso! Sos parte fundamental en la seguridad alimentaria de nuestra sucursal. Recordá que ya estás habilitado para realizar la evaluación. ¡Muchos éxitos!</p>
+        </div>
+      </div>
+
+      <div class="slide-inner d-cierre-summary" data-cierre-step="summary" hidden>
+        <div class="d-cierre-cols">
+          <div class="d-cierre-results">
+            <p class="who" hidden>¡Hola, <span id="d-cert-name"></span>! 👋</p>
+            <div class="d-medalla" data-medalla>
+              <div class="d-medalla-ic" data-medalla-ic aria-hidden="true">🥉</div>
+              <div>
+                <p class="d-medalla-tit"><span data-medalla-lbl>Medalla de</span> <b data-medalla-nombre>bronce</b></p>
+                <p class="d-medalla-sub" data-medalla-sub></p>
+              </div>
+            </div>
+            <ol class="d-medalla-rangos" data-medalla-rangos aria-label="Cómo se obtiene cada medalla">
+              <li data-rango="oro"><span aria-hidden="true">🥇</span><b>Oro</b><i>395 puntos o más</i></li>
+              <li data-rango="plata"><span aria-hidden="true">🥈</span><b>Plata</b><i>de 350 a 394</i></li>
+              <li data-rango="bronce"><span aria-hidden="true">🥉</span><b>Bronce</b><i>menos de 350</i></li>
+            </ol>
+            <div class="d-cert-stats">
+              <div class="s"><b id="d-cert-score">–</b><span>Situaciones encontradas</span></div>
+              <div class="s"><b id="d-cert-points">–</b><span>Puntos</span></div>
+              <div class="s"><b id="d-cert-badges">–</b><span>Logros</span></div>
+              <div class="s"><b id="d-cert-videos">–</b><span>Interacciones</span></div>
+            </div>
+            <p class="d-cert-note">Recordá que la <b>evaluación</b> es un <b>cuestionario aparte</b>, que vas a encontrar en la plataforma ahora que terminaste todo el contenido.</p>
+            <div class="cta">
+              <button class="btn btn-cat" type="button" data-popup-trigger="logros">Ver mis logros 🏆</button>
+              <button class="btn btn-cat-ghost" type="button" id="d-summary-print" title="Abre el diálogo de impresión: elegí &quot;Guardar como PDF&quot; para descargarlo">Imprimir resumen 📄</button>
+            </div>
+          </div>
+          <div class="d-cierre-recap">
+            <h3>Repaso rápido de todo el curso</h3>
+            <p class="d-cierre-recap-lead">Lo que viste en las 3 unidades, en una pantalla, para tener a mano en el día a día.</p>
+            <div class="d-cierre-recap-grid">
+              <div class="d-cierre-recap-col">
+                <h4>Unidad 1 · Riesgo alimentario</h4>
+                <dl class="d-recap-rep">
+                  <div><dt>Inocuidad</dt><dd>Un alimento inocuo no causa daño al consumidor. Es el objetivo de todo lo demás.</dd></div>
+                  <div><dt>Alteración</dt><dd>Se nota: mal olor, textura, color o sabor. Mala conservación o fin de la vida útil.</dd></div>
+                  <div><dt>Contaminación</dt><dd>No se nota a simple vista. Peligro biológico, físico o químico.</dd></div>
+                  <div><dt>Vías de contaminación</dt><dd>Personas, medio ambiente, plagas y contaminación cruzada.</dd></div>
+                </dl>
+              </div>
+              <div class="d-cierre-recap-col">
+                <h4>Unidad 2 · Manipulación segura</h4>
+                <dl class="d-recap-rep">
+                  <div><dt>Malas prácticas</dt><dd>Tocarse la cara, toser sobre los alimentos, fumar, comer o masticar chicle, usar joyas.</dd></div>
+                  <div><dt>Buenas prácticas</dt><dd>Lavado de manos, ropa de trabajo limpia, cubrir cortes y heridas, informar síntomas.</dd></div>
+                  <div><dt>Limpieza</dt><dd>Quita la suciedad visible: elimina lo que se ve.</dd></div>
+                  <div><dt>Desinfección</dt><dd>Elimina las bacterias que no se ven. La limpieza sola no alcanza.</dd></div>
+                </dl>
+              </div>
+              <div class="d-cierre-recap-col">
+                <h4>Unidad 3 · Conservación y control</h4>
+                <dl class="d-recap-rep">
+                  <div><dt>Envasado</dt><dd>Bandeja + film: menos contacto con el aire, menos contaminación y menos alteración.</dd></div>
+                  <div><dt>Temperaturas</dt><dd>Refrigerado 0° a 5°C · congelado bajo -18°C · caliente sobre 65°C.</dd></div>
+                  <div><dt>Rango crítico</dt><dd>Entre 5°C y 65°C los microorganismos se multiplican: evitá exponer alimentos ahí.</dd></div>
+                  <div><dt>Rotación</dt><dd>Lo más próximo a vencer se retira primero, en cámaras, depósitos y ventas.</dd></div>
+                </dl>
+                <h4>Para tu día a día</h4>
+                <ul>
+                  <li>Lavate las manos con frecuencia.</li>
+                  <li>Limpiá y desinfectá antes de empezar.</li>
+                  <li>Retirá los productos vencidos de inmediato.</li>
+                  <li>Controlá el frío y el calor de los alimentos.</li>
+                  <li>Retirá los productos con calidad alterada.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-confetti" id="d-confetti" aria-hidden="true"></div>
+    </section>
+
+  </main>
+
+  <!-- ============ BARRA INFERIOR ============ -->
+  <footer class="d-bottom">
+    <button class="d-nav-btn d-nav-btn--prev" type="button" data-nav="prev" aria-label="Diapositiva anterior">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      <span>Anterior</span>
+    </button>
+
+    <div class="d-progress" data-progress-track>
+      <div class="d-progress-fill" data-slide-progress></div>
+      <span class="d-progress-thumb" data-slide-thumb role="slider" tabindex="0" aria-label="Progreso del curso: usá las flechas para navegar" aria-valuemin="1" aria-valuemax="26" aria-valuenow="1" aria-valuetext="Diapositiva 1 de 26"></span>
+    </div>
+
+    <span class="d-counter" data-slide-counter>1 / 26</span>
+
+    <button class="d-nav-btn d-nav-btn--next" type="button" data-nav="next" aria-label="Siguiente diapositiva">
+      <span data-nav-label>Empezar</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </footer>
+
+  <div class="d-resume" id="d-resume" role="status" hidden>
+    <span class="d-resume-txt">Retomá donde dejaste</span>
+    <button class="btn btn-cat" type="button" id="d-resume-go">Continuar →</button>
+    <button class="d-resume-x" type="button" id="d-resume-x" aria-label="Descartar">✕</button>
+  </div>
+
+  <!-- Ayuda + Configuración — flotantes, kit-base v1.9.36 (CLAUDE.md
+       §6.57). Antes vivían como un solo botón "Ayuda" fijo en el
+       header, con la configuración de voz/velocidad escondida ADENTRO
+       de ese pop-up — pedido explícito del cliente: separarlos (Ayuda
+       = solo ayuda, Configuración = todo lo configurable) y bajarlos
+       a flotantes discretos abajo a la derecha. Mockup aprobado antes
+       de implementar (§6.40). Lo cablea initFabPopovers()
+       (coto-player.js) — mismo mecanismo "pinned" que
+       initAudioPopovers (hover/foco/tap). -->
+  <div class="d-fab-stack" data-fab-stack>
+    <div class="d-fab d-fab--config" data-fab-ctl="config">
+      <span class="d-fab-ring" aria-hidden="true"></span>
+      <button class="d-fab-btn" type="button" aria-label="Configuración" aria-haspopup="dialog" title="Configuración">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 0 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 0 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 0 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 0 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg>
+      </button>
+      <div class="d-fab-pop" role="dialog" aria-label="Configuración">
+        <div class="d-fab-pop-hd">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83"/></svg>
+          <span class="d-fab-pop-title">Configuración</span>
+        </div>
+
+        <!-- Selector manual de voz: lo cablea initVoicePicker() del kit y
+             necesita EXACTAMENTE estos IDs. -->
+        <div class="field" id="d-voice-field" hidden>
+          <label for="d-voice-select">Voz de la locución</label>
+          <select id="d-voice-select"></select>
+          <button class="d-fab-listen" type="button" id="d-voice-listen">
+            <svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8V4z"/></svg>
+            Escuchar un ejemplo
+          </button>
+          <span class="hint">Se guarda en este dispositivo. Si no elegís ninguna, el curso usa la voz recomendada.</span>
+        </div>
+
+        <!-- Velocidad de la locución: lo cablea initRatePicker() del kit
+             (coto-player.js) y necesita EXACTAMENTE estos 3 IDs. Es un
+             multiplicador sobre el ritmo ya afinado por voz, no un valor
+             fijo (ver narrador.js). -->
+        <div class="field" id="d-rate-field" hidden>
+          <label for="d-rate-range">Velocidad de la locución</label>
+          <input type="range" id="d-rate-range" min="0.75" max="1.3" step="0.05" value="1">
+          <span class="hint" id="d-rate-value">1.00x (normal)</span>
+        </div>
+
+        <!-- Restablece voz + velocidad, lo cablea initConfigReset()
+             (coto-player.js) reusando los mismos listeners de arriba. -->
+        <button class="d-fab-reset" type="button" id="d-config-reset">Restablecer a los valores recomendados</button>
+      </div>
+    </div>
+
+    <div class="d-fab d-fab--ayuda" data-fab-ctl="ayuda">
+      <span class="d-fab-ring" aria-hidden="true"></span>
+      <button class="d-fab-btn" type="button" aria-label="Ayuda" aria-haspopup="dialog" title="Ayuda">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.4c-.8.4-1.4 1-1.4 2.1"/><line x1="12" y1="17" x2="12" y2="17"/></svg>
+      </button>
+      <div class="d-fab-pop d-fab-pop--ayuda" role="dialog" aria-label="Ayuda">
+        <div class="d-fab-pop-hd">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.4c-.8.4-1.4 1-1.4 2.1"/></svg>
+          <span class="d-fab-pop-title">Ayuda</span>
+        </div>
+
+        <p class="d-instr-nav">Avanzá con <kbd>←</kbd> <kbd>→</kbd> o con los botones <strong>"Anterior"</strong> / <strong>"Siguiente"</strong>. Desde <strong>"Índice" (☰)</strong> podés volver a cualquier diapositiva que ya hayas visto, y también arrastrar el punto de la barra de progreso. <strong>Esc</strong> cierra cualquier ventana emergente.</p>
+
+        <div class="d-instr-grid">
+          <div class="d-instr-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-cursor"/></svg><span>Tarjetas y flechas<small>tocalas para abrir cada ficha o pasar a la siguiente</small></span></div>
+          <div class="d-instr-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-play"/></svg><span>Video<small>en "El proceso de limpieza y desinfección", tocá para reproducir</small></span></div>
+          <div class="d-instr-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-examen"/></svg><span>Mini juego<small>encontrá las 6 cosas que están mal en la imagen</small></span></div>
+        </div>
+
+        <!-- Reabre "Cómo recorrer el curso" (data-gate-popup="instrucciones"
+             en la diapositiva de índice, hoy solo se ve una vez al llegar
+             ahí) — el motor ya sabe abrir cualquier [data-popup] con
+             data-popup-trigger, initFabPopovers() solo cierra este
+             flotante al tocarlo para que no quede "pinned" atrás del modal. -->
+        <button class="d-fab-replay" type="button" data-popup-trigger="instrucciones">
+          <svg viewBox="0 0 24 24"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2.1-9.4L1 10"/></svg>
+          Volver a ver la introducción
+        </button>
+
+        <div class="d-fab-acc" data-fab-acc>
+          <div class="d-fab-acc-item">
+            <button class="d-fab-acc-q" type="button">¿Qué tengo que hacer para avanzar?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <p class="d-fab-acc-a">En las diapositivas con interacción vas a tener que <strong>abrir o recorrer todo</strong> para poder avanzar. Si te falta algo, el curso te lo señala.</p>
+          </div>
+          <div class="d-fab-acc-item">
+            <button class="d-fab-acc-q" type="button">¿Cómo se aprueba el mini juego?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <p class="d-fab-acc-a">El <strong>mini juego</strong> hay que aprobarlo para seguir: se aprueba encontrando <strong>4 de las 6</strong> cosas que están mal. Si no llegás, podés reintentarlo las veces que quieras.</p>
+          </div>
+          <div class="d-fab-acc-item">
+            <button class="d-fab-acc-q" type="button">¿Cómo veo el curso más grande?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <p class="d-fab-acc-a">Usá el botón de <strong>pantalla completa</strong> de la barra superior.</p>
+          </div>
+          <div class="d-fab-acc-item">
+            <button class="d-fab-acc-q" type="button">¿Puedo silenciar la narración?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <p class="d-fab-acc-a">Sí — el curso narra en voz alta cada diapositiva, podés silenciarlo con el botón de <strong>"Locución"</strong>.</p>
+          </div>
+          <div class="d-fab-acc-item">
+            <button class="d-fab-acc-q" type="button">¿Dónde está la evaluación?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <p class="d-fab-acc-a">La <strong>evaluación</strong> es un <strong>cuestionario aparte</strong>, que vas a encontrar en la plataforma cuando termines de ver todo el contenido.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== POP-UPS =================== -->
+
+<!-- Índice lateral · contrato del kit (addendum §8). Los `[data-goto]`
+     los cablea el motor solo; curso.js solo marca `.is-done` y
+     `disabled` en lo no visto (§7.3 punto 3). -->
+<div class="modal modal--drawer" data-popup="sidenav" role="dialog" aria-modal="true" aria-label="Índice del curso">
+  <div class="modal-back" data-popup-close></div>
+  <div class="modal-card d-sidenav">
+    <div class="d-sidenav-hd">
+      <h2>Índice de contenidos</h2>
+      <button class="modal-x" type="button" data-popup-close aria-label="Cerrar">✕</button>
+    </div>
+    <nav class="d-sidenav-list" aria-label="Diapositivas">
+      <p id="d-sidenav-progress" class="d-sidenav-progress" aria-live="polite"></p>
+      <div class="d-obj-progress" aria-live="polite">
+        <span class="d-obj-pip" data-obj-pip="A" title="A · Identificar los tipos de riesgo alimentario">A</span>
+        <span class="d-obj-pip" data-obj-pip="B" title="B · Conocer las prácticas de manipulación e higiene">B</span>
+        <span class="d-obj-pip" data-obj-pip="C" title="C · Aplicar los procedimientos de conservación y control">C</span>
+        <span class="d-obj-progress-lbl" data-obj-lbl></span>
+      </div>
+      <span class="d-sidenav-group">Inicio</span>
+      <button class="d-sidenav-item" type="button" data-goto="portada"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-flag"/></svg><span>Portada</span><svg class="ix-ck" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg></button>
+      <button class="d-sidenav-item" type="button" data-goto="introduccion"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-book"/></svg><span>Introducción</span><svg class="ix-ck" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg></button>
+      <button class="d-sidenav-item" type="button" data-goto="objetivos"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-target"/></svg><span>Objetivos de aprendizaje</span><svg class="ix-ck" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg></button>
+      <button class="d-sidenav-item" type="button" data-goto="indice"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-grid"/></svg><span>Índice de contenidos</span><svg class="ix-ck" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg></button>
+
+      <span class="d-sidenav-group">Unidad 1 — Riesgo alimentario</span>
+      <button class="d-sidenav-item" type="button" data-goto="unidad1"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-layers"/></svg><span>Unidad 1</span><svg class="ix-ck" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg></button>
+      <button class="d-sidenav-item" type="button" data-goto="inocuidad"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-shield"/></svg><span>Inocuidad</span><svg class="ix-ck" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg></button>
+      <button class="d-sidenav-item" type="button" data-goto="riesgo"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-alert"/></svg><span>¿Qué es el riesgo alimentario?</span><svg class="ix-ck" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg></button>
+      <button class="d-sidenav-item" type="button" data-goto="alteracion"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-clock"/></svg><span>Alteración</span><svg class="ix-ck" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg></button>
+      <button class="d-sidenav-item" type="button" data-goto="contaminacion"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-chart-pie"/></svg><span>Contaminación</span><svg class="ix-ck" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg></button>
+      <button class="d-sidenav-item" type="button" data-goto="contaminan"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-list-check"/></svg><span>¿Cómo se contaminan los alimentos?</span><svg class="ix-ck" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg></button>
+      <button class="d-sidenav-item" type="button" data-goto="resumen1"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-book"/></svg><span>Resumen de la unidad 1</span><svg class="ix-ck" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg></button>
+
+      <span class="d-sidenav-group">Unidad 2 — Manipulación segura e higiene</span>
+      <button class="d-sidenav-item" type="button" data-goto="unidad2"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-layers"/></svg><span>Unidad 2</span><svg class="ix-ck" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg></button>
+      <button class="d-sidenav-item" type="button" data-goto="seguridad"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-info"/></svg><span>¿Qué es la seguridad alimentaria?</span><svg class="ix-ck" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg></button>
+      <button class="d-sidenav-item" type="button" data-goto="malas"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-x-circle"/></svg><span>Malas prácticas</span><svg class="ix-ck" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg></button>
+      <button class="d-sidenav-item" type="button" data-goto="buenas"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-spark"/></svg><span>Buenas prácticas</span><svg class="ix-ck" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg></button>
+      <button class="d-sidenav-item" type="button" data-goto="limpieza"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-droplet"/></svg><span>Limpieza y desinfección</span><svg class="ix-ck" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg></button>
+      <button class="d-sidenav-item" type="button" data-goto="proceso"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-play"/></svg><span>El proceso de limpieza y desinfección</span><svg class="ix-ck" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg></button>
+      <button class="d-sidenav-item" type="button" data-goto="resumen2"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-book"/></svg><span>Resumen de la unidad 2</span><svg class="ix-ck" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg></button>
+
+      <span class="d-sidenav-group">Unidad 3 — Conservación y control</span>
+      <button class="d-sidenav-item" type="button" data-goto="unidad3"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-layers"/></svg><span>Unidad 3</span><svg class="ix-ck" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg></button>
+      <button class="d-sidenav-item" type="button" data-goto="envasado"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-boxes"/></svg><span>Envasado</span><svg class="ix-ck" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg></button>
+      <button class="d-sidenav-item" type="button" data-goto="temperatura"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-gauge"/></svg><span>Temperatura alimentaria</span><svg class="ix-ck" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg></button>
+      <button class="d-sidenav-item" type="button" data-goto="rotacion"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-rotate"/></svg><span>Rotación y control de vencimientos</span><svg class="ix-ck" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg></button>
+      <button class="d-sidenav-item" type="button" data-goto="resumen3"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-book"/></svg><span>Resumen de la unidad 3</span><svg class="ix-ck" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg></button>
+
+      <span class="d-sidenav-group">Práctica y cierre</span>
+      <button class="d-sidenav-item" type="button" data-goto="minijuego"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-examen"/></svg><span>Mini juego</span><svg class="ix-ck" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg></button>
+      <button class="d-sidenav-item" type="button" data-goto="consejos"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-bulb"/></svg><span>Últimos consejos</span><svg class="ix-ck" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg></button>
+      <button class="d-sidenav-item" type="button" data-goto="cierre"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-medal"/></svg><span>Cierre y resumen</span><svg class="ix-ck" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg></button>
+    </nav>
+  </div>
+</div>
+
+<!-- Glosario · material de CONSULTA: se narra solo la entrada
+     (`data-narrate-only`, CLAUDE.md §6.5) — narrarlo entero serían
+     varios minutos de locución seguida. -->
+<div class="modal modal--drawer-right" data-popup="glosario" role="dialog" aria-modal="true" aria-label="Glosario">
+  <div class="modal-back" data-popup-close></div>
+  <div class="modal-card d-drawer-r">
+    <div class="modal-hd">
+      <button class="modal-x" data-popup-close aria-label="Cerrar">✕</button>
+      <h3 style="margin:0;color:inherit">Glosario</h3>
+    </div>
+    <div class="modal-bd">
+      <p class="d-glossary-intro" data-narrate-only>Los términos de seguridad alimentaria, en el orden en que van apareciendo a lo largo del curso — como un camino. Buscá el que necesites en la lista.</p>
+
+      <div class="d-gloss-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <label class="sr-only" for="d-gloss-search-input">Buscar en el glosario</label>
+        <input type="search" id="d-gloss-search-input" data-gloss-search placeholder="Buscar un término..." autocomplete="off">
+      </div>
+      <p class="d-gloss-empty" data-gloss-empty hidden>No encontramos ningún término con ese texto.</p>
+
+      <!-- Orden CRONOLÓGICO (por diapositiva de aparición, no
+           alfabético) — pedido explícito del cliente: "en orden de
+           aparición de las diapos, como un caminito". Se fusionan acá
+           los 3 peligros con el resto (compartían diapositiva
+           "Contaminación" con Contaminación/ETA/Microorganismo, así
+           que ahora quedan juntos por orden natural, sin necesitar un
+           encabezado propio). Sigue siendo UN solo <dl class="d-glossary">
+           — initGlossarySearch()/initGlossaryUnlock() (kit, genéricos)
+           no dependen de la cantidad de listas ni de encabezados. -->
+      <dl class="d-glossary">
+        <dt><button type="button" class="d-gloss-term-btn" data-goto="inocuidad">Inocuidad</button><svg class="d-gloss-lock-ic" data-gloss-lock aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></dt><dd><span class="d-gloss-def">Condición de un alimento que, al ser ingerido, <b>no causa ningún daño</b> a la salud del consumidor. Es el objetivo de todo el curso.</span><span class="d-gloss-hint">Se desbloquea al llegar a &ldquo;Inocuidad&rdquo;.</span></dd>
+        <dt><button type="button" class="d-gloss-term-btn" data-goto="alteracion">Alteración</button><svg class="d-gloss-lock-ic" data-gloss-lock aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></dt><dd><span class="d-gloss-def">Pérdida de olor, textura, color y/o sabor de un alimento. A diferencia de la contaminación, <b>se nota a simple vista</b>: el alimento ya no está apto para el consumo.</span><span class="d-gloss-hint">Se desbloquea al llegar a &ldquo;Alteración&rdquo;.</span></dd>
+        <dt><button type="button" class="d-gloss-term-btn" data-goto="alteracion">Vida útil</button><svg class="d-gloss-lock-ic" data-gloss-lock aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></dt><dd><span class="d-gloss-def">Período durante el cual el alimento conserva su calidad. El frío la prolonga; superado ese plazo, se produce la alteración.</span><span class="d-gloss-hint">Se desbloquea al llegar a &ldquo;Alteración&rdquo;.</span></dd>
+        <dt><button type="button" class="d-gloss-term-btn" data-goto="contaminacion">Peligro biológico</button><svg class="d-gloss-lock-ic" data-gloss-lock aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></dt><dd><span class="d-gloss-def">Presencia de microorganismos (bacterias, virus, hongos o parásitos). Es la causa más frecuente de las ETAs.</span><span class="d-gloss-hint">Se desbloquea al llegar a &ldquo;Contaminación&rdquo;.</span></dd>
+        <dt><button type="button" class="d-gloss-term-btn" data-goto="contaminacion">Peligro físico</button><svg class="d-gloss-lock-ic" data-gloss-lock aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></dt><dd><span class="d-gloss-def">Presencia de elementos ajenos al alimento: pelos, vidrio, astillas de madera, virutas de metal.</span><span class="d-gloss-hint">Se desbloquea al llegar a &ldquo;Contaminación&rdquo;.</span></dd>
+        <dt><button type="button" class="d-gloss-term-btn" data-goto="contaminacion">Peligro químico</button><svg class="d-gloss-lock-ic" data-gloss-lock aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></dt><dd><span class="d-gloss-def">Sustancias químicas por contacto con productos de limpieza, insecticidas y/o pesticidas.</span><span class="d-gloss-hint">Se desbloquea al llegar a &ldquo;Contaminación&rdquo;.</span></dd>
+        <dt><button type="button" class="d-gloss-term-btn" data-goto="contaminacion">Contaminación</button><svg class="d-gloss-lock-ic" data-gloss-lock aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></dt><dd><span class="d-gloss-def">Presencia de un peligro (biológico, físico o químico) dentro de un alimento que, a simple vista, puede aparentar estar apto para consumir.</span><span class="d-gloss-hint">Se desbloquea al llegar a &ldquo;Contaminación&rdquo;.</span></dd>
+        <dt><button type="button" class="d-gloss-term-btn" data-goto="contaminacion">ETA</button><svg class="d-gloss-lock-ic" data-gloss-lock aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></dt><dd><span class="d-gloss-def">Enfermedad Transmitida por Alimentos. Por ejemplo, hepatitis A, gastroenteritis o una intoxicación.</span><span class="d-gloss-hint">Se desbloquea al llegar a &ldquo;Contaminación&rdquo;.</span></dd>
+        <dt><button type="button" class="d-gloss-term-btn" data-goto="contaminacion">Microorganismo</button><svg class="d-gloss-lock-ic" data-gloss-lock aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></dt><dd><span class="d-gloss-def">Bacteria, virus, hongo o parásito. No se ve a simple vista y es la causa más frecuente de las ETAs.</span><span class="d-gloss-hint">Se desbloquea al llegar a &ldquo;Contaminación&rdquo;.</span></dd>
+        <dt><button type="button" class="d-gloss-term-btn" data-goto="contaminan">Alérgeno</button><svg class="d-gloss-lock-ic" data-gloss-lock aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></dt><dd><span class="d-gloss-def">Sustancia presente en un alimento que puede provocar una reacción alérgica. Se transfiere igual que un microorganismo en la contaminación cruzada.</span><span class="d-gloss-hint">Se desbloquea al llegar a &ldquo;¿Cómo se contaminan los alimentos?&rdquo;.</span></dd>
+        <dt><button type="button" class="d-gloss-term-btn" data-goto="contaminan">Contaminación cruzada</button><svg class="d-gloss-lock-ic" data-gloss-lock aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></dt><dd><span class="d-gloss-def">Transferencia involuntaria de microorganismos o alérgenos de un alimento o superficie contaminado a uno seguro. Es <b>directa</b> (alimento con alimento) o <b>indirecta</b> (por cuchillos, manos, tablas).</span><span class="d-gloss-hint">Se desbloquea al llegar a &ldquo;¿Cómo se contaminan los alimentos?&rdquo;.</span></dd>
+        <dt><button type="button" class="d-gloss-term-btn" data-goto="contaminan">Plagas</button><svg class="d-gloss-lock-ic" data-gloss-lock aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></dt><dd><span class="d-gloss-def">Moscas, hormigas, cucarachas, ratas. Ante cualquier evidencia (excremento, orina, elementos roídos) hay que <b>alertar al jefe de sector o gerente</b>.</span><span class="d-gloss-hint">Se desbloquea al llegar a &ldquo;¿Cómo se contaminan los alimentos?&rdquo;.</span></dd>
+        <dt><button type="button" class="d-gloss-term-btn" data-goto="seguridad">Seguridad alimentaria</button><svg class="d-gloss-lock-ic" data-gloss-lock aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></dt><dd><span class="d-gloss-def">Conjunto de rutinas, prácticas y procedimientos al manipular alimentos, para prevenir daños a la salud y garantizar la inocuidad.</span><span class="d-gloss-hint">Se desbloquea al llegar a &ldquo;¿Qué es la seguridad alimentaria?&rdquo;.</span></dd>
+        <dt><button type="button" class="d-gloss-term-btn" data-goto="malas">Elaborados</button><svg class="d-gloss-lock-ic" data-gloss-lock aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></dt><dd><span class="d-gloss-def">Sector de producción de alimentos de la sucursal. Ahí el uso de joyas y objetos personales está <b>prohibido</b>, no solo desaconsejado.</span><span class="d-gloss-hint">Se desbloquea al llegar a &ldquo;Malas prácticas en el manejo de alimentos&rdquo;.</span></dd>
+        <dt><button type="button" class="d-gloss-term-btn" data-goto="limpieza">Desinfección</button><svg class="d-gloss-lock-ic" data-gloss-lock aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></dt><dd><span class="d-gloss-def">Paso posterior a la limpieza: elimina las <b>bacterias peligrosas que no se ven</b>. Se aplica solución desinfectante diluida y se deja actuar 5 minutos.</span><span class="d-gloss-hint">Se desbloquea al llegar a &ldquo;Limpieza y desinfección&rdquo;.</span></dd>
+        <dt><button type="button" class="d-gloss-term-btn" data-goto="limpieza">Equipo dosificador</button><svg class="d-gloss-lock-ic" data-gloss-lock aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></dt><dd><span class="d-gloss-def">Equipo que diluye la solución de limpieza o de desinfección en la proporción correcta.</span><span class="d-gloss-hint">Se desbloquea al llegar a &ldquo;Limpieza y desinfección&rdquo;.</span></dd>
+        <dt><button type="button" class="d-gloss-term-btn" data-goto="limpieza">Limpieza</button><svg class="d-gloss-lock-ic" data-gloss-lock aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></dt><dd><span class="d-gloss-def">Quitar la suciedad <b>visible</b>: restos de alimentos, polvo, tierra. En otras palabras, elimina lo que se ve. Sola no alcanza.</span><span class="d-gloss-hint">Se desbloquea al llegar a &ldquo;Limpieza y desinfección&rdquo;.</span></dd>
+        <dt><button type="button" class="d-gloss-term-btn" data-goto="envasado">Envasado</button><svg class="d-gloss-lock-ic" data-gloss-lock aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></dt><dd><span class="d-gloss-def">Colocar el alimento en bandeja y envolverlo en film para aislarlo del aire. Reduce el riesgo de contaminación y de alteración.</span><span class="d-gloss-hint">Se desbloquea al llegar a &ldquo;Envasado&rdquo;.</span></dd>
+        <dt><button type="button" class="d-gloss-term-btn" data-goto="temperatura">Congelado</button><svg class="d-gloss-lock-ic" data-gloss-lock aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></dt><dd><span class="d-gloss-def">Método de conservación a temperaturas <b>inferiores a -18 °C</b>. Evita el desarrollo de los microorganismos.</span><span class="d-gloss-hint">Se desbloquea al llegar a &ldquo;Temperatura alimentaria&rdquo;.</span></dd>
+        <dt><button type="button" class="d-gloss-term-btn" data-goto="temperatura">Mantenimiento en caliente</button><svg class="d-gloss-lock-ic" data-gloss-lock aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></dt><dd><span class="d-gloss-def">Método de conservación a temperaturas <b>superiores a 65 °C</b>.</span><span class="d-gloss-hint">Se desbloquea al llegar a &ldquo;Temperatura alimentaria&rdquo;.</span></dd>
+        <dt><button type="button" class="d-gloss-term-btn" data-goto="temperatura">Rango crítico de temperatura</button><svg class="d-gloss-lock-ic" data-gloss-lock aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></dt><dd><span class="d-gloss-def">Entre <b>5 °C y 65 °C</b>. Es donde los microorganismos se multiplican más rápido: hay que evitar exponer alimentos ahí.</span><span class="d-gloss-hint">Se desbloquea al llegar a &ldquo;Temperatura alimentaria&rdquo;.</span></dd>
+        <dt><button type="button" class="d-gloss-term-btn" data-goto="temperatura">Refrigerado</button><svg class="d-gloss-lock-ic" data-gloss-lock aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></dt><dd><span class="d-gloss-def">Método de conservación entre <b>0 °C y 5 °C</b>. Reduce la velocidad de crecimiento de las bacterias.</span><span class="d-gloss-hint">Se desbloquea al llegar a &ldquo;Temperatura alimentaria&rdquo;.</span></dd>
+        <dt><button type="button" class="d-gloss-term-btn" data-goto="rotacion">Cámara de decomiso</button><svg class="d-gloss-lock-ic" data-gloss-lock aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></dt><dd><span class="d-gloss-def">Sector específico donde se lleva el producto vencido, para que no entre en contacto con mercadería en buen estado.</span><span class="d-gloss-hint">Se desbloquea al llegar a &ldquo;Rotación y control de vencimientos&rdquo;.</span></dd>
+        <dt><button type="button" class="d-gloss-term-btn" data-goto="rotacion">Decomiso</button><svg class="d-gloss-lock-ic" data-gloss-lock aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></dt><dd><span class="d-gloss-def">Baja definitiva de mercadería que no está en condiciones de venderse ni devolverse al proveedor.</span><span class="d-gloss-hint">Se desbloquea al llegar a &ldquo;Rotación y control de vencimientos&rdquo;.</span></dd>
+        <dt><button type="button" class="d-gloss-term-btn" data-goto="rotacion">Fecha de vencimiento</button><svg class="d-gloss-lock-ic" data-gloss-lock aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></dt><dd><span class="d-gloss-def">Fin de la vida útil del alimento. Es la base de la rotación: lo más próximo a vencer se retira primero.</span><span class="d-gloss-hint">Se desbloquea al llegar a &ldquo;Rotación y control de vencimientos&rdquo;.</span></dd>
+        <dt><button type="button" class="d-gloss-term-btn" data-goto="rotacion">Rotación de mercadería</button><svg class="d-gloss-lock-ic" data-gloss-lock aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></dt><dd><span class="d-gloss-def">Metodología por la que la mercadería más próxima a vencer se retira primero, en cámaras, depósitos y ventas.</span><span class="d-gloss-hint">Se desbloquea al llegar a &ldquo;Rotación y control de vencimientos&rdquo;.</span></dd>
+      </dl>
+    </div>
+  </div>
+</div>
+
+<!-- Ayuda · la referencia COMPLETA y siempre disponible. Repite a
+     propósito parte de "Cómo recorrer el curso": ese aparece una sola
+     vez y quien lo cerró necesita encontrarlo fijo (§6.10.2). -->
+<!-- El pop-up "Ayuda" (drawer) se reemplazó por los botones flotantes
+     de Ayuda/Configuración — ver [data-fab-stack] al final de
+     `.d-app`, CLAUDE.md §6.57. El contenido (instructivo + selector de
+     voz/velocidad) es el mismo, solo se reorganizó. -->
+
+<!-- Cómo recorrer el curso (kit-base v1.9) -->
+<div class="modal" data-popup="instrucciones" role="dialog" aria-modal="true" aria-label="Cómo recorrer el curso">
+  <div class="modal-back" data-popup-close></div>
+  <div class="modal-card d-instr-modal">
+    <button class="modal-x" data-popup-close aria-label="Cerrar">✕</button>
+    <div class="d-instr-hd">
+      <span class="d-instr-kicker">Antes de empezar</span>
+      <h3>Cómo recorrer el curso</h3>
+    </div>
+    <div class="modal-bd">
+      <div class="d-instr-cardgrid">
+        <div class="d-instr-card">
+          <div class="d-instr-card-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 3l6.5 16 2.2-6.3L20 10.5z"/><line x1="13.5" y1="13.5" x2="19" y2="19"/></svg></div>
+          <div><b>Es interactivo</b><span>Tocá las tarjetas, pasá las flechas, mirá el video y jugá el mini juego.</span></div>
+        </div>
+        <div class="d-instr-card">
+          <div class="d-instr-card-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></div>
+          <div><b>Hay que ver todo</b><span>Para avanzar necesitás completar cada interacción — si te falta algo, te lo señalamos.</span></div>
+        </div>
+        <div class="d-instr-card">
+          <div class="d-instr-card-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M15.3 9a4.3 4.3 0 0 1 0 6"/><path d="M18 6.3a8.2 8.2 0 0 1 0 11.4"/></svg></div>
+          <div><b>Subí el volumen</b><span>El curso se narra solo; silenciala desde <strong>"Locución"</strong> o cambiá la voz desde <strong>"Configuración"</strong>.</span></div>
+        </div>
+        <div class="d-instr-card">
+          <div class="d-instr-card-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="5.2"/><path d="M9 12.8 7.3 21l4.7-2.8 4.7 2.8-1.7-8.2"/></svg></div>
+          <div><b>Sumás puntos</b><span>Ganás logros a medida que avanzás y una medalla final.</span></div>
+        </div>
+      </div>
+      <div class="d-instr-cta">
+        <button class="btn btn-cat btn-ic" type="button" data-popup-close>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-play"/></svg>
+          Empezar mi aprendizaje
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Predicción antes del video "El proceso de limpieza y desinfección"
+     (item 7, ronda de mejoras). Mismo molde que "logros": .modal-card
+     de texto plano, sin --art ni estilo especial. Se abre sola una
+     vez al entrar a la diapo "proceso" (data-intro-popup/-once en su
+     <section>). No suma puntos — nivel de compromiso bajo, igual que
+     los hotspots informativos de "seguridad"/"temperatura"/"envasado"
+     agregados en esta misma ronda. -->
+<div class="modal" data-popup="prediccion-proceso" role="dialog" aria-modal="true" aria-label="Un momento, pensemos">
+  <div class="modal-back" data-popup-close></div>
+  <div class="modal-card">
+    <div class="modal-hd">
+      <button class="modal-x" data-popup-close aria-label="Cerrar">✕</button>
+      <span class="d-instr-kicker">Antes de mirar el video</span>
+      <h3 style="margin:0;color:inherit"><span class="d-pred-ic" aria-hidden="true">💭</span>Un momento, pensemos:</h3>
+    </div>
+    <div class="modal-bd">
+      <p class="d-pred-q">¿Qué creés que se hace primero en el proceso de limpieza y desinfección?</p>
+      <div class="d-pred-opts" data-pred-opts>
+        <button type="button" data-pred-opt="quitar" data-pred-ok="true">Quitar la suciedad visible</button>
+        <button type="button" data-pred-opt="aplicar">Aplicar la solución de limpieza</button>
+        <button type="button" data-pred-opt="enjuagar">Enjuagar con agua</button>
+      </div>
+      <p class="d-pred-fb" data-pred-fb hidden></p>
+      <button type="button" class="d-pred-continue" data-popup-close data-pred-continue hidden>Continuar →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Logros · contrato del kit (addendum §"logros") -->
+<div class="modal" data-popup="logros" role="dialog" aria-modal="true" aria-label="Mis logros">
+  <div class="modal-back" data-popup-close></div>
+  <div class="modal-card d-wide">
+    <div class="modal-hd">
+      <button class="modal-x" data-popup-close aria-label="Cerrar">✕</button>
+      <h3 style="margin:0;color:inherit">Mis logros</h3>
+    </div>
+    <div class="modal-bd">
+      <p class="d-badges-intro" data-narrate-only>Vas sumando <strong>✦ puntos</strong> a medida que avanzás (abrir una ficha, recorrer un carrusel, mirar el video, encontrar algo en el mini juego) y ganás un <strong>🏆 logro</strong> al completar del todo cada unidad.</p>
+      <div class="d-badges-grid" id="d-badges-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ---------- Pop-ups exportados por el diseñador ----------
+     El diseñador los entregó como PNG con ALFA REAL, a resolución
+     nativa y con su ✕ ya dibujada: no hay nada que recrear en CSS, se
+     pegan tal cual (CLAUDE.md §6.32 — "cuando el cliente dice 'usá lo
+     que te pasé', la lectura por defecto es poner la imagen tal cual").
+     Van sobre `.modal-card--art` (kit): tarjeta transparente, sin
+     sombra propia — la sombra ya viene en el alfa del archivo, y
+     sumarle la del kit son las dos sombras desalineadas de §6.28.
+     Lo único real encima de la imagen es la hitbox invisible sobre la
+     ✕ dibujada, medida en píxeles sobre cada archivo. -->
+<div class="modal" data-popup="peligro-biologico" role="dialog" aria-modal="true" aria-label="Peligro biológico">
+  <div class="modal-back" data-popup-close></div>
+  <div class="modal-card modal-card--art" style="--shot-card-ratio:1.0473">
+    <div class="d-shot" data-shot>
+      <img class="d-shot-img" src="img/pop-peligro-biologico.webp" alt="" aria-hidden="true">
+      <button class="d-shot-hit d-shot-hit--pop-close" data-hit data-popup-close data-l="86.37" data-t="19.3" data-w="9.6" data-h="10.06">
+        <span class="sr-only">Cerrar</span>
+      </button>
+    </div>
+    <div class="sr-only"><p>Peligro biológico. Presencia de microorganismos —bacterias, virus, hongos o parásitos— que, dentro del cuerpo humano, producen enfermedades infecciosas como la hepatitis A o la gastroenteritis. Es la causa más frecuente de las Enfermedades Transmitidas por Alimentos.</p></div>
+  </div>
+</div>
+
+<div class="modal" data-popup="peligro-fisico" role="dialog" aria-modal="true" aria-label="Peligro físico">
+  <div class="modal-back" data-popup-close></div>
+  <div class="modal-card modal-card--art" style="--shot-card-ratio:1.0473">
+    <div class="d-shot" data-shot>
+      <img class="d-shot-img" src="img/pop-peligro-fisico.webp" alt="" aria-hidden="true">
+      <button class="d-shot-hit d-shot-hit--pop-close" data-hit data-popup-close data-l="86.37" data-t="19.3" data-w="9.6" data-h="10.06">
+        <span class="sr-only">Cerrar</span>
+      </button>
+    </div>
+    <div class="sr-only"><p>Peligro físico. Presencia de elementos ajenos al alimento —pelos, vidrio, astillas de madera, virutas de metal—. Puede ocasionar daños en la boca y el tracto intestinal del consumidor.</p></div>
+  </div>
+</div>
+
+<div class="modal" data-popup="peligro-quimico" role="dialog" aria-modal="true" aria-label="Peligro químico">
+  <div class="modal-back" data-popup-close></div>
+  <div class="modal-card modal-card--art" style="--shot-card-ratio:1.0428">
+    <div class="d-shot" data-shot>
+      <img class="d-shot-img" src="img/pop-peligro-quimico.webp" alt="" aria-hidden="true">
+      <button class="d-shot-hit d-shot-hit--pop-close" data-hit data-popup-close data-l="86.35" data-t="19.54" data-w="9.62" data-h="10.03">
+        <span class="sr-only">Cerrar</span>
+      </button>
+    </div>
+    <div class="sr-only"><p>Peligro químico. Presencia de sustancias químicas producidas por el contacto del alimento con productos de limpieza, insecticidas y/o pesticidas. Provoca intoxicaciones, otra causa de las Enfermedades Transmitidas por Alimentos.</p></div>
+  </div>
+</div>
+
+<div class="modal" data-popup="como-limpiar" role="dialog" aria-modal="true" aria-label="¿Cómo limpiar?">
+  <div class="modal-back" data-popup-close></div>
+  <div class="modal-card modal-card--art" style="--shot-card-ratio:0.8929">
+    <div class="d-shot" data-shot>
+      <img class="d-shot-img" src="img/pop-como-limpiar.webp" alt="" aria-hidden="true">
+      <button class="d-shot-hit d-shot-hit--pop-close" data-hit data-popup-close data-l="87.63" data-t="14.77" data-w="8.59" data-h="7.67">
+        <span class="sr-only">Cerrar</span>
+      </button>
+    </div>
+    <div class="sr-only"><p>¿Cómo limpiar? Para realizar la limpieza se deben seguir los siguientes pasos: quitar la suciedad visible —restos de alimentos, polvo, tierra y otros materiales—; enjuagar con agua; aplicar la solución de limpieza general diluida, utilizando equipo dosificador; realizar acción mecánica según corresponda, con cepillo o esponja; y enjuagar con agua.</p></div>
+  </div>
+</div>
+
+<div class="modal" data-popup="como-desinfectar" role="dialog" aria-modal="true" aria-label="¿Cómo desinfectar?">
+  <div class="modal-back" data-popup-close></div>
+  <div class="modal-card modal-card--art" style="--shot-card-ratio:0.8939">
+    <div class="d-shot" data-shot>
+      <img class="d-shot-img" src="img/pop-como-desinfectar.webp" alt="" aria-hidden="true">
+      <button class="d-shot-hit d-shot-hit--pop-close" data-hit data-popup-close data-l="87.63" data-t="14.67" data-w="8.59" data-h="7.67">
+        <span class="sr-only">Cerrar</span>
+      </button>
+    </div>
+    <div class="sr-only"><p>¿Cómo desinfectar? Una vez realizada la limpieza, se debe aplicar la solución desinfectante diluida, utilizando equipo dosificador, dejándola actuar 5 minutos. Por último, realizar el enjuague final con agua.</p></div>
+  </div>
+</div>
+
+<!-- Reglas del mini juego · también exportado por el diseñador, pero
+     este trae un botón "Continuar" dibujado en vez de una ✕. La hitbox
+     va sobre esa píldora; Esc y el fondo cierran igual que en
+     cualquier otro pop-up del molde (§6.10.2: los tres siempre). -->
+<div class="modal" data-popup="mj-reglas" role="dialog" aria-modal="true" aria-label="Reglas del mini juego">
+  <div class="modal-back" data-popup-close></div>
+  <div class="modal-card modal-card--art" style="--shot-card-ratio:2.0516">
+    <div class="d-shot" data-shot>
+      <img class="d-shot-img" src="img/pop-reglas-minijuego.webp" alt="" aria-hidden="true">
+      <button class="d-shot-hit d-shot-hit--pop-cta" data-hit data-popup-close data-l="37.81" data-t="83.06" data-w="24.29" data-h="11.13">
+        <span class="sr-only">Continuar</span>
+      </button>
+    </div>
+    <div class="sr-only"><p>En este mini juego tenés que seleccionar todo lo que ves mal en la imagen.</p></div>
+  </div>
+</div>
+
+<!-- Repaso del mini juego · pop-up real (no capa), entre terminar la
+     partida y ver el resultado final (pedido explícito: mejor
+     devolución/aprendizaje, y que viva "separado del fondo" como
+     cualquier pop-up del curso — mismo criterio ya fijado en
+     CLAUDE.md §6.22 punto 3 para las fichas de reporte). Al ganar
+     muestra las 6 correctas con su explicación; al perder, SOLO lo
+     que el alumno eligió esa partida (aciertos y errores propios),
+     sin revelar lo que le faltó — para no arruinarle el reintento.
+     Título/subtítulo/lista los arma `mostrarRepaso()` en curso.js;
+     el pop-up se abre con `motor.showPopup('mj-repaso')` en vez de
+     `data-popup-trigger` (no hay ningún clic que lo dispare, se abre
+     solo al terminar la partida). Se excluye de
+     `initPopupNarration()` (curso.js) — la narración la maneja
+     `mostrarRepaso()` a mano, mismo texto de siempre, para no narrar
+     la lista completa dos veces ni con las palabras pegadas
+     (CLAUDE.md §6.54). Cerrarlo por CUALQUIER vía (✕, Esc, fondo, o
+     "Ver resultado") dispara el mismo paso al resultado — ver el
+     listener de `popupclose` en curso.js. -->
+<div class="modal" data-popup="mj-repaso" role="dialog" aria-modal="true" aria-label="Repaso del mini juego">
+  <div class="modal-back" data-popup-close></div>
+  <div class="modal-card d-wide d-mj-repaso-card">
+    <div class="modal-hd">
+      <button class="modal-x" data-popup-close aria-label="Cerrar">✕</button>
+      <h3 style="margin:0;color:inherit"><span aria-hidden="true">🎯</span> <span data-mj-repaso-title>¡Encontraste las 6!</span></h3>
+    </div>
+    <div class="modal-bd d-mj-repaso-bd">
+      <p class="d-mj-repaso-sub" data-mj-repaso-sub>Antes de ver tu resultado final, repasemos qué estaba mal en la imagen y por qué.</p>
+      <ul class="d-mj-repaso-list" data-mj-repaso-list></ul>
+      <button class="btn btn-cat d-mj-repaso-cta" type="button" data-mj-repaso-continue data-popup-close>Ver resultado</button>
+    </div>
+  </div>
+</div>
+
+<!-- Pantalla de salida · contrato del kit (addendum §14, pareja de
+     salirDelCurso() en coto-cierre.js). No es un pop-up: la sesión
+     SCORM ya se cerró acá, por eso cubre toda la pantalla. -->
+<div id="d-salida" class="d-salida" hidden role="status">
+  <div class="d-salida-card">
+    <div class="d-salida-ic" aria-hidden="true">👏</div>
+    <h2>Curso finalizado</h2>
+    <p>Ya registramos que completaste <b>Seguridad alimentaria</b>. Podés cerrar esta ventana.</p>
+    <p class="d-salida-eval">La evaluación es un cuestionario aparte, en la plataforma.</p>
+    <button type="button" class="btn btn-ghost" data-salida-volver>Volver al resumen</button>
+  </div>
+</div>
+
+<!-- =================== RESUMEN IMPRIMIBLE ===================
+     Lo muestra/oculta initSummaryPrint() (kit, coto-ui.js); el
+     esqueleto genérico de impresión vive en coto-cierre.css. -->
+<section class="d-summary" id="d-summary" aria-hidden="true">
+  <h1>Seguridad alimentaria — resumen del curso</h1>
+  <p class="lead">Área Control de Calidad · COTO. Lo que viste en las 3 unidades, para tener a mano.</p>
+
+  <h2>Unidad 1 · Riesgo alimentario</h2>
+  <ul>
+    <li><b>Inocuidad:</b> un alimento inocuo no causa ningún daño al consumidor.</li>
+    <li><b>Alteración:</b> se nota a simple vista (olor, textura, color, sabor). Por mala conservación o fin de la vida útil.</li>
+    <li><b>Contaminación:</b> no se nota. Puede ser peligro biológico, físico o químico.</li>
+    <li><b>Vías de contaminación:</b> personas, medio ambiente, plagas y contaminación cruzada (directa o indirecta).</li>
+  </ul>
+
+  <h2>Unidad 2 · Manipulación segura e higiene</h2>
+  <ul>
+    <li><b>Malas prácticas:</b> tocarse nariz, boca, pelo u ojos; toser o estornudar sobre los alimentos; fumar; comer o masticar chicle; usar joyas y objetos personales.</li>
+    <li><b>Buenas prácticas:</b> lavado de manos; ropa de trabajo limpia y adecuada; proteger cortes y heridas con apósitos impermeables; informar síntomas de enfermedad.</li>
+    <li><b>Limpieza:</b> quitar la suciedad visible, enjuagar, aplicar solución diluida, acción mecánica y enjuague final.</li>
+    <li><b>Desinfección:</b> después de limpiar, solución desinfectante diluida, 5 minutos de acción y enjuague final.</li>
+  </ul>
+
+  <h2>Unidad 3 · Conservación y control</h2>
+  <ul>
+    <li><b>Envasado:</b> bandeja + film. Menos contacto con el aire: menos contaminación y menos alteración.</li>
+    <li><b>Temperaturas:</b> refrigerado 0 °C a 5 °C · congelado por debajo de -18 °C · caliente por encima de 65 °C.</li>
+    <li><b>Rango crítico:</b> entre 5 °C y 65 °C. Evitar exponer alimentos ahí.</li>
+    <li><b>Rotación:</b> lo más próximo a vencer se retira primero, en cámaras, depósitos y ventas.</li>
+    <li><b>Control de vencimientos:</b> control diario en góndola → retirar el vencido de inmediato → embolsar y validar con el jefe de sector → cámara de decomiso y devoluciones.</li>
+  </ul>
+
+  <h2>Últimos consejos</h2>
+  <ol>
+    <li>Lavate las manos con frecuencia.</li>
+    <li>Limpiá y desinfectá antes de empezar.</li>
+    <li>Retirá los productos vencidos de inmediato.</li>
+    <li>Controlá el frío y el calor de los alimentos.</li>
+    <li>Retirá los productos con calidad alterada.</li>
+  </ol>
+
+  <p class="nota">La evaluación es un cuestionario aparte, en la plataforma.</p>
+</section>
+
+<script src="js/motor-slides.js"></script>
+<script src="js/scorm-api.js"></script>
+<script src="js/xapi.js"></script>
+<script src="js/narrador.js"></script>
+<script src="js/fx.js"></script>
+<script src="js/coto-player.js"></script>
+<script src="js/coto-ui.js"></script>
+<script src="js/coto-media.js"></script>
+<script src="js/coto-hotspots.js"></script>
+<script src="js/coto-cierre.js"></script>
+<script src="js/curso.js"></script>
+</body>
+</html>

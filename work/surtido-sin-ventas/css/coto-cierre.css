@@ -1,0 +1,288 @@
+/* ============================================================
+   coto-cierre.css · Confeti + "brillo de medalla" del cierre
+   kit-base v1.6 · Área Aprendizaje (COTO) — genérico, sin contenido
+   de curso. Copiar tal cual a cada curso nuevo, sin editar.
+   ------------------------------------------------------------
+   Pareja de js/coto-cierre.js (initCierreCelebration). Extraído de
+   "Prevención cardiovascular".
+
+   BUG REAL evitado: el confeti se genera en el DOM (celebrate() crea
+   ~126 <span class="cf cf-...">) pero si el contenedor solo tiene
+   `id="d-confetti"` SIN la clase ".d-confetti", ninguna regla de acá
+   matchea (son todas ".d-confetti .cf{...}") y cada pieza queda como
+   un <span> sin ancho/alto/color — invisible, sin ningún error en
+   consola. El contrato de marcado es:
+     <div id="d-confetti" class="d-confetti" aria-hidden="true"></div>
+   — las DOS cosas, no solo el id.
+
+   ".d-cert-stats .s" (la tarjeta de estadística del resumen) ya viene
+   estilada acá desde kit v1.9.21. Antes el archivo declaraba que su
+   layout "queda a cargo de cada curso", pero igual traía sus 3
+   escalones responsive de `padding`/`font-size` más abajo — o sea, el
+   kit estilaba el componente SOLO dentro de sus media queries y
+   dependía de que el curso escribiera la regla base. El curso que se
+   olvidaba veía el número y su etiqueta pegados en la misma línea
+   ("10/10Reportes explorados") y sin `position:relative;overflow:
+   hidden` el barrido de luz se salía del borde redondeado. La regla
+   base usa solo tokens (--surface-2/--line/--cat-strong/--r), así que
+   no había nada específico de un curso que justificara dejarla afuera
+   (misma auditoría §7.1 que subió .d-sidenav-progress/.d-salida-eval
+   al addendum).
+   ============================================================ */
+/* BUG REAL: z-index:200 ponía el confeti POR ENCIMA de la barra
+   superior del reproductor (`.d-top`, z-index:40 en
+   `coto-player-chrome.css`) — las piezas que caen por esa franja
+   tapan visualmente los botones del header (visto en un curso real:
+   una estrella de confeti encima del texto "Ampliar", ilegible). El
+   confeti no necesita ganarle a ningún chrome fijo del kit, solo al
+   contenido normal de la diapositiva (sin z-index, auto/0) — con 35
+   le gana a eso y queda DEBAJO de `.d-top` (40), `.d-resume` (70) y
+   `.d-award-toast` (95, los tres en coto-player-chrome.css). */
+#d-confetti,.d-confetti{position:fixed;inset:0;pointer-events:none;z-index:35;overflow:hidden}
+.d-confetti .cf{position:absolute;top:-16px;width:9px;height:14px;animation:d-fall linear forwards}
+.d-confetti .cf-sq{border-radius:2px}
+.d-confetti .cf-circ{border-radius:50%;width:11px;height:11px}
+.d-confetti .cf-ribbon{width:6px;height:18px;border-radius:3px}
+.d-confetti .cf-star{width:15px;height:15px;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
+@keyframes d-fall{to{transform:translateY(110vh) rotate(var(--rot,360deg));opacity:.85}}
+.d-confetti .cf-burst{top:50%;left:50%;animation:d-burst 1.4s cubic-bezier(.15,.7,.3,1) forwards}
+@keyframes d-burst{to{transform:translate(var(--bx,0),calc(var(--by,0) + 90px)) rotate(var(--rot,360deg));opacity:0}}
+@media (prefers-reduced-motion:reduce){#d-confetti,.d-confetti{display:none}}
+
+/* "Brillo de medalla": barrido de luz que cruza cada tarjeta de stat,
+   escalonado (ver shineCertStats en coto-cierre.js), disparado junto
+   con el confeti. La regla base de arriba ya le da a la tarjeta
+   `position:relative;overflow:hidden`, que es lo que recorta este
+   ::after adentro del borde redondeado. */
+/* Layout base de la grilla de estadísticas del resumen (kit v1.9.21,
+   ver nota de arriba). `position:relative;overflow:hidden` en la
+   tarjeta son requisito del brillo de la regla siguiente, no
+   decoración. */
+.d-cert-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem;margin:1.1rem 0 .9rem}
+.d-cert-stats .s{position:relative;overflow:hidden;display:grid;gap:.15rem;justify-items:center;
+  text-align:center;background:var(--surface-2);border:1px solid var(--line);
+  border-radius:var(--r);padding:.7rem .5rem}
+.d-cert-stats .s b{font-family:var(--font-title);font-size:1.35rem;line-height:1;color:var(--cat-ink)}
+.d-cert-stats .s span{font-size:.75rem;line-height:1.25;color:var(--text-soft)}
+
+.d-cert-stats .s.d-shine::after{content:"";position:absolute;inset:0;left:-70%;width:45%;
+  background:linear-gradient(100deg,transparent,color-mix(in srgb,#fff 65%,transparent),transparent);
+  animation:d-cert-shine .95s ease forwards}
+@keyframes d-cert-shine{to{left:130%}}
+@media (prefers-reduced-motion:reduce){.d-cert-stats .s.d-shine::after{animation:none;display:none}}
+
+/* ============================================================
+   LAYOUT DEL RESUMEN DE CIERRE  ·  .d-cierre-*
+   kit-base v1.8 — pareja del paso 2 de coto-cierre.js
+   (`[data-cierre-step="summary"]`), que estaba en el kit desde v1.6 con
+   su layout todavía en cada curso.
+   ------------------------------------------------------------
+   Dos columnas: resultados (medalla, estadísticas, botones) y repaso.
+   ⚠️ LO IMPORTANTE de este bloque son los escalones de compresión por
+   alto de pantalla. Bug real: a 1366x768 las columnas necesitaban 818px
+   contra 648 disponibles, y como `.slide-inner` está centrado el scroll
+   quedaba DENTRO de cada columna — o sea contenido invisible sin
+   ninguna señal, que es peor que un scroll. El cierre tiene que leerse
+   de un vistazo.
+   La solución fue comprimir, no sacar contenido: las tarjetas de
+   estadística en una sola fila y 3 tramos (860 / 740 / 660px de alto)
+   que achican tipografías y espaciados. Y el repaso mantiene sus 3
+   columnas mientras haya ancho: apilarlas lo hace crecer a lo alto
+   justo cuando menos alto hay.
+   Verificado de 1024x640 a 2560x1440.
+   ============================================================ */
+.slide-cierre .d-cierre-shot,.slide-cierre .d-cierre-summary{display:none}
+.slide-cierre.unlocked .d-cierre-shot:not([hidden]){display:flex}
+/* Ancho del resumen: 1680px/96% (no 1400px/100%). Fix real que ya vivía en
+   "Uso de Sucursales 3 - NOA" y nunca había vuelto al kit (CLAUDE.md §6.22
+   punto 6): a 1400px el repaso de cierre desperdicia pantallas grandes, y el
+   100% sin margen deja el bloque pegado a los bordes. */
+.slide-cierre.unlocked .d-cierre-summary:not([hidden]){display:block;width:min(1680px,96%); max-height:100%;overflow-y:auto;overflow-x:hidden}
+.d-cierre-cols{display:grid;grid-template-columns:minmax(260px,320px) 1fr;gap:1.4rem;align-items:stretch}
+.d-cierre-results{position:relative;overflow:hidden;text-align:center;padding:1.4rem 1.3rem; display:flex;flex-direction:column;border-radius:var(--r-xl);background:var(--surface); border:1px solid var(--line);box-shadow:var(--shadow-card)}
+.d-cierre-results::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:var(--cat-grad,var(--brand))}
+.d-cierre-summary .who{font-weight:800;font-size:1.1rem;color:var(--cat-ink);margin:0 0 .5rem;font-family:var(--font-title)}
+.d-cierre-summary p{color:var(--text);margin:0 0 .9rem;font-size:.92rem}
+.d-cierre-results .cta{margin:.9rem 0 0;display:flex;flex-direction:column;gap:.55rem}
+.d-cierre-results .cta .btn{width:100%;justify-content:center;font-size:.9rem;padding:.65rem 1rem}
+.d-cierre-recap{position:relative;overflow:hidden;height:100%;padding:1.3rem 1.8rem; border-radius:var(--r-xl);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-card)}
+.d-cierre-recap::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:var(--cat-grad,var(--brand))}
+.d-cierre-recap h3{text-align:center;margin:0 0 .9rem;font-family:var(--font-title);font-weight:900;color:var(--text)}
+.d-cierre-recap-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:.9rem 2.4rem}
+.d-cierre-recap-col{position:relative;padding-left:1rem}
+.d-cierre-recap-col::before{content:"";position:absolute;top:.15rem;bottom:.15rem;left:0;width:3px; border-radius:2px;background:var(--cat,var(--brand))}
+.d-cierre-recap-col h4{margin:0 0 .5rem;font-family:var(--font-title);font-weight:900;font-size:.92rem;color:var(--cat-ink)}
+.d-cierre-recap-col h4:not(:first-child){margin-top:.8rem}
+.d-cierre-recap-col ul{margin:0;padding-left:1.2rem}
+.d-cierre-recap-col li{margin:.26rem 0;font-size:.84rem;line-height:1.32;color:var(--text)}
+.d-cierre-recap-col li::marker{color:var(--cat-ink)}
+.d-cierre-shot{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+
+@media (max-width:900px){.d-cierre-cols{grid-template-columns:1fr;height:auto}}
+
+@media (max-width:620px){.d-cierre-recap-grid{grid-template-columns:1fr}}
+
+@media (max-height:800px){
+  .d-medalla{padding:.6rem .8rem;margin-bottom:.5rem}
+  .d-medalla-ic{font-size:2rem}
+  .d-medalla-rangos{margin-bottom:.6rem}
+}
+
+@media (max-height:860px){
+  .d-medalla{padding:.5rem .7rem;margin-bottom:.45rem}
+  .d-medalla-ic{font-size:1.8rem}
+  .d-medalla-tit{font-size:1rem}
+  .d-medalla-sub{font-size:.76rem}
+  .d-medalla-rangos{margin-bottom:.5rem}
+  .d-medalla-rangos li{padding:.3rem .2rem}
+  .d-medalla-rangos li span{font-size:.95rem}
+  .d-medalla-rangos li b{font-size:.72rem}
+  .d-medalla-rangos li i{font-size:.62rem}
+  .d-cert-stats{gap:.28rem;margin-bottom:.55rem}
+  .d-cert-note{font-size:.76rem;line-height:1.35;margin-bottom:.55rem}
+  .d-cierre-results .cta .btn{padding:.5rem .8rem;font-size:.82rem}
+  .d-cierre-recap{padding:.9rem 1.1rem}
+  .d-cierre-recap h3{font-size:.95rem;margin-bottom:.5rem}
+  .d-cierre-recap-col h4{font-size:.8rem;margin-bottom:.3rem}
+  .d-cierre-recap-col h4:not(:first-child){margin-top:.5rem}
+  .d-cierre-recap-col li{font-size:.74rem;line-height:1.28;margin:.16rem 0}
+  .d-cierre-recap-grid{gap:.6rem 1.4rem}
+  .d-gloss > div{padding:.16rem .2rem}
+  .d-gloss dt{font-size:.79rem}
+  .d-gloss dd{font-size:.73rem;line-height:1.28}
+}
+
+@media (max-height:740px){
+  .d-medalla{padding:.4rem .6rem;margin-bottom:.35rem}
+  .d-medalla-ic{font-size:1.5rem}
+  .d-medalla-tit{font-size:.9rem}
+  .d-medalla-sub{font-size:.7rem}
+  .d-medalla-rangos li i{font-size:.58rem}
+  .d-cert-stats .s{padding:.35rem .2rem}
+  .d-cert-note{font-size:.7rem;margin-bottom:.4rem}
+  .d-cierre-recap{padding:.7rem .9rem}
+  .d-cierre-recap h3{font-size:.88rem;margin-bottom:.4rem}
+  .d-cierre-recap-col h4{font-size:.75rem}
+  .d-cierre-recap-col li{font-size:.68rem;line-height:1.25;margin:.1rem 0}
+  .d-gloss dt{font-size:.73rem}
+  .d-gloss dd{font-size:.67rem;line-height:1.25}
+  .d-gloss > div{padding:.1rem .2rem}
+  .d-cierre-cols{gap:.9rem}
+}
+
+@media (max-height:660px){
+  .d-medalla{padding:.3rem .5rem;margin-bottom:.3rem;gap:.6rem}
+  .d-medalla-ic{font-size:1.25rem}
+  .d-medalla-tit{font-size:.82rem}
+  .d-medalla-sub{font-size:.64rem}
+  .d-medalla-rangos{margin-bottom:.35rem}
+  .d-medalla-rangos li{padding:.2rem .15rem}
+  .d-medalla-rangos li span{font-size:.8rem}
+  .d-medalla-rangos li b{font-size:.64rem}
+  .d-medalla-rangos li i{font-size:.54rem}
+  .d-cert-stats{margin-bottom:.4rem}
+  .d-cert-stats .s{padding:.25rem .15rem}
+  .d-cert-stats .s span{font-size:.5rem}
+  .d-cert-note{font-size:.64rem;padding:.4rem .55rem;margin-bottom:.35rem}
+  .d-cierre-results .cta .btn{padding:.4rem .6rem;font-size:.74rem}
+  .d-cierre-recap{padding:.55rem .75rem}
+  .d-cierre-recap h3{font-size:.8rem;margin-bottom:.3rem}
+  .d-cierre-recap-col h4{font-size:.68rem;margin-bottom:.2rem}
+  .d-cierre-recap-col h4:not(:first-child){margin-top:.35rem}
+  .d-cierre-recap-col li{font-size:.62rem;line-height:1.22;margin:.06rem 0}
+  .d-gloss dt{font-size:.66rem}
+  .d-gloss dd{font-size:.61rem;line-height:1.22}
+  .d-gloss > div{padding:.06rem .2rem}
+  .d-cierre-recap-grid{gap:.4rem 1rem}
+}
+
+@media (min-width:1000px){
+  .d-cierre-recap-grid{grid-template-columns:repeat(3,1fr)}
+}
+
+/* ============================================================
+   RESUMEN IMPRIMIBLE  (kit v1.9.5)
+   Pareja de `initSummaryPrint()` (coto-ui.js). Hueco real encontrado
+   auditando "Uso de Sucursales 3 - NOA" v2: el botón "Imprimir resumen"
+   y la función que lo cablea ya estaban en el kit desde v1.6, pero el
+   ESQUELETO CSS que hace que sirva de algo —ocultar `.d-summary` en
+   pantalla, mostrarlo SOLO en @media print, y tapar el resto de la
+   app mientras se imprime— nunca se subió. Un curso que copiaba
+   `coto-cierre.css` tal cual (checklist §7) tenía el botón, la función
+   y el `<section id="d-summary">`, pero al hacer clic imprimía la app
+   en vivo (rota: la mayoría de las diapositivas están [hidden] y
+   `.d-app` es `position:fixed`), no la hoja de resumen.
+   El contenido de `#d-summary` (qué dice el resumen de ESTE curso) es
+   específico de cada curso y se escribe en su `pulido.css`/`assets.css`
+   — acá solo el mecanismo de mostrar/ocultar, 100% genérico. */
+.d-summary{ display:none; }
+@media print{
+  body.printing-summary .d-app,
+  body.printing-summary #d-confetti,
+  body.printing-summary .modal{ display:none !important; }
+  body.printing-summary{ background:#fff; }
+  body.printing-summary .d-summary{
+    display:block !important; max-width:720px; margin:0 auto; color:#000;
+  }
+  body.printing-summary .d-summary-hd{
+    border-bottom:3px solid var(--cat); padding-bottom:.6rem; margin-bottom:1.2rem;
+  }
+  body.printing-summary .d-summary-hd h1{
+    font-family:var(--font-title); font-weight:900; color:var(--cat-ink); margin:0 0 .2rem;
+  }
+  body.printing-summary .d-summary-hd p{ margin:0; color:var(--text-soft); font-weight:700; }
+  body.printing-summary .d-summary h2{
+    font-family:var(--font-title); font-size:1.1rem; color:var(--brand-navy); margin:1.3rem 0 .5rem;
+  }
+  body.printing-summary .d-summary-gloss{ display:grid; gap:.1rem; margin:0; }
+  body.printing-summary .d-summary-gloss > div{
+    display:grid; grid-template-columns:170px 1fr; gap:.8rem;
+    padding:.35rem 0; border-bottom:1px solid var(--line);
+  }
+  body.printing-summary .d-summary-gloss dt{ font-weight:900; color:var(--cat-ink); }
+  body.printing-summary .d-summary-gloss dd{ margin:0; }
+  body.printing-summary .d-summary ul{ margin:.3rem 0 0; padding-left:1.2rem; }
+  body.printing-summary .d-summary li{ margin:.25rem 0; line-height:1.5; }
+}
+
+/* ============================================================
+   CERTIFICADO DE FINALIZACIÓN  (kit-base v1.9.39)
+   Pareja de `initCertificatePrint()` (coto-cierre.js). Mismo mecanismo
+   ya probado del resumen imprimible de arriba (`window.print()` +
+   `body.printing-*` que oculta la app y muestra SOLO el documento) —
+   pero el certificado no necesita NINGÚN contenido propio de curso: el
+   JS arma el `<div id="d-cert-doc">` entero en caliente (nombre real
+   del alumno vía `SCORM.getFullName()`, nombre del curso, fecha,
+   medalla si el curso tiene sistema de puntos) — un curso nuevo solo
+   necesita el botón `#d-cert-print` en su resumen de cierre, nada de
+   HTML del certificado en sí. */
+.d-cert-doc{ display:none; }
+@media print{
+  body.printing-cert .d-app,
+  body.printing-cert #d-confetti,
+  body.printing-cert .modal{ display:none !important; }
+  body.printing-cert{ background:#fff; }
+  @page{ size:landscape; margin:0; }
+  body.printing-cert .d-cert-doc{
+    display:flex; align-items:center; justify-content:center;
+    width:100%; min-height:100vh; padding:2rem; box-sizing:border-box;
+  }
+  .d-cert-card{
+    position:relative; width:100%; max-width:920px; aspect-ratio:1.5/1;
+    box-sizing:border-box; border:3px solid var(--cat-strong); border-radius:var(--r-xl);
+    padding:3rem 4rem; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; gap:.3rem;
+    background:linear-gradient(180deg, color-mix(in srgb, var(--cat) 8%, transparent), transparent 45%);
+  }
+  .d-cert-card::before{
+    content:""; position:absolute; inset:14px;
+    border:1px solid color-mix(in srgb, var(--cat-strong) 40%, transparent);
+    border-radius:calc(var(--r-xl) - 8px); pointer-events:none;
+  }
+  .d-cert-kicker{ margin:0; letter-spacing:2px; text-transform:uppercase; font-size:.8rem; font-weight:800; color:var(--cat-ink); }
+  .d-cert-nombre{ margin:.4rem 0 0; font-family:var(--font-title); font-weight:900; font-size:2.6rem; color:var(--text); }
+  .d-cert-texto{ margin:.2rem 0; color:var(--text-soft); font-size:1rem; }
+  .d-cert-curso{ margin:0; font-family:var(--font-title); font-weight:900; font-size:1.4rem; color:var(--cat-ink); }
+  .d-cert-foot{ margin-top:1.6rem; display:flex; gap:2rem; font-size:.85rem; color:var(--text-soft); }
+  .d-cert-medalla{ font-weight:800; color:var(--text); }
+}

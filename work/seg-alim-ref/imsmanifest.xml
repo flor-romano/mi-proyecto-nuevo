@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  imsmanifest.xml · "Seguridad alimentaria" (Área Control de Calidad)
+  SCORM 1.2, un solo SCO.
+
+  SIN <adlcp:masteryscore>: este curso NO es la evaluación. El
+  cuestionario calificado es aparte, en la plataforma (así lo dice la
+  propia diapositiva de cierre del PDF), y declarar un mastery score
+  acá haría que el LMS espere una nota de aprobación que el SCO nunca
+  va a mandar. El curso reporta `cmi.core.score.raw` como dato
+  INFORMATIVO (SCORM.setProgressScore) y marca `completed` al llegar
+  al final — ver CLAUDE.md §6.24 y §3.11.
+-->
+<manifest identifier="COTO_SEGURIDAD_ALIMENTARIA" version="1.0"
+  xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2"
+  xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsproject.org/xsd/imscp_rootv1p1p2 imscp_rootv1p1p2.xsd
+                      http://www.imsglobal.org/xsd/imsmd_rootv1p2p1 imsmd_rootv1p2p1.xsd
+                      http://www.adlnet.org/xsd/adlcp_rootv1p2 adlcp_rootv1p2.xsd">
+
+  <metadata>
+    <schema>ADL SCORM</schema>
+    <schemaversion>1.2</schemaversion>
+  </metadata>
+
+  <organizations default="ORG_SEGURIDAD_ALIMENTARIA">
+    <organization identifier="ORG_SEGURIDAD_ALIMENTARIA">
+      <title>Seguridad Alimentaria</title>
+      <item identifier="ITEM_SEGURIDAD_ALIMENTARIA" identifierref="RES_SEGURIDAD_ALIMENTARIA" isvisible="true">
+        <title>Seguridad Alimentaria</title>
+      </item>
+    </organization>
+  </organizations>
+
+  <resources>
+    <resource identifier="RES_SEGURIDAD_ALIMENTARIA" type="webcontent" adlcp:scormtype="sco" href="index.html">
+      <file href="index.html"/>
+    </resource>
+  </resources>
+</manifest>

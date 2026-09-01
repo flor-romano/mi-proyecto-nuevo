@@ -1,0 +1,106 @@
+/* ============================================================
+   diapositivas.css · "Seguridad alimentaria"
+   Layout de LAS diapositivas de este curso. Todo lo genérico ya vive
+   en el kit: el lienzo (coto-shot-stage.css), la cáscara del mini
+   juego (coto-minijuego.css), las tildes de avance y el pie de los
+   pop-ups largos (addendum §11), el resumen del cierre
+   (coto-cierre.css). Acá queda lo que SOLO sirve para este curso.
+   ============================================================ */
+
+/* ============================================================
+   1 · CARTELES SOBRE LA CAPTURA
+   ------------------------------------------------------------
+   `[data-place]` lo posiciona `Motor._initShots` escribiendo
+   `left/top` en píxeles — un elemento en flujo normal los ignora, así
+   que CUALQUIER overlay nuevo necesita `position:absolute` propio
+   (bug real, CLAUDE.md §6.22 punto 7). `.d-u2-prog` ya lo trae del
+   kit; este cartel no, por eso está acá.
+   ============================================================ */
+.d-swap-hint {
+  position: absolute; pointer-events: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: clamp(.6rem, 1.05cqw, .82rem); font-weight: 600;
+  color: var(--text-soft); text-align: center;
+}
+
+/* ============================================================
+   2 · MINI JUEGO — solo la TOPOLOGÍA del mapa
+   ------------------------------------------------------------
+   La cáscara visual (cartel, tarjetas de estado, píldoras, feedback,
+   panel final, escalera responsive) vive en `coto-minijuego.css` del
+   kit. Lo único propio de este curso es cuántas filas tiene el banco
+   de opciones y dónde va cada línea: el arte del PDF arma 12 reportes
+   en 3 columnas × 4 filas, todos conectados con sus vecinos.
+
+   Técnica (kit): las pistas de conexión son TRACKS del grid, no
+   `gap` — así hay dónde "enganchar" cada línea como un ítem más del
+   grid, sin SVG ni JS de layout. Las columnas de contenido son la 1,
+   3 y 5; las filas de contenido la 1, 3, 5 y 7; el resto son pistas
+   de `--mj-track`.
+   ============================================================ */
+.slide-minijuego .slide-inner {
+  /* flex:1 + width:100% son necesarios los DOS: .slide-minijuego es
+     display:flex (pulido.css) y sin ellos el .slide-inner se encoge al
+     ancho de su contenido — que es 0, porque adentro todo se mide en
+     % del padre. */
+  flex: 1 1 auto; width: 100%; min-width: 0;
+  height: 100%; display: flex; flex-direction: column; padding: 0;
+  max-width: none;
+}
+.d-mj { --mj-escena-ratio: 834/706; }
+/* Colores del botón del panel final: medidos sobre el arte (relleno
+   #50BDE6, trazo #046E9F). Son del DIBUJO, no de la categoría, por eso
+   los pone el curso y no el kit — el botón tiene que ser
+   indistinguible del que el diseñador ya dibujó debajo. */
+.d-shot-hit.d-mj-fin-cta { --mj-cta-bg: #50BDE6; --mj-cta-border: #046E9F; }
+/* El grid del kit reparte 1fr/1fr; medido contra el arte, el PDF le da
+   ~33% del ancho a la ilustración y ~37% al banco de opciones (el
+   resto son márgenes). Con 50/50 la ilustración sale más grande que en
+   el diseño y las píldoras quedan más apretadas. */
+.d-mj-body { grid-template-columns: minmax(0,.88fr) minmax(0,1.12fr); }
+.d-mj-grid {
+  grid-template-rows: auto var(--mj-track) auto var(--mj-track) auto var(--mj-track) auto;
+}
+/* Pedido del cliente: el bloque de stats+consigna+opciones quedaba
+   anclado arriba de su fila mientras la ilustración (mucho más alta,
+   12 opciones = fila más chica que la imagen) llenaba casi toda la
+   altura — quedaba un hueco vacío abajo, corrido hacia arriba respecto
+   a la imagen. `align-items:center` (el kit usa `start` por defecto,
+   pensado para el minijuego de NOA con menos opciones) centra cada
+   columna dentro de la fila ya compacta, alineando el bloque con el
+   centro real de la imagen. */
+.d-mj-body { align-items: center; }
+/* El enunciado se perdía contra el resto del bloque ("muy chico"). */
+.d-mj-consigna { font-size: 1.24rem; margin-bottom: 1.3rem; }
+/* Las píldoras del PDF de ESTE curso no tienen borde de color: son
+   blancas con una sombra suave y el texto en el celeste de la marca.
+   (El default del kit — borde de 2px en --cat-strong — viene del arte
+   del curso anterior.) La seleccionada sí se rellena, y eso ya lo
+   resuelve `.is-ok`/`.is-bad` del kit. */
+.d-mj-opt {
+  border-color: transparent;
+  color: var(--cat);
+  box-shadow: 0 1px 0 #fff inset, 0 2px 10px -2px rgba(20,30,60,.16);
+}
+.d-mj-opt:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--cat) 60%, transparent);
+  background: var(--cat-soft); color: var(--cat-strong);
+}
+
+/* ============================================================
+   3 · TARJETA DE ESTADÍSTICA DEL CIERRE / RESUMEN
+   El layout base de `.d-cert-stats` subió al kit en esta vuelta
+   (coto-cierre.css). Acá solo lo que es de este curso.
+   ============================================================ */
+.slide-cierre .cta { display: grid; margin-top: .6rem; }
+.d-cierre-recap-grid { align-content: start; }
+.d-cierre-recap-lead {
+  text-align: center; margin: 0 0 1.1rem; font-size: .88rem; color: var(--text-soft);
+}
+.d-recap-rep { margin: 0 0 .3rem; display: flex; flex-direction: column; gap: .5rem; }
+.d-recap-rep > div { padding: 0; }
+.d-recap-rep dt {
+  font-size: .9rem; font-weight: 800; color: var(--cat-strong);
+  font-family: var(--font-title); margin: 0;
+}
+.d-recap-rep dd { font-size: .84rem; line-height: 1.35; color: var(--text); margin: .1rem 0 0; }

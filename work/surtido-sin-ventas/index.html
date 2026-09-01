@@ -411,45 +411,69 @@
       </div>
     </div>
     <div class="d-mj-panel" data-mj-panel="fin-ok" hidden>
-      <div class="d-mj-fin2 d-mj-fin2--ok">
-        <h2>¡Terminaste el mini juego con éxito!</h2>
-        <p>Ya podés identificar estos conceptos clave. <b>¡Seguí aplicándolo cada día!</b></p>
-        <div class="d-mj-fin2-stats">
-          <div class="d-mj-fin2-stat">
-            <span class="d-mj-fin2-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/></svg></span>
-            <b data-mj-fin-aciertos>5/5</b><span>Preguntas completadas</span>
+      <div class="d-mj-intro d-mj-fin2 d-mj-fin2--ok">
+        <span class="d-mj-intro-kicker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11.5V6a2 2 0 1 1 4 0v5"/><path d="M13 6a2 2 0 1 1 4 0v6"/><path d="M17 8a2 2 0 1 1 4 0v6a7 7 0 0 1-7 7h-2a7 7 0 0 1-6-3.4L3.3 13a1.8 1.8 0 0 1 2.8-2.2L9 13.5"/></svg> ¡Jugá con nosotros!</span>
+        <div class="d-mj-intro-main">
+          <img class="d-mj-intro-mascot" src="img/mj-fin-ok-male.webp" alt="" aria-hidden="true" width="700" height="1303">
+          <div class="d-mj-intro-mid">
+            <h2 class="d-mj-fin2-tit">¡Terminaste el mini<br>
+              <span class="d-mj-intro-tit-line"><img class="d-mj-wreath d-mj-wreath--l" src="img/mj-wreath.webp" alt="" aria-hidden="true">juego con <span>éxito</span>!<img class="d-mj-wreath d-mj-wreath--r" src="img/mj-wreath.webp" alt="" aria-hidden="true"></span>
+            </h2>
+            <p class="d-mj-fin2-sub">Ya podés identificar estos conceptos clave. <b>¡Seguí aplicándolo cada día!</b></p>
+            <div class="d-mj-fin2-card">
+              <div class="d-mj-fin2-divider"><img class="d-mj-fin2-badge" src="img/mj-badge-ok.webp" alt="" aria-hidden="true"></div>
+              <div class="d-mj-fin2-stats">
+                <div class="d-mj-fin2-stat">
+                  <span class="d-mj-fin2-ic d-mj-fin2-ic--target" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 16a6 6 0 1 1 6-6 6 6 0 0 1-6 6zm0-9.5A3.5 3.5 0 1 0 15.5 12 3.5 3.5 0 0 0 12 8.5z"/></svg></span>
+                  <b data-mj-fin-aciertos>5/5</b><span>Preguntas completadas</span>
+                </div>
+                <div class="d-mj-fin2-stat">
+                  <span class="d-mj-fin2-ic d-mj-fin2-ic--star" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg></span>
+                  <b data-mj-fin-puntos>0</b><span>Puntos conseguidos</span>
+                </div>
+                <div class="d-mj-fin2-stat is-ok">
+                  <span class="d-mj-fin2-ic d-mj-fin2-ic--check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span>
+                  <b>¡Excelente!</b><span>Ya reforzaste estos conceptos</span>
+                </div>
+              </div>
+              <button type="button" class="btn btn-cat" data-mj-continue>Continuar</button>
+            </div>
           </div>
-          <div class="d-mj-fin2-stat">
-            <span class="d-mj-fin2-ic d-mj-fin2-ic--solid" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg></span>
-            <b data-mj-fin-puntos>0</b><span>Puntos conseguidos</span>
-          </div>
-          <div class="d-mj-fin2-stat is-ok">
-            <span class="d-mj-fin2-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12l2.5 2.5L16 9"/></svg></span>
-            <b>¡Excelente!</b><span>Ya reforzaste estos conceptos</span>
-          </div>
+          <img class="d-mj-intro-mascot" src="img/mj-fin-ok-female.webp" alt="" aria-hidden="true" width="700" height="1265">
         </div>
-        <button type="button" class="btn btn-cat" data-mj-continue>Continuar</button>
+        <div class="d-mj-intro-floor" aria-hidden="true"></div>
       </div>
     </div>
     <div class="d-mj-panel" data-mj-panel="fin-fail" hidden>
-      <div class="d-mj-fin2 d-mj-fin2--fail">
-        <h2>¡Ups! Estuviste cerca&hellip;</h2>
-        <p>Hacé clic en el botón <b>&ldquo;Reintentar&rdquo;</b> para intentarlo de nuevo.</p>
-        <div class="d-mj-fin2-stats">
-          <div class="d-mj-fin2-stat">
-            <span class="d-mj-fin2-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/></svg></span>
-            <b data-mj-fail-aciertos>1/5</b><span>Preguntas completadas</span>
+      <div class="d-mj-intro d-mj-fin2 d-mj-fin2--fail">
+        <span class="d-mj-intro-kicker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11.5V6a2 2 0 1 1 4 0v5"/><path d="M13 6a2 2 0 1 1 4 0v6"/><path d="M17 8a2 2 0 1 1 4 0v6a7 7 0 0 1-7 7h-2a7 7 0 0 1-6-3.4L3.3 13a1.8 1.8 0 0 1 2.8-2.2L9 13.5"/></svg> ¡Jugá con nosotros!</span>
+        <div class="d-mj-intro-main">
+          <img class="d-mj-intro-mascot" src="img/mj-fin-fail-male.webp" alt="" aria-hidden="true" width="700" height="1263">
+          <div class="d-mj-intro-mid">
+            <h2 class="d-mj-fin2-tit">¡Ups! <span>Estuviste cerca&hellip;</span></h2>
+            <p class="d-mj-fin2-sub">Hacé clic en el botón <b>&ldquo;Reintentar&rdquo;</b> para intentarlo de nuevo.</p>
+            <div class="d-mj-fin2-card">
+              <div class="d-mj-fin2-divider"><img class="d-mj-fin2-badge" src="img/mj-badge-fail.webp" alt="" aria-hidden="true"></div>
+              <div class="d-mj-fin2-stats">
+                <div class="d-mj-fin2-stat">
+                  <span class="d-mj-fin2-ic d-mj-fin2-ic--target" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 16a6 6 0 1 1 6-6 6 6 0 0 1-6 6zm0-9.5A3.5 3.5 0 1 0 15.5 12 3.5 3.5 0 0 0 12 8.5z"/></svg></span>
+                  <b data-mj-fail-aciertos>1/5</b><span>Preguntas completadas</span>
+                </div>
+                <div class="d-mj-fin2-stat">
+                  <span class="d-mj-fin2-ic d-mj-fin2-ic--star" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg></span>
+                  <b data-mj-fail-puntos>0</b><span>Puntos conseguidos</span>
+                </div>
+                <div class="d-mj-fin2-stat is-bad">
+                  <span class="d-mj-fin2-ic d-mj-fin2-ic--x" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
+                  <b>A reintentarlo</b><span>Podés hacerlo mejor</span>
+                </div>
+              </div>
+              <button type="button" class="btn btn-cat" data-mj-retry>Reintentar</button>
+            </div>
           </div>
-          <div class="d-mj-fin2-stat">
-            <span class="d-mj-fin2-ic d-mj-fin2-ic--solid" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg></span>
-            <b data-mj-fail-puntos>0</b><span>Puntos conseguidos</span>
-          </div>
-          <div class="d-mj-fin2-stat is-bad">
-            <span class="d-mj-fin2-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg></span>
-            <b>A reintentarlo</b><span>Podés hacerlo mejor</span>
-          </div>
+          <img class="d-mj-intro-mascot" src="img/mj-fin-fail-female.webp" alt="" aria-hidden="true" width="700" height="1280">
         </div>
-        <button type="button" class="btn btn-cat" data-mj-retry>Reintentar</button>
+        <div class="d-mj-intro-floor" aria-hidden="true"></div>
       </div>
     </div>
   </div>

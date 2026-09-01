@@ -114,7 +114,7 @@
    hay hueco entre el personaje y el piso) — margen negativo a
    propósito, no un error de spacing. */
 .d-mj-intro-floor { margin-top: -14px; width: 100vw; margin-left: calc(50% - 50vw);
-  padding: 1.3rem 1.5rem .9rem; border-radius: 48% 48% 0 0 / 60px 60px 0 0;
+  padding: 1.3rem 1.5rem .9rem; min-height: 2.6rem; border-radius: 48% 48% 0 0 / 60px 60px 0 0;
   background: linear-gradient(180deg, #9199a6, #767f8d); position: relative; z-index: 2; }
 .d-mj-intro-tips { list-style: none; margin: 0; padding: 0; display: flex;
   justify-content: center; gap: 2rem; flex-wrap: wrap; }
@@ -179,28 +179,33 @@
 .d-mj-opts .d-mj-opt { flex: 1 1 200px; max-width: 260px; }
 .d-mj-next { align-self: center; }
 
-/* ---- Pantallas finales (éxito / a reintentar) ---- */
-.d-mj-fin2 { max-width: 680px; margin: 0 auto; text-align: center; padding: 0 1.5rem; }
-.d-mj-fin2 h2 { font-family: var(--font-title); font-weight: 900;
-  font-size: clamp(1.5rem, 2.8cqw, 2.1rem); margin: 0 0 .7rem; }
-.d-mj-fin2--ok h2 { color: var(--success-ink); }
-.d-mj-fin2--fail h2 { color: var(--warning-ink); }
-.d-mj-fin2 > p { margin: 0 0 1.6rem; color: var(--text); font-size: 1rem; }
-.d-mj-fin2-stats { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
-  margin-bottom: 1.8rem; }
-.d-mj-fin2-stat { flex: 1 1 160px; max-width: 200px; display: flex; flex-direction: column;
-  align-items: center; gap: .4rem; background: var(--surface); border: 1px solid var(--line);
-  border-radius: var(--r-lg); padding: 1.1rem .9rem; box-shadow: var(--shadow-card); }
-.d-mj-fin2-ic { width: 46px; height: 46px; border-radius: 50%; display: grid;
-  place-items: center; background: var(--cat-wash); color: var(--cat-ink); }
-.d-mj-fin2-ic svg { width: 26px; height: 26px; fill: none; stroke: currentColor;
-  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.d-mj-fin2-ic--solid svg { fill: currentColor; stroke: none; }
-.d-mj-fin2-ic--solid { color: #e8a628; }
-.d-mj-fin2-stat.is-ok .d-mj-fin2-ic { background: color-mix(in srgb, var(--success) 18%, var(--surface)); color: var(--success-ink); }
-.d-mj-fin2-stat.is-bad .d-mj-fin2-ic { background: color-mix(in srgb, var(--danger) 14%, var(--surface)); color: var(--danger-ink); }
-.d-mj-fin2-stat b { font-family: var(--font-title); font-weight: 900; font-size: 1.15rem; color: var(--text); }
-.d-mj-fin2-stat span { font-size: .78rem; color: var(--text-soft); }
+/* ---- Pantallas finales (éxito / a reintentar) ----
+   Mismo esqueleto que la intro (.d-mj-intro-main/-mascot/-mid, mascota
+   parada sobre la guarda gris) — el PDF calca esa composición acá
+   también, con una tarjeta blanca de estadísticas en vez del globo de
+   instrucción. */
+.d-mj-fin2-tit { font-family: var(--font-title); font-weight: 900;
+  font-size: clamp(1.4rem, 2.4cqw, 1.95rem); margin: 0 0 .8rem; line-height: 1.2; }
+.d-mj-fin2--ok .d-mj-fin2-tit span { color: var(--success-ink); }
+.d-mj-fin2--fail .d-mj-fin2-tit span { color: var(--warning-ink); }
+.d-mj-fin2-sub { margin: 0 0 1.3rem; color: var(--text); font-size: .92rem; line-height: 1.5; }
+.d-mj-fin2-card { background: var(--surface); border-radius: var(--r-xl);
+  box-shadow: var(--shadow-card); padding: 0 1.2rem 1.3rem; }
+.d-mj-fin2-divider { position: relative; height: 1px; background: var(--line);
+  margin: 0 0 1.4rem; }
+.d-mj-fin2-badge { position: absolute; top: 50%; left: 50%; translate: -50% -50%;
+  width: 68px; height: auto; }
+.d-mj-fin2-stats { display: flex; gap: .8rem; justify-content: center; flex-wrap: wrap;
+  margin-bottom: 1.3rem; }
+.d-mj-fin2-stat { flex: 1 1 130px; max-width: 170px; display: flex; flex-direction: column;
+  align-items: center; gap: .35rem; }
+.d-mj-fin2-ic { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; }
+.d-mj-fin2-ic svg { width: 24px; height: 24px; }
+.d-mj-fin2-ic--target, .d-mj-fin2-ic--check, .d-mj-fin2-ic--x { background: #ef9f31; color: #fff; }
+.d-mj-fin2-ic--star { background: #f9b12b; color: #fff; }
+.d-mj-fin2-stat.is-bad .d-mj-fin2-ic--x { background: #f9b12b; }
+.d-mj-fin2-stat b { font-family: var(--font-title); font-weight: 900; font-size: 1.1rem; color: var(--text); }
+.d-mj-fin2-stat span { font-size: .76rem; color: var(--text-soft); }
 
 @media (max-width: 720px) {
   .d-mj-card { flex-direction: column; text-align: center; }

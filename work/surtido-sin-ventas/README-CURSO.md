@@ -290,7 +290,11 @@ Dos pedidos puntuales del cliente:
      mascot y la tarjeta de fondo, y el recorte sangraba sobre el
      texto en 2 intentos; se descartó el recorte y se armaron las
      tarjetas limpias en CSS/SVG (ícono en círculo, mismo lenguaje que
-     los pop-ups de repaso).
+     los pop-ups de repaso). **Superado en la Ronda 11**: con el PDF
+     re-enviado por el cliente, esas mismas 2 páginas rindieron limpias
+     (arte vectorial sobre blanco liso, sin la textura que hacía
+     sangrar el recorte antes) — hoy usan las mascotas reales, no la
+     aproximación en CSS/SVG. Ver Ronda 11 para el detalle.
    - **Puntaje sin cambiar el total del curso**: 5 × 20 pts por acierto
      + 20 pts de completar = 120, igual al presupuesto viejo (10 × 10 +
      20 = 120) — no hizo falta tocar los umbrales de medalla en
@@ -431,6 +435,61 @@ sin overflow horizontal, la guarda con margen negativo no rompe nada
 porque las mascotas se ocultan en mobile (`display:none` por debajo de
 760px, ya existía desde la Ronda 9). Suite completa (7/7) y los 2
 checks de CSS/imágenes en verde. Baseline de `visual-regress.mjs`
+regenerada.
+
+## Ronda 11 — "hacelo TAL CUAL el PDF": pantallas finales reconstruidas con el arte real, no el CSS/SVG genérico de la Ronda 6
+
+El cliente insistió en calcar el PDF al 100% y reenvió el archivo. Al
+re-renderizarlo con PyMuPDF a resolución completa (páginas 7 y 8 —
+pantallas de éxito y de "a reintentar" — habían quedado sin usar desde
+la Ronda 6, cuando se las abandonó por un problema de recorte) el
+resultado esta vez fue arte vectorial limpio sobre fondo blanco liso,
+sin la textura que había hecho fallar el recorte en su momento. Con
+eso resuelto, se reconstruyeron ambas pantallas con el arte real en
+vez de la aproximación en CSS/SVG:
+
+- **4 mascotas nuevas** (`mj-fin-ok-male/female.webp`,
+  `mj-fin-fail-male/female.webp`) — vincha en vez de casco (distintas
+  de las de la portada), sosteniendo trofeo o con cara triste según el
+  resultado. Mismo filtro de des-grisado que ya se usó en la Ronda 9
+  para la portada (blanquea sombras suaves sin tocar el dibujo), más
+  un parche puntual por imagen para tapar fragmentos de texto/ícono
+  vecino que quedaban pegados al recorte (la tarjeta de estadísticas
+  se superpone parcialmente con la mascota en el PDF, así que un
+  rectángulo simple no siempre alcanza — se blanquea a mano la
+  esquina exacta donde cae el texto ajeno, verificado que no toca a la
+  mascota en esa franja). Un recorte (`mj-fin-fail-female`) salió más
+  angosto que el resto por el margen que hubo que dejarle al ícono de
+  al lado — con el mismo `width` que las demás mascotas se veía
+  desproporcionadamente alta/flaca; se volvió a recortar con más aire
+  a los costados para que la relación de aspecto quede pareja.
+- **2 insignias nuevas** (`mj-badge-ok.webp` con trofeo dorado sólido,
+  `mj-badge-fail.webp` con el mismo trofeo en contorno) — el hexágono
+  con destellos que el PDF flota sobre la línea divisoria de la
+  tarjeta de estadísticas. Recorte directo, sin retoque: están sobre
+  blanco liso.
+- **Tarjeta de estadísticas rehecha**: línea divisoria fina con la
+  insignia centrada encima (antes no existía esa línea), y los 3
+  íconos (objetivo/estrella/check-o-x) pasan de círculo con trazo fino
+  sobre fondo wash de categoría a círculo SÓLIDO con ícono blanco
+  relleno — colores exactos muestreados del PDF (`#ef9f31` objetivo,
+  `#f9b12b` estrella/check/x), no aproximados.
+- **Mismo esqueleto que la portada** (Ronda 9/10): mascotas
+  desbordando los costados de la tarjeta, paradas sobre la guarda gris
+  sin hueco, rótulo "¡Jugá con nosotros!" fijo en la esquina, título
+  con guirnaldas alrededor de la palabra clave ("éxito" en verde /
+  la frase completa en el caso de fail) — se reusan las mismas clases
+  `.d-mj-intro-main`/`.d-mj-intro-mascot`/`.d-mj-intro-floor` de la
+  intro en vez de duplicar el layout.
+
+Verificado con Playwright: recorrido completo (5/5 → pantalla de
+éxito) y recorrido de 3 errores (→ pantalla de "a reintentar"), ambos
+con las 4 mascotas, las 2 insignias y los 6 íconos de stat renderizando
+sin artefactos. Viewport móvil real (iPhone 12): sin overflow
+horizontal, botón "Continuar"/"Reintentar" verificado clear del
+fab-stack tras scrollear al fondo (mismo criterio que las píldoras de
+respuesta, Ronda 8/9). Suite completa (7/7), `check-css-duplicates`/
+`check-image-weight` en verde. Baseline de `visual-regress.mjs`
 regenerada.
 
 ## Decisiones de esta migración

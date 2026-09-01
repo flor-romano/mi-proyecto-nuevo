@@ -492,6 +492,49 @@ respuesta, Ronda 8/9). Suite completa (7/7), `check-css-duplicates`/
 `check-image-weight` en verde. Baseline de `visual-regress.mjs`
 regenerada.
 
+## Ronda 12 — el cliente seguía viendo las 5 ilustraciones de pregunta en blanco (mascotas de la portada sí se veían)
+
+Capturas reales del cliente (no del PDF, de SU navegador): portada
+perfecta con las 2 mascotas, pero las 5 preguntas mostraban la tarjeta
+con el texto y las píldoras bien, sin ninguna ilustración — ni rota,
+ni cortada: directamente ausente, como si nunca se hubiera puesto un
+`src`.
+
+**Investigación** (no se pudo reproducir localmente): se corrió el
+mismo recorrido con Playwright contra el servidor local, contra el
+mismo `index.html` abierto como `file://` (simulando doble clic desde
+el zip descomprimido), y con captura de errores de consola/red — en
+los tres casos las 5 imágenes cargan bien (`naturalWidth` > 0, cero
+errores de red o de JS). El código de `renderPregunta()` en `curso.js`
+es correcto: `if (imgEl) { imgEl.src = it.img; }` — el único escenario
+que explica el síntoma exacto (texto y opciones sí, imagen no, sin
+ningún error visible) es que `imgEl` diera `null` en el momento de la
+consulta, algo que no se logró provocar en ningún escenario probado.
+
+**Diagnóstico más probable**: caché del navegador. Los 5 nombres de
+archivo (`mj-plu-ean.webp`, `mj-reporte.webp`, etc.) se vinieron
+reusando sin cambiar desde la Ronda 8, mientras el CONTENIDO cambiaba
+ronda a ronda (Ronda 8: recortes rotos: Ronda 9: recorte corregido) —
+si el cliente vino probando builds sucesivos sobre la misma carpeta/
+pestaña sin refresco forzado, el navegador pudo haber quedado sirviendo
+una versión cacheada vieja bajo ese mismo nombre de archivo. Las
+mascotas de la portada, en cambio, son archivos nuevos desde la Ronda
+9 (nunca existieron con otro contenido bajo ese nombre) — consistente
+con que esas SÍ se vean bien.
+
+**Acción tomada, sin esperar confirmación del diagnóstico**: se
+renombraron las 14 imágenes propias del mini juego (`img/mj-*.webp` →
+`img/mj-*-r11.webp`) y se actualizaron las referencias en `index.html`
+y `curso.js`. Esto no cambia ningún contenido visual — es puramente
+para que el navegador del cliente pida los archivos bajo un nombre que
+nunca vio antes, eliminando cualquier posibilidad de caché vieja de
+por medio, sin depender de que confirme el diagnóstico.
+
+Reverificado con Playwright (server local + `file://`) que las 5
+imágenes cargan con los nuevos nombres, suite completa (7/7),
+`check-css-duplicates`/`check-image-weight` en verde. Baseline de
+`visual-regress.mjs` regenerada.
+
 ## Decisiones de esta migración
 
 - **Reencuadre 2:1**: en vez de editar las capturas (proporción real

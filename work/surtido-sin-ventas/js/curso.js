@@ -163,23 +163,23 @@
      preguntas queda FIJO, calcando la secuencia del PDF.
      ============================================================ */
   var MJ_BANK = [
-    { id: 'plu-ean', img: 'img/mj-plu-ean.webp',
+    { id: 'plu-ean', img: 'img/mj-plu-ean-r11.webp',
       q: 'Es el número que Coto le asigna a cada producto dentro de su sistema. <b>No aparece en el envase.</b>',
       opts: ['PLU', 'Stock', 'EAN', 'Falso stock'], ok: 0,
       why: 'Ese es el PLU — código interno de COTO. El EAN, en cambio, sí aparece impreso en el envase.' },
-    { id: 'surtido', img: 'img/mj-reporte.webp',
+    { id: 'surtido', img: 'img/mj-reporte-r11.webp',
       q: 'Es un reporte que, según la cantidad de días que elijas, muestra los productos que no se vendieron en ese tiempo.',
       opts: ['Control de rotación', 'Control de surtido sin venta', 'Control de exhibición', 'Control de GESCOM'], ok: 1,
       why: 'El control de surtido sin venta es justamente ese reporte: muestra qué productos no tuvieron movimiento en el período elegido.' },
-    { id: 'mejorar-venta', img: 'img/mj-mejorar-venta.webp',
+    { id: 'mejorar-venta', img: 'img/mj-mejorar-venta-r11.webp',
       q: 'Para <b>mejorar la venta</b> de un producto, nuestro sector puede, entre otras opciones, hacer&hellip;',
       opts: ['Ponerlo cerca de línea de cajas', 'Pedir más espacio en góndola', 'Ponerle un cartel de &ldquo;novedad&rdquo;', 'Regalar una muestra'], ok: 1,
       why: 'Pedir más espacio en góndola, exhibirlo como novedad, sumarlo a la línea de cajas o regalar una muestra son acciones reales para mejorar la venta.' },
-    { id: 'rotacion', img: 'img/mj-rotacion.webp',
+    { id: 'rotacion', img: 'img/mj-rotacion-r11.webp',
       q: 'La rotación es qué tan rápido se vende un producto en la clase determinada. Según cuánto se vende, cada producto tiene una rotación: <b>A (Alta)</b>: se vende mucho y seguido. <b>B (Media)</b>: se vende con frecuencia moderada. <b>C (Baja)</b>: &hellip;',
       opts: ['Se vende poco o lento', 'Se venden pocos', 'No se vende', 'No hay stock'], ok: 0,
       why: 'Rotación baja es "se vende poco o muy lentamente" — no vendido nunca sería otro problema (stock estancado), y frecuencia moderada es rotación media.' },
-    { id: 'ean', img: 'img/mj-ean.webp',
+    { id: 'ean', img: 'img/mj-ean-r11.webp',
       q: 'Es el número largo que está debajo del código de barras en el envase. Es el mismo en todos los supermercados, <b>lo pone el fabricante.</b>',
       opts: ['Surtido', 'Sobre stock', 'EAN', 'PLU'], ok: 2,
       why: 'El EAN es el código de barras que pone el fabricante — es igual en cualquier supermercado. El PLU, en cambio, es el código interno que le asigna COTO.' }

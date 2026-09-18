@@ -162,12 +162,18 @@
     { id: 'conceptos', nom: 'Explorador', ic: '🔎',
       txt: 'Abriste los 7 conceptos del curso.',
       pista: 'Abrí los 7 conceptos de "Algunos conceptos importantes".' },
-    { id: 'reporte', nom: 'Sabés armarlo', ic: '📋',
-      txt: 'Repasaste para qué sirve el reporte y cómo se genera.',
-      pista: 'Abrí las 2 fichas de "Lo que vimos en este video" del primer video.' },
-    { id: 'acciones', nom: 'Manos a la obra', ic: '🛠️',
-      txt: 'Repasaste qué acciones tomar y cómo mejorar la venta.',
-      pista: 'Abrí las 2 fichas de "Lo que vimos en este video" del segundo video.' },
+    /* `repaso` reemplaza a los dos logros que había antes ("Sabés
+       armarlo" por las 2 fichas del primer video y "Manos a la obra"
+       por las 2 del segundo): el cliente fijó un tope GENERAL de 5
+       logros por curso, y de los 6 que había estos dos eran los únicos
+       que medían lo mismo —abrir fichas de repaso— partido en dos. Se
+       fusionan en uno solo por las 4, así el tope se cumple sin sacar
+       ninguna conducta del tablero. Los ids viejos siguen apareciendo
+       en el `suspend_data` de quien ya venía jugando: los descarta
+       `sanearLogros()`, que filtra contra este catálogo. */
+    { id: 'repaso', nom: 'Buen repaso', ic: '📋',
+      txt: 'Abriste las 4 fichas de repaso de los dos videos.',
+      pista: 'Abrí las 4 fichas de "Lo que vimos en este video".' },
     { id: 'juego', nom: 'Jugador', ic: '🎮',
       txt: 'Terminaste el mini juego.',
       pista: 'Terminá el mini juego, con o sin errores.' },
@@ -178,6 +184,11 @@
       txt: 'Completaste "Surtido sin venta".',
       pista: 'Llegá al final del curso.' }
   ];
+  /* Las 4 fichas de repaso, en un solo lugar: las usa `premiarFicha()`
+     para decidir qué pop-up paga y el logro `repaso` para saber cuándo
+     están las cuatro. Antes la lista estaba escrita dos veces. */
+  var FICHAS = ['rep-para-que', 'rep-como', 'rep-acciones', 'rep-mejorar'];
+
   var Logros = null;   // lo crea boot(), cuando el DOM ya existe
 
   /* ---------- 5 · Estado y persistencia ----------
@@ -298,10 +309,24 @@
     initTiempoActivo();
     initVideoSafetyNet();
 
-    /* ---- Videos: el patrón "el arte ya dibuja el reproductor" ----
-       Variante (b) de `initInlineCircleVideos` (coto-media.js): el
-       `poster` es un recorte del reproductor que el diseñador dibujó,
-       así que el <video> real cae exactamente encima. */
+    /* ---- Videos de fondo (portada y unidad 1) ----
+       Patrón 1 de coto-media.js. Es la pieza que §7.17 marca como la
+       falla más común de este molde: el marcado puesto y el cable no.
+       `initBgVideos()` es también quien reintenta MUDO cuando el
+       navegador rechaza el autoplay con sonido —lo que pasa SIEMPRE en
+       la portada, porque todavía no hubo un gesto del alumno (§7.18
+       K10)— y quien muestra el `.d-shot-video-tap`.
+       Los dos .mp4 están como placeholder de 0 bytes con su nombre
+       final: hasta que el cliente los suba se ve el `poster`, que es la
+       misma captura de antes. */
+    initBgVideos();
+
+    /* ---- Videos del cuerpo: carátula + el play REAL del kit ----
+       Variante (c) de `initInlineCircleVideos` (coto-media.js): el
+       `poster` es el recorte del reproductor que dibujó el diseñador
+       CON el círculo de play borrado, y encima va el
+       `.d-shot-hit-play` del kit — que sí tiene foco, hover y nombre
+       accesible, a diferencia de un play horneado (§6.29). */
     initInlineCircleVideos({
       seen: function (src) { return !!estado.videos[src]; },
       markSeen: function (src) { estado.videos[src] = true; },
@@ -316,7 +341,7 @@
        ⚠️ Un grupo de N variantes dispara `onChange` N−1 veces, no N: la
        variante 0 es la que ya se ve al entrar (coto-media.js). Acá eso
        es justo lo que queremos — la 0 no es ningún concepto. */
-    initShotSwap({
+    var swaps = initShotSwap({
       onChange: function (i) {
         var c = CONCEPTOS[i];
         if (!c) return;
@@ -350,10 +375,9 @@
     });
 
     function premiarFicha(id) {
-      if (['rep-para-que', 'rep-como', 'rep-acciones', 'rep-mejorar'].indexOf(id) === -1) return;
+      if (FICHAS.indexOf(id) === -1) return;
       Logros.award(PTS.ficha, 'Ficha de repaso');
-      if (estado.popups['rep-para-que'] && estado.popups['rep-como']) Logros.unlock('reporte');
-      if (estado.popups['rep-acciones'] && estado.popups['rep-mejorar']) Logros.unlock('acciones');
+      if (FICHAS.every(function (f) { return !!estado.popups[f]; })) Logros.unlock('repaso');
       persistir();
       motor._syncNav();
     }
@@ -464,6 +488,15 @@
       if (refrescarGlosario) refrescarGlosario();
       if (e.detail.id === 'cierre') Cierre.unlockCierre();
       if (e.detail.id === 'minijuego') MJ_UI.alEntrar();
+      /* "Algunos conceptos importantes" vuelve SIEMPRE a su estado
+         inicial al reentrar (pedido explícito del cliente): la
+         ilustración del librito con la lupa y ninguna píldora marcada.
+         `go(0, true)` es silencioso a propósito — `silencioso` corta el
+         `onChange`, así que el reset no vuelve a pagar puntos ni a
+         narrar; y `estado.conceptos` NO se toca, que es lo que sostiene
+         el gate de la diapositiva y el logro "Explorador" (si se
+         limpiara, quien ya abrió los 7 quedaría trabado de nuevo). */
+      if (e.detail.id === 'conceptos' && swaps.conceptos) swaps.conceptos.go(0, true);
       persistir();
     });
 
@@ -471,6 +504,21 @@
        calcula desde el estado YA RESTAURADO, no desde `motor.index` en
        frío — si no, quien reabre el curso en una sesión nueva se
        encuentra la barra creyendo que no vio nada (§6.51). */
+    /* Los "desde N" de la tablita de medallas se escriben DESDE
+       `NIVELES`, no a mano en el marcado. El generador del kit deja ahí
+       los números de ejemplo (148/190/230) y este curso derivó los
+       suyos de un recorrido instrumentado (74/127/180, ver
+       README-CURSO.md): quedaron los del ejemplo, así que el alumno leía
+       un umbral y el contador usaba otro. Es exactamente la trampa de
+       §7.3 punto 19 —"la tabla es una intención, el contador es el
+       hecho"— pero al revés: acá la tabla mentía en pantalla. Pintarla
+       desde la misma constante que decide la medalla hace imposible que
+       vuelvan a separarse. */
+    NIVELES.forEach(function (n) {
+      var li = document.querySelector('[data-rango="' + n.id + '"] i');
+      if (li) li.textContent = 'desde ' + n.desde;
+    });
+
     motor.restoreMaxVisited(estado.vistas);
     if (refrescarIndice) refrescarIndice();
     if (refrescarGlosario) refrescarGlosario();
@@ -505,6 +553,14 @@
     var elConsigna = raiz.querySelector('[data-mj-consigna]');
     var elOpciones = raiz.querySelector('[data-mj-opciones]');
     var elFb = raiz.querySelector('[data-mj-fb]');
+    var zonaFb = raiz.querySelector('[data-mj-zona]') || elFb.parentNode;
+    var elMolde = raiz.querySelector('[data-mj-molde]');
+    /* La coletilla del error vive en una constante porque se usa DOS
+       veces: al medir el fantasma (para reservar el alto exacto) y al
+       mostrar la devolución de verdad. Escrita dos veces, el fantasma
+       reservaría un alto distinto del real en cuanto alguien la
+       retocara en un solo lado. */
+    var COLA_ERROR = 'Podés probar otra opción o seguir al siguiente concepto.';
     var elN = raiz.querySelector('[data-mj-n]');
     var elPts = raiz.querySelector('[data-mj-pts]');
     var elVidas = raiz.querySelector('[data-mj-vidas]');
@@ -619,7 +675,20 @@
       bloqueado = false;
       if (elEscena) elEscena.setAttribute('src', q.escena);
       if (elConsigna) elConsigna.textContent = q.consigna;
+      /* Reserva de espacio (pedido del cliente: "el espacio para la
+         retroalimentación ya tiene que estar reservado desde el
+         principio, aunque esté vacío"). No se reserva un alto fijo a
+         ojo: se escribe el texto REAL más largo de los dos que puede
+         mostrar esta pregunta y se lo deja invisible. Así el cartel
+         ocupa exactamente lo que va a ocupar —ni un píxel de más, ni
+         de menos— en cada pregunta, sin una constante que se
+         desactualice cuando cambie un texto. */
+      if (elMolde) {
+        elMolde.textContent = (q.mal + ' ' + COLA_ERROR).length > q.why.length
+          ? q.mal + ' ' + COLA_ERROR : q.why;
+      }
       if (elFb) { elFb.textContent = ''; elFb.className = 'd-mj-fb'; }
+      fantasmaDeBoton(q);
       if (elOpciones) {
         elOpciones.innerHTML = '';
         q.opts.forEach(function (txt, k) {
@@ -661,13 +730,12 @@
 
     function feedback(ok, txt) {
       if (!elFb) return;
-      elFb.className = 'd-mj-fb ' + (ok ? 'is-ok' : 'is-bad');
+      elFb.className = 'd-mj-fb ' + (ok ? 'is-ok' : 'is-bad');   // saca `is-fantasma`
       /* Tras un error el cartel dice las DOS salidas que hay. Sin esa
          línea, el alumno ve la explicación y nada más: las opciones que
          quedan vivas no se leen como "probá otra", y el botón nuevo
          podría leerse como la única salida. */
-      elFb.textContent = ok ? txt
-        : txt + ' Podés probar otra opción o seguir al siguiente concepto.';
+      elFb.textContent = ok ? txt : txt + ' ' + COLA_ERROR;
     }
 
     function responder(k, btn) {
@@ -726,22 +794,43 @@
        existe: existe siempre. Si el alumno erró y después acierta, esta
        función corre de nuevo, de ahí el `remove()` del botón anterior
        para no terminar con dos. */
+    /* El botón de avance también reserva su lugar desde el render: se
+       dibuja con el rótulo que va a tener y se lo deja invisible
+       (`.d-mj-next-fantasma`, sin la clase `.d-mj-next`). La clase
+       final la pone `siguientePaso()`, así que `_auto()` y la suite —que
+       buscan `.d-mj-next`— nunca encuentran el fantasma y no clickean
+       un botón que el alumno no ve. */
+    function fantasmaDeBoton(q) {
+      var previo = zonaFb.querySelector('button');
+      if (previo) previo.remove();
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'd-mj-next-fantasma btn btn-cat';
+      b.textContent = rotulo(true);
+      b.tabIndex = -1;
+      b.setAttribute('aria-hidden', 'true');
+      zonaFb.appendChild(b);
+      return b;
+    }
+    function rotulo(acerto) {
+      if (i + 1 >= MJ.length) return 'Ver resultado';
+      return acerto ? 'Siguiente concepto' : 'Seguir al siguiente';
+    }
+
     function siguientePaso(acerto) {
-      var previo = raiz.querySelector('.d-mj-next');
+      var previo = zonaFb.querySelector('button');
       if (previo) previo.remove();
       var ultima = i + 1 >= MJ.length;
       var b = document.createElement('button');
       b.type = 'button';
       b.className = 'd-mj-next btn ' + (acerto ? 'btn-cat' : 'btn-cat-ghost');
-      b.textContent = ultima
-        ? 'Ver resultado'
-        : (acerto ? 'Siguiente concepto' : 'Seguir al siguiente');
+      b.textContent = rotulo(acerto);
       b.addEventListener('click', function () {
         b.remove();
         if (!ultima) { i++; render(); }
         else terminar(acertoUltima());
       });
-      elFb.after(b);
+      zonaFb.appendChild(b);
       /* El foco se mueve solo si la pregunta quedó cerrada. Con un error
          todavía hay opciones vivas: llevarle el foco al botón de seguir
          empuja a saltear justo cuando conviene reintentar. */
@@ -795,6 +884,20 @@
     var btnReintentar = raiz.querySelector('[data-mj-reintentar]');
     if (btnReintentar) btnReintentar.addEventListener('click', function () {
       if (btnReintentar.closest('[data-panel]').hidden) return;
+      reiniciar();
+    });
+    /* "Volver a jugar" en la pantalla de ÉXITO (pedido del cliente:
+       "aunque ya aprobé el juego, quiero poder volver a jugarlo").
+       Rejugar es seguro por construcción y conviene decir por qué, que
+       es justo lo que §6.53 advierte: los puntos de cada concepto los
+       guarda `estado.mjOk`, persistido en `suspend_data`, así que una
+       segunda vuelta no paga de nuevo; `estado.mjErr` también persiste,
+       así que tampoco se puede "limpiar el prontuario" para arrancar el
+       logro `preciso`; y `estado.mjFin` queda en true, así que el gate
+       de la diapositiva no vuelve a cerrarse mientras se rejuega. */
+    var btnRejugar = raiz.querySelector('[data-mj-rejugar]');
+    if (btnRejugar) btnRejugar.addEventListener('click', function () {
+      if (btnRejugar.closest('[data-panel]').hidden) return;
       reiniciar();
     });
 

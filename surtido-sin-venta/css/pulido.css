@@ -19,12 +19,17 @@
 
 /* Las fichas de repaso son tarjetas altas: en pantallas bajas el
    `.modal-card` ya scrollea solo, pero el aro de ícono absoluto se
-   escapaba del recorte. */
+   escapaba del recorte. Desde que la ficha se arma con las
+   proporciones del PDF (`cqw` sobre el ancho de la tarjeta,
+   diapositivas.css), lo único que hay que ceder acá es el ANCHO: la
+   tarjeta se angosta y todo lo demás —círculo, subrayado, tipografía—
+   se achica solo, en proporción. Tocar `top`/`width` del aro por
+   separado, como antes, lo descolocaba respecto del arte. */
 @media (max-height:620px){
-  .modal-card.d-ficha{ margin-top:2.4rem; }
-  .d-ficha-ic{ width:4.2rem; height:4.2rem; top:-2.1rem; }
-  .d-ficha-ic svg{ width:2.1rem; height:2.1rem; }
-  .modal-card.d-ficha > .modal-bd{ padding:2.4rem 1.4rem 1.2rem; }
+  .modal-card.d-ficha{ width:min(30rem,100%); margin-top:calc(min(30rem,100%) * .181); }
+  /* Con la tarjeta más angosta el círculo asoma menos: se le devuelve
+     ese alto al cuerpo en vez de dejarlo reservado de más. */
+  .modal-card.d-ficha > .modal-bd{ max-height:calc(88svh - 5.6rem); }
 }
 
 /* Los dos botones flotantes del kit (`.d-fab-stack`: Ayuda y

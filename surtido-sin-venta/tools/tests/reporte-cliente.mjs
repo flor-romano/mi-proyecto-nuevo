@@ -59,8 +59,20 @@ const cerca = (a, b, tol) => Math.abs(a - b) <= tol;
 /* ---- 2 · forma del realce de las tarjetas de repaso -------------
    La tarjeta está DIBUJADA en la captura, así que no hay nodo que
    medir: se calcula dónde cae contra la imagen y se compara con el
-   `::after` que pinta el realce. Las coordenadas son las mismas que
-   están en el marcado, medidas sobre el render de 2520x1260. */
+   `<span class="d-ficha-ring">` que pinta el realce. Las coordenadas
+   salen del marcado y del arte medido a 2520x1260.
+
+   El cliente reclamó esto DOS veces, y la segunda fue más fina que la
+   primera: no alcanza con que el realce empiece en el borde de la
+   tarjeta (ronda 2) — el aro dorado del ícono asoma por encima de ese
+   borde, y un rectángulo que arranque ahí igual le pasa por arriba
+   (ronda 3). Por eso acá se verifica lo que se ve, no cómo está hecho:
+   1) que el realce arranque en el borde real de la tarjeta,
+   2) que tenga las esquinas redondeadas de la tarjeta, y
+   3) que el centro del círculo del ícono quede FUERA del realce —
+      medido pidiéndole al navegador el color del píxel… que no se
+      puede. Lo que sí se puede es leer la máscara: si no hay
+      `mask-image` con un agujero, el círculo queda tapado. */
 const TARJETAS = [
   { slide: 'repaso-reporte', hit: { t: 440, h: 553 }, card: { t: 574, b: 992 } },
   { slide: 'repaso-acciones', hit: { t: 424, h: 555 }, card: { t: 559, b: 978 } }
@@ -71,35 +83,43 @@ for (const t of TARJETAS) {
   const m = await page.evaluate((slide) => {
     const btn = document.querySelector(`[data-slide="${slide}"] .d-hit-ficha`);
     if (!btn) return null;
+    const ring = btn.querySelector('.d-ficha-ring');
+    if (!ring) return { w: 0, h: 0, sinRing: true };
     const r = btn.getBoundingClientRect();
-    const cs = getComputedStyle(btn, '::after');
+    const rr = ring.getBoundingClientRect();
+    const cs = getComputedStyle(ring);
     return {
       w: r.width, h: r.height,
-      top: parseFloat(cs.top),
+      top: rr.top - r.top,
       radio: parseFloat(cs.borderTopLeftRadius),
-      contenido: cs.content,
-      hoverOutline: getComputedStyle(btn).outlineStyle
+      mask: cs.maskImage || cs.webkitMaskImage || 'none',
+      contenedor: getComputedStyle(btn).containerType
     };
   }, t.slide);
   if (!m) { fails.push(`[${t.slide}] no hay ninguna .d-hit-ficha`); continue; }
-  if (!m.contenido || m.contenido === 'none') {
-    fails.push(`[${t.slide}] la .d-hit-ficha no tiene el ::after que dibuja el realce: el hover ` +
-      'vuelve a ser el rectángulo entero del hitbox, con el aro de ícono adentro.');
+  if (m.sinRing) {
+    fails.push(`[${t.slide}] la .d-hit-ficha no tiene el <span class="d-ficha-ring"> que dibuja ` +
+      'el realce: el hover vuelve a ser el rectángulo entero del hitbox, con el aro de ícono adentro.');
     continue;
   }
   // dónde arranca la tarjeta dentro del hitbox, en px de pantalla
   const escala = m.h / t.hit.h;
   const topEsperado = (t.card.t - t.hit.t) * escala;
-  if (!cerca(m.top, topEsperado, 2)) {
+  if (!cerca(m.top, topEsperado, 3)) {
     fails.push(`[${t.slide}] el realce arranca a ${m.top.toFixed(1)}px del borde del hitbox y la ` +
       `tarjeta arranca a ${topEsperado.toFixed(1)}px: el remarcado no calza con el borde real.`);
   }
-  // el radio se declara en cqw del PROPIO hitbox: 5.71% de su ancho
-  const radioEsperado = m.w * 0.0571;
+  // el radio se declara en cqw del PROPIO hitbox: 6% de su ancho
+  const radioEsperado = m.w * 0.06;
   if (!cerca(m.radio, radioEsperado, 2)) {
     fails.push(`[${t.slide}] el radio del realce es ${m.radio.toFixed(1)}px y el de la tarjeta es ` +
       `${radioEsperado.toFixed(1)}px. Si dio 0, el \`cqw\` no se está resolviendo contra el hitbox ` +
-      '(falta `container-type:inline-size`) y el realce sale con esquinas vivas.');
+      `(containerType="${m.contenedor}") y el realce sale con esquinas vivas.`);
+  }
+  if (!/radial-gradient/.test(m.mask)) {
+    fails.push(`[${t.slide}] el realce no tiene la máscara radial que le hace el agujero al aro ` +
+      `dorado (mask-image: ${m.mask}). Sin eso el rectángulo del realce le pasa por encima al ` +
+      'círculo del ícono, que es exactamente lo que el cliente reportó.');
   }
 }
 
@@ -233,7 +253,7 @@ for (const t of TARJETAS) {
 {
   await page.evaluate(() => {
     const s = window.SCORM.loadState() || {};
-    s.b = ['conceptos', 'reporte', 'acciones', 'juego', 'preciso', 'curso', 'fantasma-de-otra-version'];
+    s.b = ['conceptos', 'repaso', 'juego', 'preciso', 'curso', 'reporte', 'acciones', 'fantasma-de-otra-version'];
     window.SCORM.saveState(s);
   });
   await page.reload();

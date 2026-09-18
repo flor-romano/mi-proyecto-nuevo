@@ -121,8 +121,14 @@
 <header class="d-top">
   <div class="d-top-row1">
     <div class="d-top-left">
-      <button class="d-iconbtn" type="button" data-popup-trigger="sidenav" aria-haspopup="dialog" aria-label="Índice del curso" title="Índice">
+      <!-- `d-iconbtn--labeled` + `<span class="lbl">` es el patrón del kit
+           (coto-player-chrome.css §212): la etiqueta se muestra al lado del
+           ícono y el propio kit la esconde sola por debajo de 640px, donde
+           la barra ya no tiene ancho. Pedido del cliente: que diga
+           "Índice" junto a las tres rayas. -->
+      <button class="d-iconbtn d-iconbtn--labeled" type="button" data-popup-trigger="sidenav" aria-haspopup="dialog" aria-label="Índice del curso" title="Índice">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        <span class="lbl">Índice</span>
       </button>
       <span class="d-brand">
         <span class="lg" aria-hidden="true"><img src="img/icono-salon.webp" alt=""></span>
@@ -524,11 +530,23 @@
     <span>Este curso se ve mejor en horizontal.</span>
   </div>
   <!-- 0 · PORTADA -->
-  <section class="slide d-shot-slide d-shot-slide--bg-layered" data-slide="portada" data-slide-index="0">
+  <section class="slide d-shot-slide d-shot-slide--bg-video" data-slide="portada" data-slide-index="0">
     <h2 class="sr-only" data-slide-title>Surtido sin venta</h2>
     <p class="sr-only">Curso del Área Salón de COTO.</p>
+    <!-- Patrón 1 de coto-media.js (video de fondo). El .mp4 todavía no
+         está: queda el placeholder de 0 bytes con el NOMBRE FINAL
+         (§3.9) y el `poster` —la misma captura que se veía antes— cubre
+         el hueco, así que hasta que el cliente suba el archivo la
+         diapositiva se ve exactamente igual que hoy. `playsinline` es
+         obligatorio (sin él iOS abre el video a pantalla completa y se
+         lleva puesto el curso) y el `.d-shot-video-tap` nace `hidden`:
+         lo muestra `initBgVideos()` solo si el navegador rechazó el
+         autoplay con sonido. -->
     <div class="d-shot" data-shot>
-      <img class="d-shot-img" src="img/portada.webp" alt="" aria-hidden="true">
+      <video class="d-shot-video" playsinline preload="auto" poster="img/portada.webp">
+        <source src="video/portada.mp4" type="video/mp4">
+      </video>
+      <button type="button" class="d-shot-video-tap" hidden>Reproducir el video con sonido</button>
     </div>
   </section>
 
@@ -576,11 +594,23 @@
   </section>
 
   <!-- 3 · SEPARADOR DE UNIDAD -->
-  <section class="slide d-shot-slide d-shot-slide--bg-layered" data-slide="unidad-1" data-slide-index="3">
+  <section class="slide d-shot-slide d-shot-slide--bg-video" data-slide="unidad-1" data-slide-index="3">
     <h2 class="sr-only" data-slide-title>Control de Surtido sin Venta</h2>
     <p class="sr-only">Unidad 1.</p>
+    <!-- Patrón 1 de coto-media.js (video de fondo). El .mp4 todavía no
+         está: queda el placeholder de 0 bytes con el NOMBRE FINAL
+         (§3.9) y el `poster` —la misma captura que se veía antes— cubre
+         el hueco, así que hasta que el cliente suba el archivo la
+         diapositiva se ve exactamente igual que hoy. `playsinline` es
+         obligatorio (sin él iOS abre el video a pantalla completa y se
+         lleva puesto el curso) y el `.d-shot-video-tap` nace `hidden`:
+         lo muestra `initBgVideos()` solo si el navegador rechazó el
+         autoplay con sonido. -->
     <div class="d-shot" data-shot>
-      <img class="d-shot-img" src="img/unidad-1.webp" loading="lazy" alt="" aria-hidden="true">
+      <video class="d-shot-video" playsinline preload="auto" poster="img/unidad-1.webp">
+        <source src="video/unidad-1.mp4" type="video/mp4">
+      </video>
+      <button type="button" class="d-shot-video-tap" hidden>Reproducir el video con sonido</button>
     </div>
   </section>
 
@@ -642,6 +672,22 @@
         <video class="d-shot-hit-video" playsinline preload="none" poster="img/poster-video-reporte.webp">
           <source src="video/como-hacemos-el-reporte.mp4" type="video/mp4">
         </video>
+        <!-- Variante (c) de `initInlineCircleVideos` (coto-media.js): carátula
+             real SIN control dibujado adentro + el botón de play REAL del kit.
+             Antes era la (b) —el triángulo venía horneado en el `poster`—, que
+             es justo lo que §6.29 prohíbe: un play dibujado no tiene foco, ni
+             hover, ni `:focus-visible`, ni lo ve un lector de pantalla. El
+             círculo del play lo borró un parche sobre los dos posters (el
+             patrón de texto se repite cada 165px, medido por autocorrelación,
+             así que el relleno sale del mismo patrón un período más arriba).
+             El `<svg>` se pone acá porque el kit NO inyecta ninguno: su CSS
+             estiliza `.d-shot-hit-play svg` pero el marcado de ejemplo no
+             trae ícono (anotado en README-CURSO.md). El círculo, el tamaño,
+             el hover y el apagado al reproducir son todos del kit. -->
+        <button type="button" class="d-shot-hit-play">
+          <span class="sr-only">Reproducir el video</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>
+        </button>
       </div>
     </div>
   </section>
@@ -652,8 +698,8 @@
     <p class="sr-only">Repasemos algunos puntos importantes. Abrí las dos fichas para seguir.</p>
     <div class="d-shot" data-shot>
       <img class="d-shot-img" src="img/repaso-reporte.webp" loading="lazy" alt="" aria-hidden="true">
-      <button class="d-shot-hit d-hit-ficha" type="button" data-hit data-popup-trigger="rep-para-que" aria-haspopup="dialog" data-l="20.000" data-t="34.921" data-w="27.778" data-h="43.889"><span class="sr-only">¿Para qué sirve el reporte?</span></button>
-      <button class="d-shot-hit d-hit-ficha" type="button" data-hit data-popup-trigger="rep-como" aria-haspopup="dialog" data-l="50.913" data-t="34.921" data-w="27.778" data-h="43.889"><span class="sr-only">¿Cómo lo generamos?</span></button>
+      <button class="d-shot-hit d-hit-ficha" type="button" data-hit data-popup-trigger="rep-para-que" aria-haspopup="dialog" data-l="20.000" data-t="34.921" data-w="27.778" data-h="43.889"><span class="sr-only">¿Para qué sirve el reporte?</span><span class="d-ficha-ring" aria-hidden="true"></span></button>
+      <button class="d-shot-hit d-hit-ficha" type="button" data-hit data-popup-trigger="rep-como" aria-haspopup="dialog" data-l="50.913" data-t="34.921" data-w="27.778" data-h="43.889"><span class="sr-only">¿Cómo lo generamos?</span><span class="d-ficha-ring" aria-hidden="true"></span></button>
     </div>
   </section>
 
@@ -669,6 +715,22 @@
         <video class="d-shot-hit-video" playsinline preload="none" poster="img/poster-video-acciones.webp">
           <source src="video/que-hacemos-con-los-productos.mp4" type="video/mp4">
         </video>
+        <!-- Variante (c) de `initInlineCircleVideos` (coto-media.js): carátula
+             real SIN control dibujado adentro + el botón de play REAL del kit.
+             Antes era la (b) —el triángulo venía horneado en el `poster`—, que
+             es justo lo que §6.29 prohíbe: un play dibujado no tiene foco, ni
+             hover, ni `:focus-visible`, ni lo ve un lector de pantalla. El
+             círculo del play lo borró un parche sobre los dos posters (el
+             patrón de texto se repite cada 165px, medido por autocorrelación,
+             así que el relleno sale del mismo patrón un período más arriba).
+             El `<svg>` se pone acá porque el kit NO inyecta ninguno: su CSS
+             estiliza `.d-shot-hit-play svg` pero el marcado de ejemplo no
+             trae ícono (anotado en README-CURSO.md). El círculo, el tamaño,
+             el hover y el apagado al reproducir son todos del kit. -->
+        <button type="button" class="d-shot-hit-play">
+          <span class="sr-only">Reproducir el video</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>
+        </button>
       </div>
     </div>
   </section>
@@ -679,8 +741,8 @@
     <p class="sr-only">Repasamos cómo gestionar los productos que aparecen en el reporte de surtido sin venta. Abrí las dos fichas para seguir.</p>
     <div class="d-shot" data-shot>
       <img class="d-shot-img" src="img/repaso-acciones.webp" loading="lazy" alt="" aria-hidden="true">
-      <button class="d-shot-hit d-hit-ficha" type="button" data-hit data-popup-trigger="rep-acciones" aria-haspopup="dialog" data-l="20.754" data-t="33.651" data-w="27.778" data-h="44.048"><span class="sr-only">¿Qué acciones tomar?</span></button>
-      <button class="d-shot-hit d-hit-ficha" type="button" data-hit data-popup-trigger="rep-mejorar" aria-haspopup="dialog" data-l="51.627" data-t="33.651" data-w="27.778" data-h="44.048"><span class="sr-only">¿Cómo mejorar la venta?</span></button>
+      <button class="d-shot-hit d-hit-ficha" type="button" data-hit data-popup-trigger="rep-acciones" aria-haspopup="dialog" data-l="20.754" data-t="33.651" data-w="27.778" data-h="44.048"><span class="sr-only">¿Qué acciones tomar?</span><span class="d-ficha-ring" aria-hidden="true"></span></button>
+      <button class="d-shot-hit d-hit-ficha" type="button" data-hit data-popup-trigger="rep-mejorar" aria-haspopup="dialog" data-l="51.627" data-t="33.651" data-w="27.778" data-h="44.048"><span class="sr-only">¿Cómo mejorar la venta?</span><span class="d-ficha-ring" aria-hidden="true"></span></button>
     </div>
   </section>
 
@@ -719,7 +781,25 @@
           <p class="sr-only" data-mj-consigna></p>
           <div class="d-mj-grid" data-mj-opciones></div>
         </div>
-        <p class="d-mj-fb" data-mj-fb aria-live="polite"></p>
+        <!-- La zona de devolución existe SIEMPRE y reserva su alto desde
+             el primer render: `curso.js` la llena con el texto real de
+             esta pregunta en modo fantasma (invisible pero ocupando su
+             lugar) y lo revela al responder. Sin eso el `.d-mj-body`
+             —que es flex y centra— se encogía al aparecer el cartel y
+             la ilustración saltaba hacia arriba (reporte del cliente). -->
+        <div class="d-mj-zona-fb" data-mj-zona>
+          <div class="d-mj-fb-caja">
+            <!-- El MOLDE queda siempre en el flujo, invisible, con el texto
+                 más largo que esta pregunta puede llegar a mostrar: es él
+                 quien fija el alto de la zona. El cartel real se superpone
+                 en absoluto, así que aparecer o desaparecer no mueve nada.
+                 Se hace con un molde y no midiendo píxeles porque el alto
+                 cambia al redimensionar (dos líneas pasan a tres) y una
+                 medida guardada en un `style` quedaría vieja. -->
+            <p class="d-mj-fb d-mj-fb--molde is-fantasma" data-mj-molde aria-hidden="true"></p>
+            <p class="d-mj-fb" data-mj-fb aria-live="polite"></p>
+          </div>
+        </div>
       </div>
 
       <div class="d-mj-panel d-mj-fin" data-panel="mj-fin-ok" hidden>
@@ -729,6 +809,15 @@
           <div class="d-place d-mj-fin-stat" data-place data-l="33.690" data-t="73.492" data-w="7.937" data-h="4.524"><b data-mj-ok-aciertos>0/5</b></div>
           <div class="d-place d-mj-fin-stat" data-place data-l="45.952" data-t="73.492" data-w="7.937" data-h="4.524"><b data-mj-ok-puntos>0</b></div>
           <button class="d-shot-hit d-mj-fin-btn" type="button" data-hit data-mj-continuar data-l="43.135" data-t="85.556" data-w="13.413" data-h="7.381"><span class="sr-only">Continuar</span></button>
+          <!-- "Volver a jugar" NO está dibujado en el arte: se agrega
+               como `[data-place]` con HTML real sobre el piso gris, que
+               ahí está vacío (medido: x[1010,1510] y[1180,1250] del
+               lienzo 2520x1260). Rejugar no vuelve a pagar puntos — el
+               guard persistido `estado.mjOk` de §6.53 ya lo impide — y
+               tampoco cierra el gate, que depende de `estado.mjFin`. -->
+          <div class="d-place d-mj-rejugar-place" data-place data-l="38.095" data-t="93.175" data-w="23.810" data-h="5.714">
+            <button class="d-mj-rejugar" type="button" data-mj-rejugar>↺ Volver a jugar</button>
+          </div>
         </div>
       </div>
 
@@ -829,6 +918,40 @@
                 <li>Reponer, ajustar el stock, decomisar, traspasar o devolver.</li>
                 <li>Pedir cambio de lugar, más espacio u oferta para mejorar la venta.</li>
                 <li>Repetir el control todas las semanas.</li>
+              </ul>
+            </div>
+            <!-- Tres columnas más (pedido del cliente: el resumen quedaba
+                 con mucho blanco). Nada nuevo acá: los 7 conceptos salen
+                 del mismo `CONCEPTOS` de `curso.js`, los pasos del pop-up
+                 "¿Cómo lo generamos?" y las acciones del de "¿Qué acciones
+                 tomar?". La grilla es `auto-fit minmax(260px,1fr)`, así que
+                 las 6 columnas se acomodan solas en 3x2 sin tocar el CSS
+                 del kit. -->
+            <div class="d-cierre-recap-col">
+              <h4>Los 7 conceptos</h4>
+              <ul>
+                <li><b>PLU:</b> el código interno que Coto le da al producto; no está en el envase.</li>
+                <li><b>EAN:</b> el código de barras del envase, que pone el fabricante.</li>
+                <li><b>Stock:</b> las unidades que hay, en góndola más depósito.</li>
+                <li><b>Falso stock:</b> el sistema dice más unidades de las que hay al contarlas.</li>
+              </ul>
+            </div>
+            <div class="d-cierre-recap-col">
+              <h4>Los 7 conceptos (cont.)</h4>
+              <ul>
+                <li><b>Rotación:</b> qué tan rápido se vende. A alta, B media, C baja.</li>
+                <li><b>Exhibición:</b> cómo se presenta en el salón: ubicación, frente visible y precio.</li>
+                <li><b>Surtido:</b> todos los productos disponibles para vender en la sucursal.</li>
+                <li><b>GESCOM:</b> el sistema interno donde se consultan reportes y stock.</li>
+              </ul>
+            </div>
+            <div class="d-cierre-recap-col">
+              <h4>Paso a paso en GESCOM</h4>
+              <ul>
+                <li>Elegir la sucursal y los departamentos de salón.</li>
+                <li>Si corresponde, agregar clases y proveedores.</li>
+                <li>Definir el mínimo de stock y los días sin venta a consultar.</li>
+                <li>Hacer clic en la lupa y leer la pestaña “resumido”.</li>
               </ul>
             </div>
           </div>
@@ -1051,7 +1174,7 @@
     </span>
     <div class="modal-bd">
       <h2 class="d-ficha-tit">¿Cómo lo generamos?</h2>
-      <p>Ingresamos a GESCOM, seleccionamos la sucursal y los departamentos de salón. Si corresponde, agregamos clases y proveedores. Luego, en los filtros de stock definimos el mínimo de stock y la cantidad de días sin venta que queremos consultar. Hacemos clic en la lupa y el sistema nos muestra el listado de productos en la pestaña <b>“resumido”</b>.</p>
+      <p>Ingresamos a <b>GESCOM,</b> seleccionamos la <b>sucursal</b> y los <b>departamentos</b> de salón. Si corresponde, agregamos <b>clases y proveedores</b>. Luego, en los filtros de stock definimos el <b>mínimo de stock</b> y la <b>cantidad de días sin venta</b> que queremos consultar. Hacemos clic en la <b>lupa</b> y el sistema nos muestra el listado de productos en la pestaña <b>“resumido”</b>.</p>
     </div>
   </div>
 </div>
@@ -1067,7 +1190,13 @@
       <h2 class="d-ficha-tit">¿Qué acciones tomar?</h2>
       <p><b>Verificar cada producto del listado en la góndola y en el depósito</b> para confirmar su situación.</p>
       <ul class="d-ficha-lista">
-        <li><b>Si no está apto:</b> decomiso por vencimiento o mal estado, traspaso, o devolución al proveedor.</li>
+        <li><b>Si no está apto:</b>
+          <ul class="d-ficha-sub">
+            <li>Decomiso por vencimiento o mal estado.</li>
+            <li>Traspaso.</li>
+            <li>Devolución al proveedor.</li>
+          </ul>
+        </li>
         <li><b>Si está en depósito:</b> lo reponemos.</li>
         <li><b>Si no se encuentra:</b> ajustamos el stock.</li>
         <li><b>Si no se vende:</b> analizamos por qué.</li>

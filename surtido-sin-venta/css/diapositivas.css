@@ -83,65 +83,175 @@
    área que realmente se activa. */
 .d-hit-ficha{ container-type:inline-size; }
 .d-hit-ficha:hover{ outline:none; box-shadow:none; transform:none; }
-.d-hit-ficha::after{
-  content:""; position:absolute; inset:24.28% 0 0 0;
-  border-radius:5.71cqw; pointer-events:none;
+
+/* El realce NO es el `::after` del hitbox sino un `<span>` propio, y el
+   motivo es una restricción real de CSS, no una preferencia: el aro se
+   dibujaba con un `box-shadow` EXTERIOR, que se pinta fuera de la caja
+   del elemento — y una `mask` recorta por `border-box`, así que
+   enmascarar ese aro para hacerle el agujero del círculo lo borraba
+   entero. Con un `<span>` propio el aro se dibuja `inset` (adentro de
+   la caja) y ahí sí la máscara lo respeta.
+
+   Medido contra el arte (2520×1260), no a ojo:
+     tarjeta   x[502,1204] y[572,994]  (repaso-reporte)
+               x[521,1220] y[557,979]  (repaso-acciones)
+     círculo   ⌀273, centro (851,576) y (870,560) respectivamente
+     hitbox    700×553 y 700×555
+   Relativo al hitbox las dos diapositivas dan lo mismo: la tarjeta
+   arranca al 23.9% de alto y el centro del círculo cae al 49.6% de
+   ancho, apenas 0.85% por debajo del borde superior de la tarjeta —
+   o sea el círculo asoma DOS TERCIOS por encima. Ese es el reclamo
+   del cliente: cualquier realce rectangular sobre la tarjeta le pasa
+   por encima al aro dorado. El agujero de la máscara lo deja afuera.
+
+   `container-type:inline-size` en el hitbox hace que `1cqw` = 1% del
+   ancho del hitbox = 7px de arte, así el radio del agujero (136.5px de
+   arte + margen) se escribe una vez y vale en cualquier tamaño de
+   pantalla. Ojo: NO sirve `cqw` del escenario — cuando `.d-shot` queda
+   letterboxeada, 1cqw del escenario ya no es 1% del arte (mismo
+   desfasaje que desbordó las píldoras de consejos). */
+.d-ficha-ring{
+  position:absolute; inset:23.9% 0 0 0;
+  border-radius:6cqw; pointer-events:none;
   opacity:0; transition:opacity .16s ease;
-  /* Realce SOBRE la forma, nunca un tinte plano que tape el arte
-     (§6.10.3 / §7.19 A6): anillo + sombra de contacto. */
-  box-shadow:0 0 0 2px color-mix(in srgb, var(--cat-strong) 70%, transparent),
-             0 12px 26px -12px rgba(20,30,60,.5);
+  /* Aro + resplandor, los dos `inset` para que la máscara los alcance. */
+  box-shadow:inset 0 0 0 2px color-mix(in srgb, var(--cat-strong) 75%, transparent),
+             inset 0 0 1.7cqw .3cqw color-mix(in srgb, var(--cat-strong) 16%, transparent);
+  background:color-mix(in srgb, var(--cat-strong) 7%, transparent);
+  /* El agujero del aro dorado: transparente adentro, opaco afuera. */
+  -webkit-mask-image:radial-gradient(circle 20.5cqw at 49.6% .85%, #0000 99%, #000 100%);
+  mask-image:radial-gradient(circle 20.5cqw at 49.6% .85%, #0000 99%, #000 100%);
 }
-.d-hit-ficha:hover::after{ opacity:1; }
+.d-hit-ficha:hover .d-ficha-ring,
+.d-hit-ficha:focus-visible .d-ficha-ring{ opacity:1; }
 @media (prefers-reduced-motion:reduce){
-  .d-hit-ficha::after{ transition:none; }
+  .d-ficha-ring{ transition:none; }
 }
 
 /* ---- Fichas de repaso (los 4 pop-ups del PDF) ------------------
-   El aro de ícono asoma por arriba de la tarjeta, como en el arte.
-   `--r-xl`/`--cat`/`--surface` son tokens del sistema: la ficha cambia
-   de color sola si cambia `data-cat` en el <body>. */
+   Estas 4 fichas son las páginas VERTICALES del PDF (16, 17, 20 y 21):
+   no se pueden capturar como las demás, porque el molde tiene un solo
+   lienzo 2:1 — por eso se rehacen en HTML. Y "rehacer" acá quiere decir
+   copiar las PROPORCIONES del arte, no aproximarlas a ojo (§6.32): el
+   cliente comparó el resultado contra su PDF y no coincidía.
+
+   Medido sobre la página 16 renderizada (1519×1604 px):
+     tarjeta     x[67,1479] y[281,1537]   → 1413 × 1257, radio 92
+     círculo     ⌀469, centro (768, 259)  → 22 px POR ENCIMA del borde
+     título      y[575,640], interlínea 1.15
+     subrayado   x[554,982] y[686,695]    → 429 × 10, centrado
+     cuerpo      interlínea 67, alto de glifo 53 (≈50 px de tipografía)
+   La página 17 confirma las mismas métricas de texto (interlínea 67,
+   glifo 53) con otro largo de contenido, así que son del diseño y no
+   de esa página en particular.
+
+   Todo se escribe en `cqw` sobre `container-type:inline-size` en la
+   tarjeta: `1cqw` = 1% del ancho de la tarjeta = 14.18 px de arte, así
+   la ficha se reconstruye con las mismas proporciones a cualquier
+   tamaño, sin una sola media query de tipografía. Los tokens siguen
+   siendo los del sistema (`--cat`, `--cat-strong`, `--surface`): la
+   ficha cambia de color sola si cambia `data-cat` en el <body>. */
 .modal-card.d-ficha{
-  width:min(560px,100%); overflow:visible; margin-top:3.6rem;
-  border-radius:var(--r-xl); text-align:center;
+  container-type:inline-size;
+  width:min(41rem,100%); overflow:visible;
+  margin-top:calc(min(41rem,100%) * .181);   /* el círculo asoma entero */
+  border-radius:6.5cqw; text-align:center;
+  /* El kit le pone a `.modal-card` `max-height:88vh; overflow:auto`, y
+     acá `overflow` TIENE que ser `visible` (si no, el aro dorado que
+     asoma por arriba queda cortado) — pero `overflow:visible` también
+     anula el scroll, así que en una pantalla baja (iPhone apaisado,
+     390px de alto) la ficha larga se cortaba sin forma de bajar. El
+     scroll se muda al cuerpo, que sí puede recortarse sin tocar el aro.
+     `max-height:none` acá es a propósito: el tope pasa a estar en
+     `.modal-bd`. */
+  max-height:none; display:flex; flex-direction:column;
 }
 .d-ficha-ic{
-  position:absolute; top:-3.1rem; left:50%; transform:translateX(-50%);
-  width:6.2rem; height:6.2rem; border-radius:50%;
+  position:absolute; left:50%; transform:translateX(-50%);
+  width:33.1cqw; height:33.1cqw; top:-18.1cqw; border-radius:50%;
   background:var(--cat); color:#fff;
   display:grid; place-items:center;
   box-shadow:0 10px 26px -12px rgba(20,30,60,.45);
 }
-.d-ficha-ic svg{ width:3.1rem; height:3.1rem; }
-.modal-card.d-ficha > .modal-bd{ padding:3.6rem 2rem 2rem; }
+.d-ficha-ic svg{ width:17.5cqw; height:17.5cqw; }
+/* Arriba: lo que asoma del círculo (15cqw) + el aire hasta el título
+   (82/1418 ≈ 5.8cqw). Laterales y pie, medidos en la página 17. */
+.modal-card.d-ficha > .modal-bd{
+  padding:20.8cqw 12cqw 11cqw;
+  min-height:0; overflow-y:auto;
+  /* 88vh es el tope del kit; los 8rem que se restan son lo que asoma el
+     círculo por encima de la tarjeta (18.1% de 41rem ≈ 119px). `svh`
+     donde exista: en un teléfono, `vh` cuenta la barra del navegador
+     como si no estuviera y la ficha se sigue yendo abajo del borde. */
+  max-height:calc(88vh - 8rem);
+  max-height:calc(88svh - 8rem);
+}
 .d-ficha-tit{
-  margin:0 0 .9rem; font-family:var(--font-title); font-weight:900;
-  font-size:1.25rem; color:var(--cat-ink);
+  margin:0; font-family:var(--font-title); font-weight:900;
+  font-size:4.44cqw; line-height:1.15; color:var(--cat-ink);
 }
 /* La línea corta debajo del título, como en el PDF. */
 .d-ficha-tit::after{
-  content:""; display:block; width:9rem; height:3px; margin:.55rem auto 0;
-  border-radius:2px; background:var(--cat-strong);
+  content:""; display:block; width:30.3cqw; height:.7cqw;
+  margin:3.2cqw auto 0; border-radius:.35cqw; background:var(--cat-strong);
 }
-.modal-card.d-ficha p{ margin:0 0 .8rem; line-height:1.5; color:var(--text); }
-.modal-card.d-ficha p:last-child{ margin-bottom:0; }
-.d-ficha-lista{ margin:0; padding:0; list-style:none; text-align:left; }
+.modal-card.d-ficha p{
+  margin:4.5cqw 0 0; font-size:3.53cqw; line-height:1.34; color:var(--text);
+}
+.modal-card.d-ficha p + p{ margin-top:2.4cqw; }
+.d-ficha-lista{
+  margin:4.5cqw 0 0; padding:0; list-style:none; text-align:left;
+  font-size:3.53cqw; line-height:1.34;
+}
 .d-ficha-lista li{
-  position:relative; padding-left:1.5rem; margin:.5rem 0;
-  line-height:1.45; color:var(--text);
+  position:relative; padding-left:5.4cqw; margin:2cqw 0; color:var(--text);
 }
 .d-ficha-lista li::before{
   content:""; position:absolute; left:0; top:.45em;
-  width:.62rem; height:.62rem; border-radius:50%; background:var(--cat);
+  width:3.4cqw; height:3.4cqw; border-radius:50%; background:var(--cat);
 }
-.modal-card.d-ficha .alert-inline{ text-align:left; }
+.modal-card.d-ficha .alert-inline{ text-align:left; margin-top:4.5cqw; }
+/* La sub-lista con guiones de "Si no está apto" (página 20 del PDF):
+   sin viñeta dorada, guión y sangría, como en el arte. */
+.d-ficha-sub{ margin:.6cqw 0 0; padding:0; list-style:none; }
+.d-ficha-sub li{ padding-left:2.6cqw; margin:.4cqw 0; }
+.d-ficha-sub li::before{
+  content:"–\00a0"; position:absolute; left:0; top:0;
+  width:auto; height:auto; border-radius:0; background:none; color:var(--text);
+}
 
-@media (max-width:600px){
-  .modal-card.d-ficha{ margin-top:2.8rem; }
-  .d-ficha-ic{ width:4.8rem; height:4.8rem; top:-2.4rem; }
-  .d-ficha-ic svg{ width:2.4rem; height:2.4rem; }
-  .modal-card.d-ficha > .modal-bd{ padding:2.8rem 1.2rem 1.4rem; }
+
+/* Piso de legibilidad: por debajo de ~430px de tarjeta, 3.53cqw cae de
+   15px y el cuerpo deja de leerse cómodo en un teléfono. Ahí la
+   proporción cede ante el texto — el resto del diseño (círculo,
+   subrayado, márgenes) sigue proporcional, que es lo que se ve. */
+@container (max-width:430px){
+  .modal-card.d-ficha p,
+  .d-ficha-lista{ font-size:max(3.53cqw, .95rem); }
+  .d-ficha-tit{ font-size:max(4.44cqw, 1.15rem); }
+  .modal-card.d-ficha > .modal-bd{ padding:20.8cqw 8cqw 8cqw; }
 }
+
+/* "Volver a jugar" en la pantalla de éxito del mini juego. El
+   `[data-place]` lo posiciona el mismo `_initShots` del motor sobre el
+   piso gris del arte; acá solo se ajusta el botón para que entre en esa
+   franja (5.56% del alto del lienzo) sin desbordarla. */
+.d-mj-rejugar-place{ display:flex; align-items:center; justify-content:center; }
+/* Píldora blanca y NO el `btn-cat-ghost` del sistema: el botón cae
+   sobre el piso GRIS del arte (medido: la franja y[1178,1250] del
+   lienzo está libre de punta a punta), y un contorno dorado sobre gris
+   no llegaba al contraste que pide `check-contraste`. Blanco sólido con
+   la tinta de la categoría sí. */
+.d-mj-rejugar{
+  height:100%; padding:0 1.5em; border:0; border-radius:999px; cursor:pointer;
+  background:#fff; color:var(--cat-ink);
+  font-family:var(--font-title); font-weight:800;
+  font-size:clamp(.7rem, 3.4cqh, 1.02rem); white-space:nowrap;
+  box-shadow:0 6px 16px -8px rgba(20,30,60,.55);
+  transition:transform .14s ease, box-shadow .14s ease;
+}
+.d-mj-rejugar:hover{ transform:translateY(-1px); box-shadow:0 10px 22px -10px rgba(20,30,60,.6); }
+@media (prefers-reduced-motion:reduce){ .d-mj-rejugar{ transition:none; } }
 
 /* ============================================================
    MINI JUEGO — lo que este curso le ajusta a la cáscara del kit.
@@ -192,9 +302,34 @@
   --mj-ancho: min(73.65cqw, 57.4cqh * 1856 / 723);
   justify-content:center;
 }
-.d-mj-top, .d-mj-body, .d-mj-fb{
+.d-mj-top, .d-mj-body, .d-mj-zona-fb{
   width:var(--mj-ancho); margin-inline:auto; max-width:100%;
 }
+/* Zona de devolución: existe desde el primer render y se queda quieta.
+   `flex:none` es lo que hace el trabajo — sin eso el contenedor flex de
+   arriba (`.d-mj-play`) le repartiría el sobrante y volveríamos al
+   salto. Adentro, el cartel y el botón se dibujan en modo fantasma
+   (invisibles) y se revelan al responder, así que el alto que ocupa es
+   el mismo antes y después. */
+.d-mj-zona-fb{
+  flex:none; display:flex; flex-direction:column; align-items:stretch;
+}
+.d-mj-fb-caja{ position:relative; }
+/* El cartel real se superpone al molde: sale del flujo, así que
+   mostrarlo u ocultarlo no cambia el alto de la zona. */
+.d-mj-fb-caja > [data-mj-fb]{ position:absolute; left:0; right:0; top:0; }
+.d-mj-fb.is-fantasma{
+  display:flex; gap:.7rem; align-items:flex-start;
+  padding:.85rem 1rem; border-radius:var(--r-lg);
+  visibility:hidden; animation:none;
+}
+.d-mj-fb.is-fantasma::before{ content:""; }
+.d-mj-next-fantasma{
+  align-self:center; margin-top:.9rem;
+  display:inline-flex; align-items:center; gap:.5rem;
+  visibility:hidden; pointer-events:none;
+}
+.d-mj-next-fantasma::after{ content:"→"; display:inline-block; }
 /* El botón de avance NO entra en el ancho compartido: el kit lo define
    `inline-flex` + `align-self:center` y estirarlo a todo el ancho del
    panel lo convertía en una barra, no en un botón. Solo se lo centra. */
@@ -259,9 +394,12 @@
   .d-mj-stat-lbl{ font-size:.58rem; }
   .d-mj-stat b{ font-size:.92rem; }
   .d-mj-heart{ width:1rem; height:.9rem; }
-  .d-mj-fb.is-ok, .d-mj-fb.is-bad{ padding:.45rem .6rem; font-size:.75rem; }
+  /* El fantasma se comprime EXACTAMENTE igual que el cartel real: si
+     un escalón achicara uno y no al otro, la reserva mediría mal justo
+     donde el alto escasea. */
+  .d-mj-fb.is-ok, .d-mj-fb.is-bad, .d-mj-fb.is-fantasma{ padding:.45rem .6rem; font-size:.75rem; }
   .d-mj-fb{ margin-top:.4rem; }
-  .d-mj-next{ margin-top:.4rem; padding:.35rem .8rem; font-size:.78rem; }
+  .d-mj-next, .d-mj-next-fantasma{ margin-top:.4rem; padding:.35rem .8rem; font-size:.78rem; }
 }
 /* Teléfono acostado de verdad (750x340, probado con `openCourseMobile`
    en contexto táctil real, §7.3 punto 11): el escenario queda en
@@ -281,8 +419,8 @@
   .d-mj-stat b{ font-size:.76rem; }
   .d-mj-heart{ width:.72rem; height:.64rem; }
   .d-mj-rules-ic{ width:.95rem; height:.95rem; }
-  .d-mj-fb.is-ok, .d-mj-fb.is-bad{ padding:.3rem .45rem; font-size:.62rem; }
-  .d-mj-next{ margin-top:.25rem; padding:.25rem .6rem; font-size:.66rem; }
+  .d-mj-fb.is-ok, .d-mj-fb.is-bad, .d-mj-fb.is-fantasma{ padding:.3rem .45rem; font-size:.62rem; }
+  .d-mj-next, .d-mj-next-fantasma{ margin-top:.25rem; padding:.25rem .6rem; font-size:.66rem; }
 }
 /* El PDF pinta la opción elegida con el amarillo de la categoría, no
    con el azul del molde de "Seguridad alimentaria". */

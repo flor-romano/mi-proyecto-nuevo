@@ -18,13 +18,14 @@ no se editó ni una línea de `kit-base/` (CLAUDE.md §0.1).
 | Diapositivas | 13 (de 31 páginas de PDF) |
 | Suite | **19 de 19 en verde** (17 del kit + 2 propios) |
 | Máximo de puntos medido | **199** (sin los videos reales; 219 con ellos) |
-| Medalla | bronce 74 · plata 127 · oro 180 |
-| Videos | **placeholder de 0 bytes** con el nombre final — el cliente los reemplaza sin tocar código |
+| Medalla | bronce 74 · plata 127 · oro 180 (los "desde N" del cierre los pinta `curso.js` desde `NIVELES`) |
+| Logros | **5** (tope del cliente para todos los cursos, ver K14) |
+| Videos | **4 placeholders de 0 bytes** con el nombre final (portada, unidad 1 y los 2 del cuerpo) — el cliente los reemplaza sin tocar código |
 | Baseline visual | grabada (`tools/visual-baseline/`, 13 capturas) |
 | Evaluación | cuestionario aparte en la plataforma → **sin `masteryscore`** en el manifiesto (§3.11) |
 
 ```bash
-COURSE_URL="http://localhost:8080/index.html" npm test      # 18/18
+COURSE_URL="http://localhost:8080/index.html" npm test      # 19/19
 COURSE_URL="http://localhost:8080/index.html" npm run verify-hitboxes
 node tools/verify-places.mjs http://localhost:8080/index.html
 npm run check-assets && node tools/check-css-duplicates.mjs css/*.css
@@ -615,6 +616,75 @@ Cosas que aparecieron y que, mirándolas, son de este curso y no del kit:
   lo correcto (la variante 0 se ve al entrar). Acá encaja perfecto: la
   variante 0 no es ningún concepto.
 
+### K14 · Tope de 5 logros por curso — CONVENCIÓN NUEVA del cliente, no bug
+
+**Qué pasó.** El cliente fijó, para TODOS los cursos y no solo para
+este, un máximo de **5 logros** en el catálogo. Este curso tenía 6 y se
+bajó a 5 fusionando los dos que medían lo mismo partido en dos.
+
+**Por qué es del kit.** El catálogo de logros es contenido del curso
+(así lo dice `coto-logros.js` en su cabecera, y está bien), pero el
+**tope** no: es una regla de producto que vale para todos. Hoy nada la
+sostiene — un curso nuevo puede declarar 8 logros y toda la suite pasa
+en verde.
+
+**Propuesta, dos piezas chicas:**
+
+1. Anotarlo en `CLAUDE.md` §1, junto a "qué va en el kit y qué va en el
+   curso": *el catálogo de logros lo define el curso, con un máximo de
+   5*.
+2. Un chequeo en `gamificacion.mjs`, que ya cuenta los logros del
+   catálogo (imprime "5 logro(s) en el catálogo"): que falle por encima
+   de 5. Es una línea, y convierte una regla verbal en una que no se
+   puede olvidar.
+
+Ojo con un detalle que este curso ya pagó: bajar el catálogo deja ids
+viejos en el `suspend_data` de quien ya venía jugando, y el chip pasa a
+decir "6/5". Eso es K11 (`Logros.restore()` no valida contra el
+catálogo) visto desde otro ángulo — y es un argumento más para
+arreglarlo en el kit, porque ahora **cualquier** curso que aplique este
+tope va a pisarlo.
+
+### K15 · El `.d-shot-hit-play` del kit no trae ícono, y su marcado de ejemplo tampoco — PROBADO
+
+**Síntoma.** Siguiendo al pie de la letra el marcado que documenta
+`coto-media.js` para el botón de play:
+
+```html
+<button type="button" class="d-shot-hit-play">Reproducir</button>
+```
+
+lo que se ve es el círculo azul del kit con la **palabra "Reproducir"**
+adentro, en texto negro, desbordando el círculo — no un triángulo de
+play.
+
+**Diagnóstico contra el código real.** `coto-media.css` estiliza el
+ícono asumiendo que alguien lo pone:
+
+```css
+.d-shot-hit-play svg { width: 40%; height: 40%; fill: #fff; margin-left: 8%; }
+```
+
+pero ni el CSS trae un `::before` de fallback ni `initInlineCircleVideos`
+inyecta un `<svg>` (se verificó: el único `innerHTML` con un `<svg>` en
+ese módulo es el del cartel de error, línea 165). O sea: el componente
+está completo salvo el ícono, y el ejemplo de la documentación produce
+un botón roto. El curso de referencia no lo destapa porque usa la
+variante `--art`, con una imagen propia del cliente.
+
+**Cómo se verificó.** Se montó el botón exactamente como lo documenta el
+kit y se miró el render; después se puso el `<svg>` a mano y quedó bien
+(64×64, círculo navy, triángulo blanco, hover y apagado al reproducir,
+todo del kit).
+
+**Propuesta.** Cualquiera de las dos, pero una:
+- que `initInlineCircleVideos()` inyecte el `<svg>` del triángulo cuando
+  el `.d-shot-hit-play` no tenga uno (y deje el texto como `.sr-only`),
+  que es lo que hace el kit en otros lugares; o
+- que el ejemplo de la documentación traiga el `<svg>` y un
+  `<span class="sr-only">`, como lo escribió este curso.
+
+
 ---
 
 ## 7. Segunda vuelta — 3 puntos reportados por el cliente
@@ -724,19 +794,320 @@ el ancla provisional del kit sobre los overlays de una capa oculta
 
 ---
 
-## 9. Pendiente / próximo paso
+## 10. Cuarta vuelta — 10 puntos reportados por el cliente
 
-- **Videos.** `video/como-hacemos-el-reporte.mp4` y
-  `video/que-hacemos-con-los-productos.mp4` son placeholders de 0 bytes
-  con el nombre final. `initVideoGate` los sondea y **exime el gate
-  mientras no se puedan reproducir**, así que el curso nunca queda
-  trabado; el día que se suban los archivos reales el gate vuelve a
-  valer sin tocar código. Proporción a pedirle al editor: **2:1**
-  (mismo criterio que el PDF).
-  Al subirlos, el máximo pasa de 199 a 219 y conviene volver a correr
-  `npm test` — `puntaje-curso.mjs` lo va a decir solo.
-- **El zip de entrega NO está armado**: se arma con
+Acá va, punto por punto, qué se encontró de verdad y cómo se verificó.
+Los que abrieron un hallazgo de kit están marcados y siguen abajo, en
+el §11.
+
+### 10.1 · Videos faltantes en `video/` (portada y unidad)
+
+La carpeta tenía dos `.mp4` de 0 bytes (los dos videos del cuerpo) y el
+cliente pidió los otros dos, porque portada y unidad **también son
+video**. Eran dos capturas fijas.
+
+Se pasaron al **patrón 1 de `coto-media.js`** (video de fondo):
+`.d-shot-slide--bg-video` + `<video class="d-shot-video" playsinline
+preload="auto" poster="img/…">` + `.d-shot-video-tap` naciendo
+`hidden`, y se cableó `initBgVideos()` en `boot()` — que es la pieza que
+§7.17 marca como la falla más común de este molde (el marcado puesto y
+el cable no) y además la que reintenta MUDO cuando el navegador rechaza
+el autoplay con sonido (§7.18 K10, que pasa SIEMPRE en la portada).
+
+`video/` queda con los cuatro nombres finales, todos placeholder de 0
+bytes:
+
+| archivo | diapositiva |
+|---|---|
+| `video/portada.mp4` | 0 · Portada |
+| `video/unidad-1.mp4` | 3 · Unidad 1 |
+| `video/como-hacemos-el-reporte.mp4` | 6 · Cómo hacemos el reporte |
+| `video/que-hacemos-con-los-productos.mp4` | 8 · Qué hacemos con los productos |
+
+Mientras los archivos no estén, el `poster` —la misma captura que se
+veía antes— cubre el hueco: la diapositiva se ve exactamente igual que
+hoy. Verificado con `tools/tests/video-fondo.mjs`, que chequea carpeta,
+nombre, `poster`, `playsinline`, el botón de gesto oculto al nacer y que
+con el autoplay bloqueado el video igual arranque.
+
+**Nota para cuando lleguen los .mp4 de portada y unidad:** `Narrador.textOf()`
+trata una `.d-shot-slide--bg-video` como "diapositiva que ES un video" y
+**no la narra** — el audio lo pone el video. Es el comportamiento del
+kit y el mismo que usa el curso de referencia; hasta que el archivo
+esté, esas dos diapositivas quedan mudas.
+
+### 10.2 · Falta la palabra "Índice" junto al ícono de menú
+
+El botón de hamburguesa era un `.d-iconbtn` pelado. El kit ya tiene la
+variante etiquetada que usan "Glosario", "Sonido" y "Ampliar":
+`.d-iconbtn--labeled` + `<span class="lbl">`. Se usó esa, sin CSS nuevo
+— y como bonus el propio kit esconde la etiqueta por debajo de 640px,
+donde la barra ya no tiene ancho.
+
+### 10.3 · "Algunos conceptos importantes" — los tres problemas
+
+Los tres salían del mismo lugar, y no era el código: **el diseñador
+re-renderizó la columna izquierda en CADA página del PDF**. Medido
+sobre las 8 variantes (2520×1260), diferencia contra `conceptos-plu`:
+
+| variante | bandas que cambian (filas) |
+|---|---|
+| `conceptos-0` | 148-237 (título), 275-338 (párrafo) y **las 7 píldoras** |
+| las otras 6 | 275-338 (párrafo) y **solo su propia píldora** |
+
+O sea:
+
+- **El párrafo se movía** porque en 6 de las 8 páginas está unos 6px más
+  a la derecha que en las otras 2. No es CSS: son 8 renders distintos
+  del mismo texto.
+- **La tipografía de las píldoras cambiaba al primer clic** porque la
+  página 6 (la variante inicial) las dibuja chicas y translúcidas, y las
+  páginas 7 a 13 las dibujan más grandes y en blanco. También horneado.
+
+Arreglo: se compuso **una sola columna izquierda canónica** y se pegó en
+las 8 imágenes. La canónica es la de `conceptos-plu` con la píldora
+PLU/EAN en su forma NO seleccionada (tomada de `conceptos-surtido`, que
+fuera de las bandas de texto medidas es idéntica a `plu`). Las costuras
+se eligieron midiendo, no a ojo: filas 100-262 hasta x=1190 (la banda
+del título; a partir de x=1160 la diferencia entre las 8 es **0**) y
+filas 262-1215 hasta x=980 (el hueco vacío que las 8 comparten entre
+x≈948 y x≈1015), con una rampa de alfa de 8px en cada borde.
+
+Resultado medido después del parche: contra `conceptos-plu`, las 8
+variantes difieren **solo** en la banda del rótulo PLU (419-445) y en la
+de su propia píldora. El párrafo ya no difiere en ninguna.
+
+- **El estado no se reiniciaba al volver.** Ahora `slidechange` sobre
+  `conceptos` llama a `swaps.conceptos.go(0, true)`. El `true` es
+  `silencioso`: corta el `onChange`, así que el reset no vuelve a pagar
+  puntos ni a narrar. Y **no** se toca `estado.conceptos`, que es lo que
+  sostiene el gate de la diapositiva y el logro "Explorador": limpiarlo
+  dejaría trabado a quien ya los abrió. Verificado: abrir los 7, salir,
+  volver → imagen `conceptos-0`, 0 píldoras activas, 42 puntos antes y
+  después, "Siguiente" habilitado.
+
+### 10.4 · "Lo que vimos en este video" — hover y diseño de las fichas
+
+**Hover.** El reclamo de la ronda 3 se había arreglado a medias: el
+realce arrancaba en el borde de la tarjeta, pero el aro dorado del ícono
+**asoma dos tercios por encima de ese borde**, así que un rectángulo que
+empiece ahí igual le pasa por arriba. Medido sobre el arte:
+
+| | repaso-reporte | repaso-acciones |
+|---|---|---|
+| tarjeta | x[502,1204] y[572,994] | x[521,1220] y[557,979] |
+| círculo | ⌀273, centro (851,576) | ⌀273, centro (870,560) |
+| hitbox | 700×553 | 700×555 |
+
+Relativo al hitbox las dos dan lo mismo: la tarjeta arranca al 23.9% del
+alto y el centro del círculo cae al 49.6% del ancho, 0.85% por debajo
+del borde superior. Con eso, el realce se hace con una **máscara radial**
+que le deja el agujero exacto al aro.
+
+Eso obligó a cambiar cómo se dibuja: antes era un `::after` del hitbox
+con `box-shadow` EXTERIOR, y una `mask` recorta por `border-box`, así
+que enmascarar ese aro lo borraba entero. Ahora el realce es un
+`<span class="d-ficha-ring">` propio con el aro `inset`, que la máscara
+sí respeta. `tools/tests/reporte-cliente.mjs` lo verifica por lo que se
+ve (borde, radio y presencia de la máscara), no por cómo está hecho.
+
+**Diseño del pop-up.** Las 4 fichas son las páginas VERTICALES del PDF
+(16, 17, 20 y 21): no entran en el lienzo 2:1 y por eso se rehacen en
+HTML. Estaban aproximadas a ojo. Se rehicieron con las proporciones
+medidas de la página 16 (1519×1604):
+
+| pieza | medida | en proporción de la tarjeta |
+|---|---|---|
+| tarjeta | 1413 × 1257, radio 92 | — |
+| círculo | ⌀469, centro 22px POR ENCIMA del borde | 33.1% del ancho |
+| título | y[575,640] | 4.44% |
+| subrayado | 429 × 10, centrado | 30.3% × 0.7% |
+| cuerpo | interlínea 67, glifo 53 | 3.53%, interlínea 1.34 |
+
+La página 17 confirma las mismas métricas de texto con otro largo de
+contenido, así que son del diseño y no de esa página. Todo se escribe en
+`cqw` sobre `container-type:inline-size` en la tarjeta, así que la ficha
+se reconstruye igual a cualquier tamaño sin una sola media query de
+tipografía. Se recuperaron además las negritas del PDF en "¿Cómo lo
+generamos?" y la sub-lista con guiones de "¿Qué acciones tomar?".
+
+### 10.5 · Bloque blanco sobre las líneas circulares — NO REPRODUCIDO
+
+Es el único punto de esta vuelta que quedó **sin resolver, y sin
+inventar un arreglo**. Lo que se hizo para buscarlo:
+
+1. Se recorrieron las 13 diapositivas midiendo, sobre la diapositiva
+   activa, **todo** elemento con fondo opaco claro (≥240 en los tres
+   canales, alfa ≥0.6) y más de 8000px² de área. El único que aparece en
+   las 13 es el propio `.d-shot-img`, que **es** el arte.
+2. Se comparó píxel a píxel el render en vivo de cada diapositiva contra
+   su imagen fuente, buscando zonas donde el render fuera **más blanco**
+   que el arte. Lo que sale es el borde de las letras y de las
+   ilustraciones: ruido de reescalado, no un bloque.
+3. Se revisaron además los estados que no son "diapositiva quieta": los
+   4 pop-ups de ficha, el mini juego (intro, pregunta, devolución, las
+   dos pantallas finales) y el resumen del cierre.
+
+Conclusión medida: **ningún elemento HTML o CSS de este curso pinta
+blanco por encima del arte**. Las tarjetas y paneles blancos que se ven
+—el marco del reproductor, el panel del mini juego, la tarjeta de la
+consigna— vienen dibujados en el PDF del diseñador (verificado contra
+las páginas 15, 18, 22, 23, 28 y 29: el render coincide con el arte).
+
+Para cerrarlo hace falta **una captura de la pantalla exacta**, o el
+nombre de la diapositiva. Si el bloque es del PDF y lo que se quiere es
+cambiar el arte, es un pedido para el diseñador (§5) y no un z-index.
+
+### 10.6 · Mini juego — rejugar y estabilidad del dibujo
+
+**El dibujo se movía.** El kit trae `.d-mj-fb:empty{margin:0}`: con el
+cartel vacío la zona no ocupa nada, y como `.d-mj-body` es flex y
+centra, al aparecer la devolución la escena se corría. Medido: la
+escena arrancaba en y=170 y se iba a y=181.
+
+No se reservó un alto fijo a ojo — eso se desactualiza al primer cambio
+de texto. La zona lleva un **molde**: un `.d-mj-fb--molde` invisible que
+queda SIEMPRE en el flujo con el texto real más largo que esa pregunta
+puede llegar a mostrar (`q.why` o `q.mal` + la coletilla), y el cartel
+real se superpone en absoluto. Así el alto reservado es exactamente el
+que va a hacer falta, en cada pregunta, y sigue siendo correcto al
+redimensionar (que es lo que rompe una medida guardada en píxeles). El
+botón de avance hace lo mismo con un fantasma (`.d-mj-next-fantasma`,
+sin la clase `.d-mj-next`, para que `_auto()` y la suite no clickeen un
+botón que el alumno no ve). Medido después: la escena queda en y=170,
+antes y después de responder.
+
+**Rejugar.** Se agregó "Volver a jugar" en la pantalla de éxito, como
+`[data-place]` con HTML real sobre el piso gris — que ahí está libre de
+punta a punta (medido: la franja y[1178,1250] del lienzo no tiene nada).
+Rejugar es seguro por construcción y conviene decir por qué, porque es
+justo lo que §6.53 advierte: los puntos de cada concepto los guarda
+`estado.mjOk`, persistido, así que una segunda vuelta no paga de nuevo;
+`estado.mjErr` también persiste, así que no se puede "limpiar el
+prontuario" para arrancar el logro `preciso`; y `estado.mjFin` queda en
+`true`, así que el gate no vuelve a cerrarse. Verificado jugando 5/5,
+rejugando y volviendo a hacer 5/5: 125 puntos y 2/5 logros antes y
+después.
+
+### 10.7 · Ampliar el resumen "Lo que vimos en este curso"
+
+El resumen tenía 3 columnas y el panel quedaba con dos tercios en
+blanco. Se sumaron 3 columnas más —los 7 conceptos (en dos) y el paso a
+paso en GESCOM— sin contenido nuevo: salen del mismo `CONCEPTOS` de
+`curso.js` y de los pop-ups de repaso. La grilla del kit es
+`auto-fit minmax(260px,1fr)`, así que las 6 se acomodan solas en 3×2 sin
+tocar el CSS del kit.
+
+### 10.8 · Máximo 5 logros por curso
+
+El catálogo tenía 6. Los dos únicos que medían lo mismo partido en dos
+eran "Sabés armarlo" (las 2 fichas del primer video) y "Manos a la obra"
+(las 2 del segundo): se fusionaron en **"Buen repaso"**, por las 4. Así
+el tope se cumple sin sacar ninguna conducta del tablero.
+
+Los ids viejos (`reporte`, `acciones`) siguen en el `suspend_data` de
+quien ya venía jugando: los descarta `sanearLogros()`, que filtra contra
+el catálogo — el mismo fix del "7/6" de la ronda 3. El test de cliente
+ahora usa justamente ese caso como fixture.
+
+Es una regla **general del cliente**, no de este curso: va como hallazgo
+K14 al kit.
+
+### 10.9 · Botón de play del kit en las diapositivas de video
+
+Estaban en la **variante (b)** de `initInlineCircleVideos` (el arte
+dibuja el reproductor completo, sin botón propio). Eso es exactamente lo
+que §6.29 prohíbe: un play dibujado no tiene foco, ni hover, ni
+`:focus-visible`, ni nombre accesible.
+
+Se pasaron a la **variante (c)**: carátula real sin control dibujado +
+el `.d-shot-hit-play` del kit. Para eso hubo que borrar el círculo de
+play de los dos posters. El patrón de texto del fondo se repite cada
+**165px** en vertical (medido por autocorrelación, error medio 4.2 sobre
+255), así que el relleno del círculo sale del mismo patrón un período
+más arriba, con una rampa de 6px — no hay parche inventado.
+
+El `<svg>` del triángulo va en el marcado del curso porque **el kit no
+inyecta ninguno**: su CSS estiliza `.d-shot-hit-play svg` pero el
+marcado de ejemplo de `coto-media.js` es
+`<button class="d-shot-hit-play">Reproducir</button>`, sin ícono. Va
+como hallazgo K15.
+
+### 10.10 · Verificación general
+
+**Puntaje y logros.** Se encontró un desfasaje real en la tablita de
+medallas del cierre: decía "Bronce desde 148 / Plata desde 190 / Oro
+desde 230" (los números de ejemplo que deja el generador del kit) contra
+los 74/127/180 que este curso derivó de un recorrido instrumentado. El
+alumno leía un umbral y el contador usaba otro. Es la trampa de §7.3
+punto 19 al revés: la tabla mentía **en pantalla**. Ahora los "desde N"
+los escribe `curso.js` desde la misma constante `NIVELES` que decide la
+medalla, así que no pueden volver a separarse.
+
+Lo demás se remidió después de todos los cambios de esta vuelta:
+
+| | medido | declarado |
+|---|---|---|
+| máximo sin videos | 199 | 199 |
+| piso que garantiza el gate | 74 | 74 (= bronce) |
+| acertar después de errar | 50 | (a la primera pagaría 125) |
+| logros en el catálogo | 5 | 5 |
+| `suspend_data` | 431 / 4096 | — |
+
+**Responsive.** Se recorrieron las 13 diapositivas en 4 tamaños reales,
+en contexto táctil (`isMobile` + `hasTouch`), midiendo cuánto se sale
+del escenario cada elemento visible: iPhone vertical (390×844), iPhone
+apaisado (844×390), iPad vertical (820×1180) y iPad apaisado (1180×820).
+
+Lo único que sale es lo que tiene que salir: las partículas de `fx.js`
+y el confeti del cierre (los dos, decorativos y en absoluto), y los
+`<li>` del índice, que están dentro de un `ul.sr-only` y no se pintan.
+En vertical de teléfono el kit muestra su propio aviso de "Girá tu
+dispositivo", así que ese caso no es del curso.
+
+**Un bug real sí apareció ahí**: la ficha de repaso no entraba en un
+teléfono apaisado (390px de alto) y no se podía bajar. Causa: el kit le
+da a `.modal-card` `max-height:88vh; overflow:auto`, y esta ficha
+necesita `overflow:visible` para que el aro dorado asome — pero
+`overflow:visible` también anula el scroll. El scroll se mudó al
+`.modal-bd`, que puede recortarse sin tocar el aro, con
+`max-height:calc(88svh - 8rem)` (`svh` y no `vh`: en un teléfono `vh`
+cuenta la barra del navegador como si no estuviera). Medido después, con
+"¿Cómo lo generamos?" abierta en 844×390: la tarjeta va de y=112 a
+y=365 —entra— y el cuerpo scrollea (415px de contenido en 254 de caja).
+
+
+---
+
+## 12. Pendiente / próximo paso
+
+- **Videos.** Los **cuatro** `.mp4` de `video/` son placeholders de 0
+  bytes con su nombre final:
+  `portada.mp4`, `unidad-1.mp4`, `como-hacemos-el-reporte.mp4` y
+  `que-hacemos-con-los-productos.mp4`.
+  · Los dos del cuerpo: `initVideoGate` los sondea y **exime el gate
+    mientras no se puedan reproducir**, así que el curso nunca queda
+    trabado; el día que se suban, el gate vuelve a valer sin tocar
+    código.
+  · Los dos de fondo (portada y unidad): mientras no estén se ve el
+    `poster`, que es la misma captura de siempre. Y ojo con esto, que es
+    del kit y no del curso: una `.d-shot-slide--bg-video` **no se
+    narra** (el audio lo pone el video), así que esas dos diapositivas
+    están mudas hasta que lleguen los archivos.
+  Proporción a pedirle al editor: **2:1** (mismo criterio que el PDF).
+  Al subir los dos del cuerpo el máximo pasa de 199 a 219 y conviene
+  volver a correr `npm test` — `puntaje-curso.mjs` lo va a decir solo.
+
+- **Punto 5 de la cuarta vuelta ("bloque blanco sobre las líneas
+  circulares") sigue abierto.** No se reprodujo, y está documentado en
+  §10.5 qué se midió para buscarlo. Hace falta una captura de la
+  pantalla exacta o el nombre de la diapositiva. Si el bloque resulta
+  ser del arte del PDF, es un pedido para el diseñador (§5), no un
+  z-index.
+
+- **El zip de entrega** se arma con
   `python3 tools/build-zip.py . ../surtido-sin-venta.zip` y solo a
   pedido explícito (§3.12).
-- Los 13 hallazgos de kit (K1 a K13) se llevan en un prompt al chat de
-  `kit-base/`. Desde acá no se editó `kit-base/`.
+
+- Los **15 hallazgos de kit (K1 a K15)** se llevan en un prompt al chat
+  de `kit-base/`. Desde acá no se editó `kit-base/`.

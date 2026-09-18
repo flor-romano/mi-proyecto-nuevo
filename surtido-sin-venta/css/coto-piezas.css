@@ -1,0 +1,127 @@
+/* coto-piezas.css — kit-base v1.9.77
+   ------------------------------------------------------------
+   CSS de las piezas de `coto-piezas.js` (CLAUDE.md §7.23), más dos
+   patrones puramente presentacionales que salieron del mismo relay
+   (`.d-zona`/`.d-detalle` y `.d-deco`).
+
+   Todo acá es genérico: ninguna regla sabe nada de un curso. Los
+   tamaños van en `cqw`/`cqh` y no en `rem` porque estas piezas viven
+   DENTRO de `.d-stage`, que es `container-type: size`: un `rem` fijo se
+   ve enorme en un lienzo chico y diminuto en uno grande.
+   ============================================================ */
+
+/* ---- 1. Revelado acumulativo (initRevelados) ---------------------
+   El disparador es un `[data-hit]` normal: lo dibuja el arte y lo
+   posiciona el motor. Lo único que agrega el kit es la marca de "ya lo
+   tocaste", que es lo que hace legible un revelado ACUMULATIVO — sin
+   eso, con 14 puntos el alumno no sabe cuáles le faltan.
+   Realce SOBRE la forma, nunca un tinte plano que tape el arte
+   (§7.19 A6). */
+[data-revelar].is-revelado {
+  outline: 2px solid color-mix(in srgb, var(--cat-strong) 75%, transparent);
+  outline-offset: -2px;
+}
+[data-revelado] {
+  animation: d-revelar .28s ease-out both;
+}
+@keyframes d-revelar {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-revelado] { animation: none; }
+}
+
+/* ---- 2. Paginador de tandas (initTandas) -------------------------
+   Los controles los dibuja el KIT, así que en los extremos se
+   ESCONDEN (el JS les pone `hidden`), no se deshabilitan — §7.21,
+   sección E: lo que decide es quién dibujó el control. */
+.d-tanda-nav {
+  position: absolute; z-index: 3;
+  display: grid; place-items: center;
+  width: clamp(30px, 3.4cqw, 46px); height: clamp(30px, 3.4cqw, 46px);
+  border: none; border-radius: 50%; cursor: pointer; color: #fff;
+  background: color-mix(in srgb, var(--brand-navy) 62%, transparent);
+  box-shadow: 0 6px 18px color-mix(in srgb, #000 26%, transparent);
+}
+.d-tanda-nav:hover { background: color-mix(in srgb, var(--brand-navy) 80%, transparent); }
+.d-tanda-nav[hidden] { display: none; }
+.d-tanda-prog {
+  font-family: var(--font-body); font-weight: 700;
+  font-size: clamp(.62rem, 1cqw, .82rem); color: var(--text-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- 3. Pasos del repaso (initPasosRepaso) -----------------------
+   Refleja el estado que el kit ya escribe en cada `[data-repaso-item]`.
+   El color dice el RESULTADO y la forma dice DÓNDE ESTÁS: las dos
+   cosas por separado, para que se lean de un vistazo y también sin
+   distinguir colores. */
+[data-repaso-pasos] {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-wrap: wrap; gap: clamp(4px, .6cqw, 9px);
+}
+.d-paso {
+  display: grid; place-items: center;
+  width: clamp(20px, 2.2cqw, 30px); height: clamp(20px, 2.2cqw, 30px);
+  border-radius: 50%; border: 2px solid var(--line);
+  background: var(--surface); color: var(--text-soft);
+  font-family: var(--font-title); font-weight: 900;
+  font-size: clamp(.6rem, .95cqw, .8rem); line-height: 1;
+  font-variant-numeric: tabular-nums;
+  transition: background .18s, border-color .18s, color .18s;
+}
+.d-paso.is-answered { color: #fff; border-color: transparent; }
+.d-paso.is-correct  { background: var(--success); }
+.d-paso.is-wrong    { background: var(--danger); }
+/* "Dónde estás" es un ARO por fuera, no un color: así sigue siendo
+   legible sobre un paso ya contestado, que ya usa el color. */
+.d-paso.is-current {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cat-strong) 45%, transparent);
+}
+
+/* ---- 4. Ficha de detalle sobre el arte (.d-zona / .d-detalle) -----
+   Una zona medida sobre el render + una tarjeta que se despliega.
+   `.d-zona` es el `[data-hit]`; `.d-detalle` el `[data-place]` que
+   aparece. Ambos los posiciona el motor. */
+.d-zona { cursor: pointer; }
+.d-detalle {
+  background: var(--surface); color: var(--text);
+  border-radius: var(--r-lg); box-shadow: var(--shadow-pop);
+  padding: clamp(.5rem, .9cqw, 1rem) clamp(.6rem, 1.1cqw, 1.2rem);
+  font-size: clamp(.64rem, 1cqw, .86rem); line-height: 1.4;
+  overflow: auto;
+}
+.d-detalle h4 {
+  margin: 0 0 .3em; font-family: var(--font-title); font-weight: 900;
+  font-size: clamp(.72rem, 1.15cqw, .98rem); color: var(--cat-strong);
+}
+.d-detalle ul { margin: 0; padding-left: 1.1em; }
+.d-detalle li { margin: .18em 0; }
+.d-detalle li::marker { color: var(--cat-strong); }
+/* A un lienzo muy bajo la ficha no entra en su caja medida. El motor
+   escribe left/top/width/height EN LÍNEA, así que despegarla necesita
+   `!important` — no es pereza (§7.21, trampa 8). Y `@container` y no
+   `@media`, porque lo que importa es el alto del LIENZO, no el de la
+   ventana (§7.21, sección J). */
+@container (max-height: 320px) {
+  .d-detalle {
+    left: 4% !important; right: 4% !important; width: auto !important;
+    top: auto !important; bottom: 4% !important; height: auto !important;
+    max-height: 62% !important;
+  }
+}
+
+/* ---- 5. Decoración de una diapositiva HTML (.d-deco) -------------
+   Los repasos y los resúmenes son HTML nativo y quedan desnudos al
+   lado de las diapositivas de arte. `.d-deco` cuelga un fragmento del
+   arte del curso como decoración: no es contenido, así que no se narra
+   ni se puede tocar. */
+.d-deco {
+  position: absolute; pointer-events: none; user-select: none;
+  opacity: .9; z-index: 0;
+}
+.d-deco img { display: block; width: 100%; height: auto; }
+/* En un lienzo chico la decoración compite con el texto y gana el
+   texto: a esa altura el adorno ya no se lee como adorno. */
+@container (max-height: 320px) { .d-deco { display: none; } }

@@ -1,0 +1,112 @@
+/* ============================================================
+   coto-quiz.css · Mini práctica genérica (opción múltiple)
+   kit-base v1.6 · Área Aprendizaje (COTO) — genérico, sin contenido
+   de curso. Copiar tal cual a cada curso nuevo, sin editar.
+   ------------------------------------------------------------
+   Pareja de js/coto-quiz.js (initMiniQuiz). Extraído de "Prevención
+   cardiovascular" — usa exclusivamente tokens de coto-base.css
+   (--cat/--cat-strong/--success/--danger/--warning/--surface/--line/
+   --text/--focus), sin nada propio de ese curso.
+
+   Requiere `.d-nav-btn`/`.d-shot-hit` del resto del kit para las
+   utilidades de gate compartidas (`.d-nudge`, `.is-gated`, `.d-shake`
+   — ver coto-player-bottom.css/diapositivas de cada curso): quedaron
+   ACÁ porque nacieron junto al quiz, pero @keyframes d-shake también
+   lo usa el gate genérico de avance (data-require-seen) de cada curso.
+   ============================================================ */
+.d-quiz-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1rem;flex-wrap:wrap}
+.d-quiz-count{font-size:.88rem;font-weight:600;color:var(--text-soft)}
+.d-quiz-count b{font-family:var(--font-title);font-weight:900;color:var(--cat-ink)}
+.d-quiz-streak{display:inline-flex;align-items:center;gap:.3rem;font-size:.85rem;font-weight:700;
+  color:var(--warning-ink);background:color-mix(in srgb,var(--warning) 16%,transparent);
+  padding:.3rem .7rem;border-radius:var(--r-pill)}
+.d-quiz-streak.bump{animation:d-bump .3s ease}
+.d-quiz-streak.hot{color:var(--danger-ink);background:color-mix(in srgb,var(--danger) 14%,transparent)}
+@keyframes d-bump{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
+.d-quiz-dots{display:inline-flex;gap:.55rem}
+.d-quiz-dots i{width:13px;height:13px;border-radius:50%;background:var(--line);display:block;
+  transition:transform .2s,background .2s}
+.d-quiz-dots i.cur{background:linear-gradient(135deg,var(--cat-strong),var(--cat));transform:scale(1.35)}
+.d-quiz-dots i.ok{background:var(--success)}
+.d-quiz-dots i.bad{background:var(--danger)}
+
+.d-q{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:var(--r-lg);
+  background:var(--surface);padding:1.3rem 1.5rem;box-shadow:var(--shadow-card)}
+/* ---- Enunciado a la vista en pantallas bajas (kit-base v1.9.71, §7.17) ----
+   Bug real, y solo aparece midiendo: en un teléfono acostado (~390px de
+   alto) la tarjeta del quiz es más alta que el lienzo, así que al
+   scrollear para llegar a las opciones el enunciado se va de vista y el
+   alumno elige entre cuatro opciones sin ver qué se le pregunta.
+   Medido: `.d-q-title` en `top:-101px`.
+
+   El `overflow:hidden` de `.d-q` de acá arriba existe para que la
+   animación de entrada de las opciones no se derrame — pero de paso
+   convierte a `.d-q` en el SCROLLPORT de cualquier `position:sticky`
+   que se ponga adentro, así que un enunciado sticky se pega dentro de
+   una caja que no scrollea, o sea no se pega a nada. Por eso el
+   `overflow:visible` no es opcional acá: sin él, el `sticky` de abajo
+   es una regla muerta.
+   Acotado a `max-height:560px` a propósito: es donde el problema
+   existe, y ahí el stagger ya terminó hace rato (dura ~.4s desde que
+   entra la diapositiva), así que soltar el recorte no reintroduce el
+   derrame que motivó el `hidden`. */
+@media (max-height: 560px){
+  .d-q{ overflow: visible; }
+  .d-q-title{
+    position: sticky; top: 0; z-index: 3; background: var(--surface);
+    box-shadow: 0 6px 10px -8px rgba(20,30,60,.45);
+  }
+}
+.d-q-title{font-family:var(--font-title);font-weight:900;font-size:1.12rem;color:var(--text);
+  display:flex;gap:.8rem;align-items:baseline;margin:0 0 1.1rem}
+.d-q-num{flex:none;width:32px;height:32px;border-radius:50%;display:inline-grid;place-items:center;
+  font-size:.95rem;background:var(--cat-ink);color:#fff}
+.d-opt{display:flex;align-items:flex-start;gap:.8rem;padding:.9rem 1.05rem;border-radius:var(--r-lg);
+  border:1.5px solid var(--line);cursor:pointer;margin-top:.6rem;transition:border-color .15s,background .15s}
+.d-opt:first-of-type{margin-top:0}
+.d-opt:hover{border-color:var(--cat-strong);background:color-mix(in srgb,var(--cat) 8%,var(--surface))}
+.d-opt input{position:absolute;opacity:0;width:0;height:0}
+.d-opt-mark{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--line);
+  margin-top:.1rem;display:grid;place-items:center}
+.d-opt-mark::after{content:"";width:11px;height:11px;border-radius:50%;background:var(--cat-strong);
+  transform:scale(0);transition:transform .15s}
+.d-opt input:checked + .d-opt-mark{border-color:var(--cat-strong)}
+.d-opt input:checked + .d-opt-mark::after{transform:scale(1)}
+.d-opt input:focus-visible + .d-opt-mark{outline:3px solid var(--focus);outline-offset:2px}
+.d-opt-text{color:var(--text);font-size:.97rem;font-weight:600}
+.d-opt.is-ok{border-color:var(--success);background:color-mix(in srgb,var(--success) 16%,var(--surface))}
+.d-opt.is-bad{border-color:var(--danger);background:color-mix(in srgb,var(--danger) 12%,var(--surface));
+  animation:d-shake .4s} /* @keyframes d-shake vive en coto-player-bottom.css (cargarlo antes) */
+@media (prefers-reduced-motion:reduce){.d-opt.is-bad{animation:none}.d-quiz-streak.bump{animation:none}}
+
+.d-quiz-fb{margin-top:1.1rem;border-radius:var(--r-lg);padding:1rem 1.15rem;font-size:.95rem;line-height:1.45}
+.d-quiz-fb.ok{background:color-mix(in srgb,var(--success) 14%,var(--surface));border-left:5px solid var(--success);color:var(--success-ink)}
+.d-quiz-fb.bad{background:color-mix(in srgb,var(--danger) 12%,var(--surface));border-left:5px solid var(--danger);color:var(--danger-ink)}
+.d-quiz-mascot{display:flex;align-items:center;gap:.7rem;margin-top:.8rem;font-size:.92rem;color:var(--text-soft)}
+/* BUG REAL (kit-base v1.9.52): `coto-quiz.js` viene escribiendo
+   `mascot.className = 'd-quiz-mascot happy' | 'd-quiz-mascot oops'`
+   desde v1.6, pero `.happy`/`.oops` no tenían NINGUNA regla — las dos
+   clases eran letra muerta y el comentario del mascota se veía igual
+   (gris `--text-soft`) hubieras acertado o no. Se completan con los
+   mismos tokens de estado que ya usan `.d-quiz-fb.ok/.bad` y
+   `.d-opt.is-ok/.is-bad` acá arriba, para que el bloque entero hable
+   un solo idioma de color y no se invente una paleta nueva. */
+.d-quiz-mascot.happy{color:var(--success-ink);font-weight:600}
+.d-quiz-mascot.oops{color:var(--warning-ink);font-weight:600}
+.d-quiz-mface{font-size:1.6rem;flex:none}
+.d-quiz-actions{display:flex;justify-content:center;gap:.8rem;margin-top:1rem;flex-wrap:wrap}
+.d-quiz-result{position:relative;overflow:hidden;text-align:center;border-radius:var(--r-lg);
+  padding:1.6rem 1.7rem;border:1px solid var(--line);background:var(--surface)}
+.d-quiz-result::before{content:"";position:absolute;top:0;left:0;right:0;height:5px;background:var(--line)}
+.d-quiz-result.pass{background:linear-gradient(160deg,color-mix(in srgb,var(--success) 16%,var(--surface)),var(--surface))}
+.d-quiz-result.pass::before{background:linear-gradient(90deg,var(--success),color-mix(in srgb,var(--success) 60%,#fff),var(--success))}
+.d-quiz-result strong{font-family:var(--font-title);font-size:1.35rem;display:block}
+.d-quiz-result p{margin:.5rem 0 0;color:var(--text)}
+.d-quiz-review{margin-top:1.1rem;text-align:left}
+.d-quiz-review .rv-title{font-weight:700;margin:0 0 .5rem}
+.d-quiz-review ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.7rem}
+.d-quiz-review li{background:var(--surface-2);border-radius:var(--r);padding:.8rem .95rem;font-size:.88rem}
+.d-quiz-review .rq{display:block;font-weight:700;color:var(--text)}
+.d-quiz-review .ra{display:block;margin-top:.3rem;color:var(--text-soft)}
+.d-quiz-review .rv-go{margin-top:.6rem}
+.d-quiz-allgood{font-weight:700;color:var(--success-ink)}

@@ -1,0 +1,115 @@
+/* coto-visor.css — kit-base v1.9.78
+   CSS del visor de documentos (`coto-visor.js`, CLAUDE.md §7.24).
+   ============================================================ */
+
+/* ---- El lienzo ----
+   ALTO DEFINIDO POR CSS, nunca por el contenido. No es un detalle de
+   estilo: si el alto de la hoja sale del alto del visor y el visor se
+   dimensiona por su contenido, el `ResizeObserver` entra en un bucle y
+   la tarjeta se achica sola — medido en un curso real, de 772 a 720px
+   en 4 segundos (§7.21, trampa 6). El guard en el observer es el
+   segundo cinturón; esto es la solución. */
+.d-visor-lienzo {
+  position: relative;
+  height: min(62vh, 560px);
+  overflow: hidden;
+  background: var(--surface-2);
+  border-radius: var(--r-md, 10px);
+  display: grid; place-items: center;
+  touch-action: none;                 /* el arrastre lo maneja el JS */
+}
+.d-visor-hoja {
+  display: block; max-width: none;    /* el ancho lo fija el zoom */
+  box-shadow: 0 6px 24px color-mix(in srgb, #000 18%, transparent);
+  background: #fff;
+  user-select: none; -webkit-user-drag: none;
+}
+.d-visor-lienzo.is-ampliable { cursor: grab; }
+.d-visor-lienzo.is-ampliable:active { cursor: grabbing; }
+
+/* Pantalla completa DENTRO de la página, no la API nativa: adentro del
+   iframe de un LMS `requestFullscreen` depende de `allow="fullscreen"`
+   y falla en silencio. */
+.d-visor-lienzo.is-full {
+  position: fixed; inset: 0; z-index: 300;
+  height: auto; border-radius: 0;
+  background: color-mix(in srgb, #0d1420 92%, transparent);
+}
+
+/* ---- La barra ---- */
+.d-visor-barra {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: .4rem .6rem; margin-top: .7rem;
+}
+.d-visor-barra button,
+.d-visor-barra .d-visor-bajar {
+  display: inline-flex; align-items: center; justify-content: center; gap: .35rem;
+  min-height: 38px; padding: 0 .8rem;
+  border: 1px solid var(--line); border-radius: var(--r-pill);
+  background: var(--surface); color: var(--text);
+  font-family: var(--font-body); font-weight: 700; font-size: .82rem;
+  cursor: pointer; text-decoration: none;
+}
+.d-visor-barra button:hover:not(:disabled),
+.d-visor-barra .d-visor-bajar:hover { border-color: var(--cat-strong); color: var(--cat-strong); }
+/* Deshabilitado EVIDENTE, no apenas apagado: 62% de opacidad se lee
+   como "no responde" y 88% como "está apagado" — la diferencia costó
+   una ronda de feedback (§7.21, sección E). El rótulo lo pone el JS y
+   dice el número de página, que es el dato que separa las dos
+   lecturas. */
+.d-visor-barra button:disabled {
+  opacity: .88; cursor: not-allowed;
+  background: var(--surface-2); color: var(--text-soft);
+  border-style: dashed;
+}
+/* Un solo bloque por selector: `min-width` distinto para cada uno, y
+   declarado UNA vez. Tenerlo en dos reglas del mismo selector es lo que
+   `check-css-duplicates` marca — y con razón: lo agarró sobre este
+   mismo archivo recién escrito. */
+.d-visor-prog, .d-visor-zoom-val {
+  font-family: var(--font-body); font-weight: 700; font-size: .8rem;
+  color: var(--text-soft); font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.d-visor-prog { min-width: 6.5em; }
+.d-visor-zoom-val { min-width: 4em; }
+.d-visor-bajar { margin-left: auto; }
+
+/* Ampliado, la barra flota sobre el documento. */
+.d-visor-lienzo.is-full ~ .d-visor-barra {
+  position: fixed; z-index: 301; left: 50%; translate: -50% 0; bottom: 18px;
+  background: var(--surface); padding: .45rem .7rem;
+  border-radius: var(--r-pill); box-shadow: var(--shadow-pop);
+  margin-top: 0;
+}
+
+/* ---- El documento DENTRO de la diapositiva (initDocEnDiapo) ----
+   Estas flechas las dibujó EL ARTE, así que están en el píxel y no se
+   pueden esconder: se apagan con un velo bien visible. */
+[data-doc-nav].is-apagado {
+  opacity: .88;
+  background: color-mix(in srgb, var(--surface-2) 82%, transparent);
+  cursor: not-allowed;
+}
+[data-doc-hoja] { cursor: zoom-in; background: #fff; }
+
+/* ---- Panel de recursos descargables ----
+   Cajón con los documentos del curso, abierto desde el header y desde
+   el cierre. El kit no tenía nada equivalente. */
+.d-recursos { display: grid; gap: .6rem; margin: .2rem 0 0; }
+.d-recurso {
+  display: flex; align-items: center; gap: .8rem;
+  padding: .7rem .9rem; text-decoration: none;
+  border: 1px solid var(--line); border-radius: var(--r-md, 10px);
+  background: var(--surface); color: var(--text);
+}
+.d-recurso:hover { border-color: var(--cat-strong); background: var(--surface-2); }
+.d-recurso .i { flex: none; width: 26px; height: 26px; color: var(--cat-ink); fill: none; stroke: currentColor; }
+.d-recurso b { display: block; font-family: var(--font-title); font-weight: 900; font-size: .92rem; }
+.d-recurso small { color: var(--text-soft); font-size: .76rem; }
+.d-recurso .peso { margin-left: auto; color: var(--text-soft); font-size: .74rem; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 640px) {
+  .d-visor-lienzo { height: min(52vh, 380px); }
+  .d-visor-bajar { margin-left: 0; }
+}

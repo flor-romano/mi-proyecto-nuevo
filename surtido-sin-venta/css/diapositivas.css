@@ -1,0 +1,261 @@
+/* ============================================================
+   diapositivas.css — "Surtido sin venta" (Área Salón)
+   Layout de ESTAS diapositivas. Nada de acá es genérico: si algo de
+   este archivo sirviera para cualquier curso, va al kit y se relaya
+   (CLAUDE.md §1) — no se copia a `kit-base/` desde acá (§0.1).
+   ============================================================ */
+
+/* ---- Overlays sobre las capturas -------------------------------
+   `Motor._initShots()` escribe left/top/width/height EN PÍXELES como
+   estilo en línea sobre cada `[data-hit]`/`[data-place]`. Sobre un
+   elemento en flujo normal (`position:static`) eso no hace NADA: la
+   pieza cae al final del flujo, fuera del arte, y el motor solo avisa
+   por `console.warn` (lo mide `overlays-colocados.mjs`). `.d-shot-hit`
+   ya trae `position:absolute` desde el kit; los `[data-place]` de este
+   curso NO son hitboxes, así que necesitan su propia clase. */
+.d-place{ position:absolute; }
+
+/* ---- Píldoras de "Últimos consejos" ----------------------------
+   Se dibujan EXACTAMENTE encima de las que ya trae el arte (mismas
+   coordenadas medidas contra el render, mismo color de categoría) para
+   que el texto quede vivo: narrable, seleccionable y escalable. El
+   color sale del token `--cat` y no de un hex copiado a mano — es
+   literalmente el mismo amarillo del PDF (#F0BE00 = Salón) y así
+   `check-raw-cat-colors.mjs` no tiene nada que marcar. */
+/* `container-type:inline-size` y NO `cqw` del escenario: fuera del
+   rango de proporción donde la captura llena el frame, `.d-shot` queda
+   letterboxeada y bastante más angosta que `.d-stage` — o sea que
+   `1cqw` del escenario vale MUCHO más que 1% del arte. Medido en un
+   teléfono acostado real (750x340): el arte se dibuja a 366px de
+   ancho y `1.35cqw` daba 10px de tipografía sobre una píldora de 72px,
+   así que el texto se derramaba fuera de la píldora, blanco sobre
+   blanco. Con la píldora como contenedor de consulta, la tipografía se
+   mide contra ELLA (5.2% de su ancho, que es la proporción real del
+   arte) y escala parejo en cualquier tamaño. */
+.d-consejo{
+  container-type:inline-size;
+  display:grid; place-items:center; overflow:hidden;
+  background:var(--cat); border-radius:999px;
+  padding:.15rem .8rem; box-sizing:border-box;
+}
+.d-consejo p{
+  margin:0; color:#fff; text-align:center; font-weight:700;
+  font-size:5.2cqw; line-height:1.18;
+}
+
+/* ---- Cierre: el párrafo de la evaluación, sobre la mancha amarilla.
+   Misma idea que las píldoras: el arte trae "ya estas habilitado" sin
+   tilde, así que el texto pasa a HTML real (ver README-CURSO.md, es un
+   hallazgo de CONTENIDO para el diseñador, no del kit). */
+.d-cierre-eval{
+  container-type:inline-size;
+  display:grid; place-items:center; overflow:hidden;
+  background:var(--cat); padding:0 .4rem; box-sizing:border-box;
+}
+.d-cierre-eval p{
+  margin:0; color:#fff; text-align:center; line-height:1.42;
+  /* Medido contra el arte: 35px de tipografía sobre una caja de 680px
+     de ancho = 5.15%. Mismo criterio que `.d-consejo`: se mide contra
+     la propia caja, no contra el escenario. */
+  font-size:5.15cqw;
+}
+
+/* ---- Fichas de repaso (los 4 pop-ups del PDF) ------------------
+   El aro de ícono asoma por arriba de la tarjeta, como en el arte.
+   `--r-xl`/`--cat`/`--surface` son tokens del sistema: la ficha cambia
+   de color sola si cambia `data-cat` en el <body>. */
+.modal-card.d-ficha{
+  width:min(560px,100%); overflow:visible; margin-top:3.6rem;
+  border-radius:var(--r-xl); text-align:center;
+}
+.d-ficha-ic{
+  position:absolute; top:-3.1rem; left:50%; transform:translateX(-50%);
+  width:6.2rem; height:6.2rem; border-radius:50%;
+  background:var(--cat); color:#fff;
+  display:grid; place-items:center;
+  box-shadow:0 10px 26px -12px rgba(20,30,60,.45);
+}
+.d-ficha-ic svg{ width:3.1rem; height:3.1rem; }
+.modal-card.d-ficha > .modal-bd{ padding:3.6rem 2rem 2rem; }
+.d-ficha-tit{
+  margin:0 0 .9rem; font-family:var(--font-title); font-weight:900;
+  font-size:1.25rem; color:var(--cat-ink);
+}
+/* La línea corta debajo del título, como en el PDF. */
+.d-ficha-tit::after{
+  content:""; display:block; width:9rem; height:3px; margin:.55rem auto 0;
+  border-radius:2px; background:var(--cat-strong);
+}
+.modal-card.d-ficha p{ margin:0 0 .8rem; line-height:1.5; color:var(--text); }
+.modal-card.d-ficha p:last-child{ margin-bottom:0; }
+.d-ficha-lista{ margin:0; padding:0; list-style:none; text-align:left; }
+.d-ficha-lista li{
+  position:relative; padding-left:1.5rem; margin:.5rem 0;
+  line-height:1.45; color:var(--text);
+}
+.d-ficha-lista li::before{
+  content:""; position:absolute; left:0; top:.45em;
+  width:.62rem; height:.62rem; border-radius:50%; background:var(--cat);
+}
+.modal-card.d-ficha .alert-inline{ text-align:left; }
+
+@media (max-width:600px){
+  .modal-card.d-ficha{ margin-top:2.8rem; }
+  .d-ficha-ic{ width:4.8rem; height:4.8rem; top:-2.4rem; }
+  .d-ficha-ic svg{ width:2.4rem; height:2.4rem; }
+  .modal-card.d-ficha > .modal-bd{ padding:2.8rem 1.2rem 1.4rem; }
+}
+
+/* ============================================================
+   MINI JUEGO — lo que este curso le ajusta a la cáscara del kit.
+   El kit arma el minijuego en 2 columnas (escena | opciones) porque
+   así venía el molde de "Seguridad alimentaria". Este PDF lo dispone
+   en filas: cartel + estado arriba, escena a lo ancho, y las 4
+   opciones en una sola fila abajo. Calcar la disposición del PDF es
+   la regla (§6.30), así que acá se pisa el grid — no se cambia el kit.
+   ============================================================ */
+.d-mj{
+  /* Proporción REAL del recorte de la escena (1856x723). Sin esto, el
+     `object-fit:cover` del kit recortaría el arte y cualquier cosa
+     medida sobre él se correría (ver la precondición que documenta
+     `coto-minijuego.css` para `--mj-escena-ratio`). */
+  --mj-escena-ratio: 1856 / 723;
+  --mj-accent: var(--cat-ink);
+}
+/* GLUE OBLIGATORIO, y no está en ningún lado del kit (ver
+   README-CURSO.md, hallazgo K1): `.d-mj` es `flex:1 1 auto` y
+   `.d-mj-panel` es `height:100%`, así que los dos dan por sentado un
+   padre que YA tenga alto resuelto. `.slide` es
+   `display:flex; align-items:center`, o sea que el alto de `.d-mj`
+   sale de su contenido: `height:100%` se resuelve contra `auto` y
+   colapsa. Síntoma exacto de §7.09: el arte no se ve, los `[data-hit]`
+   miden 0x0 y no hay ningún error de consola. */
+[data-slide="minijuego"]{
+  align-items:stretch;
+  /* El PDF pone el mini juego sobre BLANCO, no sobre el `--bg` celeste
+     del escenario (que es el default correcto para una diapositiva sin
+     captura a sangre). `mj-fondo.webp` es la misma página del PDF con
+     todo lo que el HTML vuelve a dibujar borrado: quedan el arco
+     naranja de arriba a la derecha y el círculo claro de abajo a la
+     izquierda, que sí son del diseño. */
+  background:#fff url("../img/mj-fondo.webp") center / cover no-repeat;
+}
+.d-mj{
+  align-self:stretch; height:100%; min-height:0;
+  display:flex; flex-direction:column;
+}
+
+/* ---- Medidas tomadas del arte (página 23 del PDF, lienzo 2520x1260):
+   el panel de la escena va de x=336 a x=2192 (73.65% del ancho) y de
+   y=268 a y=991 (57.4% del alto). El cartel "¡Jugá con nosotros!"
+   arranca en el MISMO borde izquierdo del panel y las 4 tarjetas de
+   estado terminan en el mismo borde derecho, así que las tres filas
+   comparten un ancho común en vez de tener cada una su margen. ---- */
+.d-mj-play{
+  --mj-ancho: min(73.65cqw, 57.4cqh * 1856 / 723);
+  justify-content:center;
+}
+.d-mj-top, .d-mj-body, .d-mj-fb, .d-mj-next{
+  width:var(--mj-ancho); margin-inline:auto; max-width:100%;
+}
+.d-mj-top{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:1rem; flex-wrap:wrap; flex:none;
+}
+.d-mj-top .d-mj-stats{ margin:0; flex:0 1 auto; }
+.d-mj-kicker{ height:clamp(2.6rem, 8.7cqh, 5.4rem); }
+/* Una sola columna: la escena arriba, las opciones abajo. */
+.d-mj-body{
+  display:flex; flex-direction:column; justify-content:center;
+  grid-template-columns:none;
+  align-items:stretch; align-content:stretch; gap:1.1rem; min-height:0;
+}
+/* La escena se mide contra el ALTO del escenario además del ancho.
+   `.d-stage` es `container-type:size` (kit), así que `cqh` es el alto
+   real disponible entre las dos barras: con el `width:100%` que trae
+   el kit por default, en 1280x720 el panel terminaba 43px fuera del
+   escenario, recortado y sin scroll. */
+.d-mj-escena{
+  flex:0 0 auto; width:100%; height:auto; margin-inline:auto;
+}
+/* 4 opciones en fila, sin las pistas de conexión del mapa del kit
+   (este juego no une nodos con líneas). */
+.d-mj-grid{
+  grid-template-columns:repeat(4, minmax(0,1fr));
+  gap:.9rem;
+}
+@media (max-width:820px){
+  .d-mj-grid{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+}
+/* Escalera de compresión por ALTO, no por ancho: lo que aprieta a esta
+   pantalla es el alto del escenario, no su ancho. Cada escalón declara
+   `--mj-ancho` UNA sola vez — dos reglas con el mismo selector dentro
+   del mismo bloque es justo lo que `check-css-duplicates.mjs` existe
+   para encontrar (§7.3 punto 13), y acá ya se pisaron una vez. */
+@media (max-height:760px){
+  .d-mj-play{
+    --mj-ancho: min(73.65cqw, 52cqh * 1856 / 723);
+    padding:.7rem 1.1rem 1rem; gap:.6rem;
+  }
+  .d-mj-opt{ font-size:.8rem; padding:.55rem .7rem; }
+  .d-mj-stat{ padding:.35rem .6rem; }
+  .d-mj-stat b{ font-size:1.1rem; }
+}
+/* Debajo de ~560px de ventana, el ancho compartido con el panel (la
+   alineación exacta del PDF) deja de ser posible: atado a `cqh` sobre
+   un escenario bajo, la fila del cartel + estado queda en 200px y las
+   tarjetas se encabalgan sobre la escena. Acá manda el ancho
+   disponible y la escena sigue limitada por alto. */
+@media (max-height:560px){
+  .d-mj-play{ --mj-ancho:100%; padding:.4rem .8rem .6rem; gap:.4rem; }
+  .d-mj-escena{ width:min(100%, 40cqh * 1856 / 723); }
+  .d-mj-kicker{ height:clamp(1.9rem, 14cqh, 2.6rem); }
+  .d-mj-top{ gap:.5rem; }
+  .d-mj-body{ gap:.55rem; }
+  .d-mj-grid{ gap:.45rem; }
+  .d-mj-opt{ font-size:.7rem; padding:.4rem .5rem; border-width:1.5px; }
+  .d-mj-stat{ padding:.25rem .45rem; }
+  .d-mj-stat-lbl{ font-size:.58rem; }
+  .d-mj-stat b{ font-size:.92rem; }
+  .d-mj-heart{ width:1rem; height:.9rem; }
+  .d-mj-fb.is-ok, .d-mj-fb.is-bad{ padding:.45rem .6rem; font-size:.75rem; }
+  .d-mj-fb{ margin-top:.4rem; }
+  .d-mj-next{ margin-top:.4rem; padding:.35rem .8rem; font-size:.78rem; }
+}
+/* Teléfono acostado de verdad (750x340, probado con `openCourseMobile`
+   en contexto táctil real, §7.3 punto 11): el escenario queda en
+   ~180px de alto. Las 4 opciones vuelven a UNA fila — apilarlas en dos
+   era lo que las mandaba abajo del borde. */
+@media (max-height:420px){
+  .d-mj-play{ padding:.25rem .6rem .4rem; gap:.25rem; }
+  .d-mj-top{ gap:.35rem; flex-wrap:nowrap; }
+  .d-mj-kicker{ height:clamp(1.5rem, 17cqh, 2.2rem); }
+  .d-mj-escena{ width:min(100%, 34cqh * 1856 / 723); }
+  .d-mj-body{ gap:.35rem; }
+  .d-mj-grid{ grid-template-columns:repeat(4, minmax(0,1fr)); gap:.3rem; }
+  .d-mj-opt{ font-size:.58rem; padding:.28rem .3rem; border-width:1.5px; }
+  .d-mj-stats{ gap:.25rem; }
+  .d-mj-stat{ flex:0 1 auto; padding:.18rem .3rem; }
+  .d-mj-stat-lbl{ font-size:.5rem; }
+  .d-mj-stat b{ font-size:.76rem; }
+  .d-mj-heart{ width:.72rem; height:.64rem; }
+  .d-mj-rules-ic{ width:.95rem; height:.95rem; }
+  .d-mj-fb.is-ok, .d-mj-fb.is-bad{ padding:.3rem .45rem; font-size:.62rem; }
+  .d-mj-next{ margin-top:.25rem; padding:.25rem .6rem; font-size:.66rem; }
+}
+/* El PDF pinta la opción elegida con el amarillo de la categoría, no
+   con el azul del molde de "Seguridad alimentaria". */
+.d-mj-opt.is-ok{
+  background:linear-gradient(180deg, var(--cat), var(--cat-strong));
+  border-color:var(--cat-strong); color:#fff;
+  box-shadow:0 8px 20px -4px color-mix(in srgb, var(--cat-strong) 55%, transparent);
+}
+.d-mj-lives{ align-items:center; }
+.d-mj-heart{ width:1.5rem; height:1.35rem; }
+
+/* El contador de puntos del JUEGO (el de la tarjeta amarilla) no es el
+   mismo que los ✦ del curso: son las reglas de este mini juego. */
+.d-mj-stat--pts b{ color:var(--cat-ink); }
+
+/* Panel final: los dos números que el arte deja en blanco. */
+.d-mj-fin-stat b{ color:#1a1a2e; }

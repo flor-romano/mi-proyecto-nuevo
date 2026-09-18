@@ -1,0 +1,9 @@
+node_modules/
+_work/
+
+# Salidas regenerables de las herramientas de inspección visual.
+# La baseline de `visual-regress` SÍ se versiona (CLAUDE.md §7 punto 10):
+# es la referencia contra la que se compara antes de cada entrega.
+verify-hitboxes-out/
+verify-places-out/
+tools/visual-diff-out/

@@ -1,0 +1,110 @@
+/* ============================================================
+   coto-repaso.css — kit-base v1.9.64
+   Área Aprendizaje (COTO) — cáscara del "repaso rápido"
+   ------------------------------------------------------------
+   POR QUÉ EXISTE, Y POR QUÉ RECIÉN AHORA (§7.12)
+   §6.46 dejó este widget del lado del curso, y en ese momento estuvo
+   BIEN: existía en un solo curso, y la regla del §4 pide un SEGUNDO
+   caso antes de generalizar. Ese segundo caso llegó. Auditando los
+   tres cursos terminados, `.d-repaso*` resultó ser la clase más
+   reescrita de todas — 106 reglas entre "Uso de Sucursales 3 - NOA" y
+   "Seguridad alimentaria" — y, sobre todo: de las 42 reglas con el
+   mismo selector en los dos cursos, **40 son idénticas byte a byte**.
+   Eso no es diseño convergente, es copia y pega. La condición que
+   §6.46 estaba esperando se cumplió, así que sube.
+
+   QUÉ ES DEL KIT (esto) Y QUÉ QUEDA EN EL CURSO:
+   · Acá: la cáscara del widget — el panel, la pregunta, los dos
+     botones V/F, el feedback que se despliega, los estados del ítem
+     (`.is-current`/`.is-answered`/`.is-correct`/`.is-wrong`), las
+     flechas de navegación, el contador y el botón "Siguiente".
+   · En el curso: DÓNDE se coloca. NOA lo apoya sobre el arte con
+     `[data-place]` (y por eso necesita `position:absolute`, su propio
+     candado y una forma alternativa para lienzo chico); "Seguridad
+     alimentaria" lo pone en una diapositiva normal. Esa diferencia es
+     real y no se puede promediar — por eso NINGUNA regla con
+     `[data-place]` viaja acá. También queda en el curso el contenido:
+     las preguntas, el feedback y qué respuesta es la correcta.
+
+   Marcado (idéntico en los dos cursos, es el contrato):
+     <div class="d-repaso" data-repaso>
+       <b class="d-repaso-title"><span class="d-repaso-title-ic">🔍</span>Repaso rápido
+         <span class="d-repaso-nav">
+           <button class="d-repaso-arrow" data-repaso-prev>‹</button>
+           <span class="d-repaso-count" data-repaso-count>0 de 2</span>
+           <button class="d-repaso-arrow" data-repaso-nextq>›</button>
+         </span></b>
+       <div class="d-repaso-item" data-repaso-item data-repaso-n="1"
+            data-repaso-id="u1-x" data-repaso-ok="true">
+         <p class="d-repaso-q" data-narrate-prefix="Verdadero o falso">…</p>
+         <div class="d-repaso-btns d-repaso-btns--vf">
+           <button data-repaso-ans="true">Verdadero</button>
+           <button data-repaso-ans="false">Falso</button>
+         </div>
+       … y en OPCIÓN MÚLTIPLE, sin el `--vf` y con un solo `"true"`:
+         <div class="d-repaso-btns">
+           <button data-repaso-ans="false">Opción A</button>
+           <button data-repaso-ans="true">Opción B</button>
+           <button data-repaso-ans="false">Opción C</button>
+         </div>
+         <p class="d-repaso-fb" data-repaso-fb hidden>…</p>
+         <button class="d-repaso-next" data-repaso-next>Siguiente</button>
+       </div>
+     </div>
+   Lo cablea `initRepasoRapido()` (coto-ui.js). Los tamaños en `cqw`
+   son a propósito: dentro de `.d-stage` (container-type:size) un `rem`
+   fijo se ve enorme en un lienzo chico y diminuto en uno grande.
+   ============================================================ */
+
+.d-repaso{ position: relative; overflow: visible; width: 100%; display: flex; flex-direction: column; gap: .15rem; background: linear-gradient(180deg, #fff 0%, color-mix(in srgb, var(--cat) 6%, #fff) 100%); border: 1.5px solid color-mix(in srgb, var(--cat) 30%, var(--line)); border-radius: var(--r-lg, 16px); padding: .5rem .8rem .55rem; box-shadow: 0 1px 0 #fff inset, 0 2px 4px rgba(20, 30, 60, .06), 0 10px 22px -10px rgba(20, 30, 60, .28); }
+.d-repaso-q{ margin: 0 0 .3rem; color: var(--text); font-size: clamp(.78rem, 1.15cqw, .9rem); line-height: 1.26; }
+.d-repaso-fb{ align-items: flex-start; gap: .3rem; max-height: 0; opacity: 0; overflow: hidden; margin: 0; border-radius: 9px; padding: 0 .55rem; font-size: clamp(.72rem, 1.02cqw, .82rem); line-height: 1.24; transition: max-height .35s cubic-bezier(.2, .8, .3, 1), opacity .3s ease .05s, padding .35s ease, margin .35s ease; }
+.d-repaso-nav{ margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: .3rem; }
+.d-repaso-btns{ display: flex; gap: .5rem; }
+.d-repaso-done{ display: flex; align-items: center; justify-content: center; gap: .4rem; max-height: 0; opacity: 0; overflow: hidden; margin: 0 .15rem; padding: 0 .6rem; border-radius: 10px; background: color-mix(in srgb, var(--success) 14%, var(--surface)); color: var(--success-ink); font-weight: 800; font-size: .74rem; transition: max-height .3s cubic-bezier(.22, 1.3, .4, 1), opacity .3s ease, padding .3s ease, margin .3s ease; }
+.d-repaso-item{ display: none; position: relative; padding-left: 2rem; }
+.d-repaso-next{ align-self: flex-end; display: none; align-items: center; gap: .3rem; margin-top: .34rem; padding: .3rem .85rem; border-radius: 999px; border: none; cursor: pointer; background: linear-gradient(180deg, var(--cat), var(--cat-strong)); color: #fff; font-family: var(--font-body); font-weight: 800; font-size: .74rem; box-shadow: 0 1px 0 color-mix(in srgb, #fff 35%, transparent) inset, 0 6px 14px -6px color-mix(in srgb, var(--cat-strong) 75%, transparent); transition: transform .15s, box-shadow .15s, filter .15s; }
+.d-repaso-arrow{ flex: none; display: grid; place-items: center; width: 1.5rem; height: 1.5rem; border-radius: 50%; border: none; cursor: pointer; background: var(--surface-2); color: var(--text-soft); font-size: .9rem; line-height: 1; padding: 0; transition: background .15s ease, color .15s ease, transform .15s ease; }
+.d-repaso-count{ flex: none; display: inline-flex; align-items: center; padding: .18rem .6rem; border-radius: 999px; background: var(--surface-2); color: var(--text-soft); font-family: var(--font-body); font-weight: 800; font-size: .68rem; white-space: nowrap; transition: background .2s ease, color .2s ease; }
+.d-repaso-title{ display: flex; align-items: center; gap: .5rem; color: var(--cat-strong); font-family: var(--font-title); font-weight: 900; font-size: clamp(.86rem, 1.3cqw, 1rem); }
+.d-repaso-title-ic{ display: grid; place-items: center; flex: none; width: 1.7em; height: 1.7em; border-radius: 50%; background: linear-gradient(180deg, color-mix(in srgb, var(--cat) 26%, #fff), color-mix(in srgb, var(--cat) 14%, #fff)); box-shadow: 0 1px 0 #fff inset, 0 3px 8px -3px color-mix(in srgb, var(--cat-strong) 45%, transparent); font-size: .82em; }
+.d-repaso-fb::before{ flex: none; font-size: 1em; line-height: 1.35; margin-right: .1rem; }
+.d-repaso-fb[hidden]{ display: flex !important; }
+.d-repaso-next:hover{ filter: brightness(1.07); transform: translateY(-2px); box-shadow: 0 1px 0 color-mix(in srgb, #fff 35%, transparent) inset, 0 10px 18px -7px color-mix(in srgb, var(--cat-strong) 80%, transparent); }
+.d-repaso-btns button{ flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: .3rem; padding: .34rem .85rem; border-radius: 999px; border: 2px solid var(--cat-strong); background: linear-gradient(180deg, #fff 0%, #fbfbfe 100%); color: var(--cat-strong); font-size: .76rem; font-weight: 800; cursor: pointer; box-shadow: 0 1px 0 #fff inset, 0 3px 8px -3px rgba(20, 30, 60, .18); transition: background .15s, border-color .15s, color .15s, transform .15s, box-shadow .15s; }
+.d-repaso-next:active{ transform: translateY(0); }
+.d-repaso-item::before{ content: attr(data-repaso-n); position: absolute; left: 0; top: .05rem; width: 1.45rem; height: 1.45rem; border-radius: 50%; background: var(--surface-2); color: var(--text-dim); font-size: .72rem; font-weight: 800; display: grid; place-items: center; border: 1.5px solid var(--line); transition: background .2s ease, color .2s ease, border-color .2s ease, transform .2s cubic-bezier(.22, 1.4, .4, 1); }
+.d-repaso-arrow:disabled{ opacity: .35; cursor: default; }
+.d-repaso-item.is-current{ display: flex; flex-direction: column; animation: d-repaso-in .32s cubic-bezier(.2, .8, .3, 1) both; }
+.d-repaso-btns button::before{ font-size: .9em; }
+.d-repaso-btns button:disabled{ cursor: default; }
+.d-repaso-item.is-answered::before{ background: var(--cat); color: #fff; border-color: var(--cat); transform: scale(1.08); }
+.d-repaso-arrow:hover:not(:disabled){ background: color-mix(in srgb, var(--cat) 20%, var(--surface-2)); color: var(--cat-strong); }
+.d-repaso-item.is-wrong .d-repaso-fb{ background: color-mix(in srgb, var(--danger) 10%, transparent); color: var(--danger-ink); }
+.d-repaso.is-complete .d-repaso-done{ max-height: 3em; opacity: 1; margin-top: .08rem; padding: .22rem .6rem; }
+.d-repaso-arrow:active:not(:disabled){ transform: scale(.92); }
+.d-repaso.is-complete .d-repaso-count{ background: color-mix(in srgb, var(--success) 18%, var(--surface)); color: var(--success-ink); }
+.d-repaso-item.is-correct .d-repaso-fb{ background: color-mix(in srgb, var(--success) 12%, transparent); color: var(--success-ink); }
+.d-repaso-item.is-answered .d-repaso-fb{ max-height: 12em; opacity: 1; margin-top: .28rem; padding: .3rem .55rem; }
+.d-repaso-item.is-answered .d-repaso-next{ display: inline-flex; animation: d-repaso-in .32s ease .12s both; }
+.d-repaso-btns button:hover:not(:disabled){ border-color: var(--cat); background: var(--cat-soft); transform: translateY(-2px); box-shadow: 0 10px 18px -8px rgba(20, 30, 60, .3); }
+.d-repaso-btns button:active:not(:disabled){ transform: translateY(0); }
+.d-repaso-item.is-wrong .d-repaso-fb::before{ content: "💡"; }
+.d-repaso-item.is-correct .d-repaso-fb::before{ content: "🎉"; }
+/* El ✓/✕ es la ETIQUETA de "Verdadero"/"Falso", no una marca de
+   respuesta correcta — y por eso ahora exige `.d-repaso-btns--vf`
+   (kit-base v1.9.75, §7.21 F3).
+   Sin esa condición, en una pregunta de OPCIÓN MÚLTIPLE —que el kit
+   soporta, porque `resolver()` compara `eligio === ok` y no limita la
+   cantidad de botones— el ✓ aparecía sobre la opción correcta ANTES de
+   contestar: regalaba la respuesta. En un Verdadero/Falso el mismo
+   marcado se lee como etiqueta y está bien.
+   Marcado: `<div class="d-repaso-btns d-repaso-btns--vf">` para V/F;
+   sin el modificador para múltiple. Y en múltiple va UN SOLO botón con
+   `data-repaso-ans="true"`: con `false` habría varias "correctas". */
+.d-repaso-btns--vf button[data-repaso-ans="true"]::before{ content: "✓"; }
+.d-repaso-btns--vf button[data-repaso-ans="false"]::before{ content: "✕"; }
+.d-repaso-item.is-wrong .d-repaso-btns button[data-chosen]{ background: linear-gradient(180deg, color-mix(in srgb, var(--danger) 88%, #fff), var(--danger)); animation: d-repaso-shake .45s ease; }
+.d-repaso-item.is-correct .d-repaso-btns button[data-chosen]{ background: linear-gradient(180deg, color-mix(in srgb, var(--success) 88%, #fff), var(--success)); animation: d-repaso-celebrate .5s ease; }
+.d-repaso-item.is-answered .d-repaso-btns button[data-chosen]{ color: #fff; border-color: transparent; box-shadow: 0 8px 18px -6px rgba(20, 30, 60, .4); }
+.d-repaso-item.is-answered .d-repaso-btns button:not([data-chosen]){ opacity: .45; }

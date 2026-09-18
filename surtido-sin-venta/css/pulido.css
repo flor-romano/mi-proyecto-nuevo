@@ -1,0 +1,42 @@
+/* ============================================================
+   pulido.css — "Surtido sin venta"
+   Ajustes finales de coherencia, siempre el último de la cadena.
+   ============================================================ */
+
+/* Los `.d-shot-hit` de las 7 píldoras de conceptos caen sobre píldoras
+   ya dibujadas y redondeadas: el aro rectangular por defecto quedaba
+   asomando en las esquinas. */
+.d-shot-hit--tab{ border-radius:999px; }
+
+/* El cierre arranca bloqueado por CSS del kit
+   (`.slide-cierre .d-cierre-shot{display:none}`) y se destraba con
+   `.unlocked`, que pone `Cierre.unlockCierre()`. Este curso lo
+   desbloquea al ENTRAR a la diapositiva (el gate del mini juego ya
+   garantiza que no se llega antes), así que nunca se ve un cierre
+   vacío — pero si algo fallara, esto deja el arte visible igual en vez
+   de una pantalla en blanco. */
+.slide-cierre:not(.unlocked) .d-cierre-shot{ display:flex; }
+
+/* Las fichas de repaso son tarjetas altas: en pantallas bajas el
+   `.modal-card` ya scrollea solo, pero el aro de ícono absoluto se
+   escapaba del recorte. */
+@media (max-height:620px){
+  .modal-card.d-ficha{ margin-top:2.4rem; }
+  .d-ficha-ic{ width:4.2rem; height:4.2rem; top:-2.1rem; }
+  .d-ficha-ic svg{ width:2.1rem; height:2.1rem; }
+  .modal-card.d-ficha > .modal-bd{ padding:2.4rem 1.4rem 1.2rem; }
+}
+
+/* Los dos botones flotantes del kit (`.d-fab-stack`: Ayuda y
+   Configuración) son `position:fixed` abajo a la derecha. En una
+   diapositiva-captura eso solo tapa arte; en el mini juego, que es
+   layout HTML a todo el ancho, en pantallas bajas se comen la última
+   columna de opciones y la tarjeta "Reglas" — medido en un teléfono
+   acostado real (750x340): la píldora "Falso stock" quedaba tapada a
+   medias. Se les reserva su ancho (52px + 22px de margen, 46+14 en
+   mobile, `coto-player-chrome.css`) en vez de moverlos: la posición de
+   los flotantes es del kit y es la misma en todo el curso.
+   Queda relayado como observación de kit. */
+@media (max-height:560px){
+  .d-mj-play{ padding-right:4.6rem; }
+}

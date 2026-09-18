@@ -1,0 +1,244 @@
+/* ============================================================
+   coto-player-bottom.css · Barra inferior del reproductor (.d-bottom)
+   kit-base v1.4 · Área Aprendizaje (COTO) — genérico, sin contenido
+   de curso. Copiar tal cual a cada curso nuevo, sin editar.
+   ------------------------------------------------------------
+   Pareja de coto-player-chrome.css (barra SUPERIOR, extraída en v1.1).
+   La inferior nunca se había extraído: seguía a mano en el CSS de cada
+   curso, aunque el propio kit ya dependía de sus clases —
+   coto-player-chrome.css referencia `.d-bottom` (modo cine),
+   `.d-nav-btn` y `.d-counter` (media query de mobile) sin definirlas
+   en ningún lado. O sea que los nombres ya eran contrato del kit de
+   hecho, pero la implementación no viajaba con él.
+
+   Depende de los tokens de coto-base.css (--surface, --line, --text,
+   --text-soft, --cat, --cat-strong, --cat-grad, --brand, --brand-navy,
+   --font-body, --r-pill, --r-sm, --shadow-card). No define ningún color
+   propio.
+
+   CONTRATO — lo que el HTML de cada curso tiene que respetar (los
+   atributos data-* los lee motor-slides.js, ver spec-motor-slides.md
+   §4 y §10):
+
+     <footer class="d-bottom">
+       <button class="d-nav-btn" data-nav="prev">…</button>
+       <div class="d-progress" data-progress-track>
+         <div class="d-progress-fill" data-slide-progress></div>
+         <span class="d-progress-thumb" data-slide-thumb role="slider"
+               tabindex="0" aria-label="…"></span>
+       </div>
+       <span class="d-counter" data-slide-counter>1 / N</span>
+       <button class="d-nav-btn" data-nav="next">
+         <span data-nav-label>Empezar</span>…
+       </button>
+     </footer>
+
+   El motor gestiona solo: `disabled` de prev/next, el texto de
+   [data-nav-label], el ancho de [data-slide-progress], la posición de
+   [data-slide-thumb] y las marcas de sección dentro de
+   [data-progress-track]. La clase .d-nav-btn--cta también la togglea el
+   motor (_syncNav) en la primera diapositiva y en la última con
+   data-nav-cta.
+
+   El ALTO no se define acá a propósito: lo manda la 3ª fila del grid de
+   .d-app en coto-player-chrome.css (64px en escritorio, 60px por debajo
+   de 850px). Fijarlo a mano hacía que en pantallas angostas la barra
+   midiera 64px dentro de una fila de 60px y se saliera 4px de la
+   ventana — invisible para scroll-audit porque el body tiene
+   overflow:hidden. Bug real encontrado en "Prevención cardiovascular".
+   ============================================================ */
+
+.d-bottom {
+  height: 100%;
+  display: flex; align-items: center; gap: 1rem;
+  padding: 0 clamp(.8rem, 3vw, 1.6rem);
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, .04);
+}
+
+/* ---- Botones de navegación ---- */
+.d-nav-btn {
+  font-family: var(--font-body); font-weight: 700; font-size: .9rem;
+  border: 1.5px solid var(--line); background: var(--surface); color: var(--text);
+  border-radius: var(--r-pill); padding: .6rem 1.1rem; cursor: pointer;
+  display: inline-flex; align-items: center; gap: .4rem;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.d-nav-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor;
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.d-nav-btn:hover:not(:disabled) { border-color: var(--cat-strong); color: var(--cat-ink); }
+.d-nav-btn:disabled { opacity: .4; cursor: not-allowed; }
+/* Micro-interacción de presión (kit-base v1.9.43) — feedback físico
+   inmediato al tocar, antes de que cualquier otra cosa (narración,
+   navegación) reaccione. Excluida en `.is-gated`: ahí el botón YA
+   responde temblando (`.d-shake`, más abajo) al intento — sumarle
+   además un scale de "sí, te recibí" sería un mensaje contradictorio
+   sobre un botón que en ese momento no avanza nada. */
+.d-nav-btn:active:not(:disabled):not(.is-gated) { transform: scale(.96); }
+/* Llamado a la acción: primera diapositiva ("Empezar") y última con una
+   acción pendiente (data-nav-cta). Lo togglea el motor, no el curso. */
+.d-nav-btn--cta { background: var(--cat-ink); border-color: var(--cat-ink); color: #fff; }
+.d-nav-btn--cta:hover:not(:disabled) { background: color-mix(in srgb, var(--cat-ink) 85%, #000); color: #fff; }
+
+.d-counter { font-family: var(--font-body); font-weight: 600; font-size: .82rem;
+  color: var(--text-soft); flex: none; }
+
+/* ---- Barra de progreso ----
+   Es también un control de navegación arrastrable (el gesto lo
+   implementa cada curso, ver initProgressSeek): de ahí el cursor, el
+   touch-action y el área de clic ampliada con ::before, que le da al
+   alumno una franja cómoda para agarrar sin engordar la barra visible. */
+.d-progress { position: relative; flex: 1; min-width: 0; height: 8px;
+  border-radius: var(--r-pill); background: var(--line);
+  cursor: pointer; touch-action: none; }
+.d-progress::before { content: ""; position: absolute; left: 0; right: 0; top: -11px; bottom: -11px; }
+.d-progress-fill { position: absolute; inset: 0; width: 0; border-radius: var(--r-pill);
+  background: var(--cat-grad, var(--brand)); transition: width .2s ease; }
+.d-progress-thumb { position: absolute; top: 50%; left: 0; width: 16px; height: 16px;
+  border-radius: 50%; background: var(--cat-strong); border: 2px solid var(--surface);
+  box-shadow: var(--shadow-card); transform: translate(-50%, -50%);
+  cursor: grab; transition: left .2s ease, transform .15s ease; }
+.d-progress-thumb:hover { transform: translate(-50%, -50%) scale(1.15); }
+.d-progress-thumb:focus-visible { outline: 3px solid var(--cat-strong); outline-offset: 3px; }
+/* Mientras se arrastra, el pulgar tiene que seguir al dedo/mouse sin
+   interpolar: con la transición puesta va "atrasado" y se siente pegajoso. */
+.d-progress.is-seeking .d-progress-fill,
+.d-progress.is-seeking .d-progress-thumb { transition: none; }
+.d-progress.is-seeking .d-progress-thumb { cursor: grabbing; }
+
+/* ---- Marcas de sección ----
+   Las inserta el motor solo (_initProgressSections) a partir de los
+   .d-sidenav-group del índice, con el nombre de la sección en
+   data-section-label. Son decorativas (aria-hidden): la misma
+   información ya está accesible en el índice lateral. */
+.d-progress-mark { position: absolute; top: 50%; width: 3px; height: 14px; border-radius: 2px;
+  background: color-mix(in srgb, var(--cat-strong) 70%, transparent);
+  transform: translate(-50%, -50%); }
+.d-progress-mark::after { content: attr(data-section-label); position: absolute;
+  bottom: calc(100% + 10px); left: 50%; transform: translateX(-50%); white-space: nowrap;
+  font-family: var(--font-body); font-size: .72rem; font-weight: 600;
+  color: #fff; background: var(--brand-navy);
+  padding: .3rem .6rem; border-radius: var(--r-sm); box-shadow: var(--shadow-card);
+  opacity: 0; pointer-events: none; transition: opacity .15s; }
+/* al pasar por la barra se insinúan todas; la de abajo del cursor, entera */
+.d-progress:hover .d-progress-mark::after { opacity: .55; }
+.d-progress-mark:hover::after { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .d-progress-fill, .d-progress-thumb, .d-progress-mark::after { transition: none; }
+}
+
+/* ---- Pantallas angostas ----
+   coto-player-chrome.css ya ajusta .d-nav-btn y .d-counter en su media
+   query de ≤767px (min-width:96px y ocultar el contador); acá solo va lo
+   que no tiene sentido dejar en el archivo del header. Por debajo de
+   480px el botón pasa a ser solo-ícono (se oculta cualquier texto que
+   NO sea [data-nav-label], o sea "Anterior"/el texto fijo del botón de
+   volver — el label dinámico "Empezar"/"Siguiente"/"Finalizar"/"Fin" se
+   mantiene siempre visible, es la única pista de qué hace el botón): el
+   min-width baja de 96px a un cuadrado chico, ya no hace falta ancho
+   para texto que no está. */
+@media (max-width: 480px) {
+  .d-bottom { gap: .6rem; padding: 0 .6rem; }
+  .d-nav-btn { min-width: 0; padding: .6rem .8rem; }
+  .d-nav-btn span:not([data-nav-label]) { display: none; }
+}
+/* Ventanas muy bajas (netbook / tablet apaisada chica): se achican los
+   controles, nunca el alto de la barra (lo define la grilla de .d-app). */
+@media (max-height: 620px) {
+  .d-nav-btn { padding: .45rem .9rem; font-size: .85rem; }
+}
+/* Teléfono ACOSTADO: la barra baja a 50px (ver `.d-app` en
+   coto-player-chrome.css, §7.25 E2) y lo de adentro tiene que entrar
+   sin perder el alto de toque. */
+@media (max-height: 460px) {
+  .d-bottom { gap: .5rem; padding: 0 .5rem; }
+  .d-nav-btn { padding: .38rem .7rem; font-size: .78rem; }
+}
+
+/* ---- Gate genérico de avance por contenido ----
+   kit-base v1.6. El botón "Siguiente" nunca se deshabilita con
+   disabled/aria-disabled (un lector de pantalla dejaría de anunciarlo
+   como interactivo): en cambio se atenúa (.is-gated) y, al intentar
+   avanzar igual mientras el curso frena el paso (motor.canAdvance /
+   data-require-seen — ver motor-slides.js), tiembla (.d-shake) para dar
+   feedback físico de "no, todavía no". El hitbox pendiente pulsa 2 veces
+   (.d-nudge, en el .d-shot-hit correspondiente) para guiar la mirada
+   hacia dónde falta interactuar. Extraído de "Prevención cardiovascular"
+   — @keyframes d-shake también lo reusa coto-quiz.css (misma animación,
+   dos disparadores distintos: un .d-opt incorrecto o este gate). */
+.d-nav-btn.is-gated { opacity: .55; cursor: not-allowed; }
+@keyframes d-shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+.d-nav-btn.d-shake { animation: d-shake .4s; }
+@keyframes d-nudge-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--cat-strong) 55%, transparent); }
+  50% { box-shadow: 0 0 0 8px transparent; }
+}
+/* `.d-nudge` suelto, no solo sobre `.d-shot-hit` (kit-base v1.9.63):
+   quien dispara el pulso es `initGateHints()` (coto-ui.js), y lo que
+   señala es "el elemento que falta tocar" — que en un curso es una
+   hitbox sobre la captura, pero en otro es una tarjeta, un botón o un
+   `[data-popup-trigger]` del cuerpo de la diapositiva. Con el selector
+   atado a `.d-shot-hit`, el pulso sobre cualquier otra cosa era un
+   no-op SILENCIOSO: la clase se ponía, no pasaba nada, y el gate
+   quedaba sin señalar qué falta. El `border-radius` propio se mantiene
+   solo para la hitbox, que es la que no trae uno. */
+.d-nudge { animation: d-nudge-pulse .8s ease-out 2; }
+.d-shot-hit.d-nudge { border-radius: var(--r); }
+@media (prefers-reduced-motion: reduce) {
+  .d-nav-btn.d-shake, .d-nudge { animation: none; }
+}
+
+/* `.is-gated` en sí (arriba) es vieja de v1.6 — documentada, pero sin
+   NADA de JS que la tocara hasta ahora (kit-base v1.9.43,
+   `Motor.prototype._syncGate`): el botón solo temblaba REACTIVAMENTE
+   al fallar un intento, nunca se veía atenuado de ANTEMANO. El glow
+   de acá es el complemento — se dispara una sola vez, en el instante
+   exacto en que `_syncGate` detecta que se pasó de gateado a libre
+   (la interacción que satisface el gate, no en cada `slidechange`
+   ni en loop — eso sería ruido permanente, no un aviso puntual). */
+@keyframes d-nav-unlock-glow {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--cat-strong) 55%, transparent); }
+  70% { box-shadow: 0 0 0 10px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+.d-nav-btn.d-nav-unlock-glow { animation: d-nav-unlock-glow .6s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .d-nav-btn.d-nav-unlock-glow { animation: none; }
+}
+
+/* ---- Zona bloqueada de la barra de progreso (kit-base v1.9.43) ----
+   Pedido explícito del cliente: que la pista muestre visualmente hasta
+   dónde se puede arrastrar (`initProgressSeek`), no solo que el
+   arrastre se frene en silencio al llegar al tope. La crea/reposiciona
+   `_syncNav()` (motor-slides.js) — `left` marca dónde empieza lo
+   todavía no alcanzado, siempre pegada al borde derecho de la pista.
+   Trama diagonal (no un color sólido) para que se lea como "superficie
+   distinta", no como una segunda barra de progreso compitiendo con la
+   real. `pointer-events:none`: el arrastre lo sigue gobernando
+   `.d-progress` entero, esto es puramente informativo — intentar
+   arrastrar HASTA ahí y más allá ya lo frena la lógica de
+   `initProgressSeek`, esto solo le ahorra al alumno el intento. */
+.d-progress-locked {
+  position: absolute; top: 0; bottom: 0; right: 0; pointer-events: none;
+  border-radius: 0 var(--r-pill) var(--r-pill) 0;
+  background-image: repeating-linear-gradient(
+    135deg,
+    /* 45%, no 22% (kit-base v1.9.71, §7.17). Reporte del cliente: "no
+       se le ven las rayas de que esté bloqueado". A 22% sobre franjas
+       de 5px, encima de un track gris claro, de lejos no se distingue
+       del resto de la barra. El patrón diagonal se mantiene: se lee
+       como "superficie distinta" y no como una segunda barra
+       compitiendo con la real.
+       OJO al diagnosticar esto en un curso: si el curso no llama a
+       `motor.restoreMaxVisited()`, el elemento directamente NO EXISTE
+       en el DOM y no hay contraste que arreglar (era el caso de todo
+       curso generado hasta v1.9.70 — ver §7.17 punto B2). */
+    color-mix(in srgb, var(--brand-navy) 45%, transparent) 0 5px,
+    transparent 5px 10px
+  );
+}
+@media (prefers-reduced-motion: reduce) {
+  .d-progress-locked { background-image: none; border: 1px dashed color-mix(in srgb, var(--brand-navy) 30%, transparent); }
+}

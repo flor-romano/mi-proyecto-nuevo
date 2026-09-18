@@ -1,0 +1,11 @@
+/* ============================================================
+   assets.css — "Surtido sin venta"
+   Capas `.d-shot-*` propias de ESTE curso. Todas las diapositivas de
+   este curso son CAPTURA ÍNTEGRA (CLAUDE.md §2.8: con el PDF exportado
+   a 2:1 exacto —2520x1260— `cover` no recorta nada, así que no hace
+   falta separar fondo y piezas con alfa), y el lienzo, el `object-fit`
+   y las hitboxes ya los resuelve `coto-shot-stage.css`.
+   Queda a propósito sin reglas: no hay ninguna capa de arte propia que
+   declarar. Si más adelante el diseñador entrega piezas sueltas con
+   alfa, van acá.
+   ============================================================ */

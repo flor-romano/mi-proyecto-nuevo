@@ -1,0 +1,307 @@
+<!--
+  index-boilerplate.html — kit-base v1.9.60
+  ============================================================
+  PLANTILLA DEL `index.html` DE UN CURSO. No se abre a mano: la
+  rellena `tools/new-course.mjs` y escribe el `index.html` del curso
+  nuevo. Editar ESTE archivo cambia cómo arrancan TODOS los cursos
+  siguientes; editar el `index.html` ya generado de un curso cambia
+  solo ese curso (que es lo correcto para su contenido).
+
+  POR QUÉ EXISTE (§7.08, auditoría de los 2 cursos terminados)
+  ------------------------------------------------------------
+  Hasta v1.9.59 `new-course.mjs` decía explícitamente "no genera
+  index.html" y mandaba a copiar el de un curso de referencia y
+  adaptarlo a mano. El argumento era que el chrome tiene "demasiados
+  IDs/clases con contrato exacto" para fabricarlo con confianza. Los
+  números de la auditoría dieron vuelta ese argumento: entre los dos
+  cursos terminados el chrome de cabecera difiere en 73 de ~180
+  líneas, y esas diferencias son PARÁMETROS (título, color del
+  favicon, `data-cat`, qué íconos usa), no estructura. El contrato de
+  ids es idéntico en los dos. O sea: es exactamente el tipo de archivo
+  que conviene generar, porque un generador acierta el contrato SIEMPRE
+  y una adaptación a mano es donde se rompe — en silencio, además:
+  `initPlayer()` no tira ningún error si un id no calza, simplemente
+  deja medio chrome muerto.
+
+  UNA SOLA FUENTE DE VERDAD PARA EL CHROME DE LA BARRA
+  ------------------------------------------------------------
+  El bloque `{{HEADER_BOILERPLATE}}` NO está copiado acá: el generador
+  inyecta el contenido de `header-boilerplate.html` tal cual, en el
+  momento de generar. Tener dos copias de la misma barra superior era
+  garantizar que se desincronicen (el bug que este kit ya pagó con el
+  sprite, con `curso.js` y con los popovers). Se arregla en
+  `header-boilerplate.html` y todos los cursos nuevos lo heredan.
+
+  TOKENS QUE RELLENA EL GENERADOR
+  ------------------------------------------------------------
+    {{TITULO}}              nombre del curso (ya escapado para HTML)
+    {{CAT}}                 categoría real de coto-base.css (data-cat)
+    {{FAVICON_HEX}}         color del favicon, sin '#', url-encodeado
+    {{CSS_EXTRA}}           <link> opcionales (minijuego, quiz…)
+    {{SPRITE}}              símbolos SVG (base del chrome + los del curso)
+    {{HEADER_BOILERPLATE}}  header-boilerplate.html, inyectado entero
+    {{SLIDES}}              las diapositivas del curso
+    {{TOTAL}}               cantidad de diapositivas (contadores/aria)
+    {{SIDENAV_ITEMS}}       botones [data-goto] del índice lateral
+    {{JS_EXTRA}}            <script> opcionales (quiz, minijuego…)
+  ============================================================ -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{{TITULO}}</title>
+<!-- Favicon embebido como data-URI: sin él el navegador pide
+     /favicon.ico y ese 404 entra como "error de consola" en
+     deep-audit / markup-sanity / full-regress — 3 fallos que no son
+     del curso (CLAUDE.md §6.18 punto 3). -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%23{{FAVICON_HEX}}'/%3E%3C/svg%3E">
+
+<link rel="stylesheet" href="css/coto-base.css">
+<link rel="stylesheet" href="css/coto-base-addendum-v1.8.css">
+<link rel="stylesheet" href="css/coto-player-chrome.css">
+<link rel="stylesheet" href="css/coto-player-bottom.css">
+<link rel="stylesheet" href="css/coto-shot-stage.css">
+<link rel="stylesheet" href="css/coto-media.css">
+<link rel="stylesheet" href="css/coto-fx.css">
+<link rel="stylesheet" href="css/coto-cierre.css">
+<link rel="stylesheet" href="css/coto-repaso.css">
+<link rel="stylesheet" href="css/coto-piezas.css">
+<link rel="stylesheet" href="css/coto-visor.css">
+{{CSS_EXTRA}}
+<!-- CSS propio del curso SIEMPRE al final: es el único que puede
+     pisar al del kit, y solo puede hacerlo si va después (§1). -->
+<!-- Los TRES que escribe `new-course.mjs`. Hasta v1.9.71 acá se
+     enlazaba solo `diapositivas.css` y los otros dos quedaban muertos
+     en disco: el generador los creaba y nadie los cargaba nunca
+     (§7.19 A3). El orden importa — `pulido.css` va último porque es,
+     por definición, el que ajusta lo anterior. -->
+<link rel="stylesheet" href="css/assets.css">
+<link rel="stylesheet" href="css/diapositivas.css">
+<link rel="stylesheet" href="css/pulido.css">
+</head>
+<body data-cat="{{CAT}}">
+
+<!-- ==============================================================
+     SPRITE DE ÍCONOS
+     Los primeros son los que necesita el CHROME para funcionar
+     (`i-check` lo usa CADA ítem del índice lateral); los demás los
+     elige el curso según sus secciones. El sprite es contenido de
+     curso (§6.67) — sumar acá los que hagan falta, mismo estilo de
+     línea 24x24, y borrar los que no se usen.
+     ============================================================== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+{{SPRITE}}
+  </defs>
+</svg>
+
+<!-- ==============================================================
+     `.d-app` — la cáscara de la aplicación. NO es decorativa:
+     `coto-player-chrome.css` la define como `position:fixed; inset:0;
+     display:grid` con `grid-template-rows: 56px 1fr 64px`, o sea
+     EXACTAMENTE tres filas: barra superior / escenario / barra
+     inferior. Sin ella el contenido fluye y cada diapositiva se va de
+     alto (lo detecta `scroll-audit` en las 5 resoluciones), y
+     `markup-sanity` falla directamente con "no existe .d-app".
+     Los otros hijos que quedan acá adentro (banner de retomar,
+     fab-stack, modales) son todos `position:fixed`, así que no suman
+     filas a la grilla — pero NO agregar hijos en flujo normal.
+     ============================================================== -->
+<div class="d-app">
+
+{{HEADER_BOILERPLATE}}
+
+<!-- ==============================================================
+     ESCENARIO — acá viven las diapositivas del curso.
+     El motor (`motor-slides.js`) las descubre por `[data-slide]`; el
+     orden del DOM ES el orden del curso. La última tiene que llevar
+     `data-slide-end` para que se emita `courseend` y el curso pueda
+     marcar completo en el LMS (§6.24 — el peor bug que tuvo el kit).
+     ============================================================== -->
+<main class="d-stage">
+  <!-- Aviso "girá tu dispositivo" en teléfono vertical. El CSS entero
+       —animación, ícono, tipografía— ya viaja en `coto-shot-stage.css`
+       desde v1.9.39 detrás de un `@container (max-aspect-ratio: 1)`;
+       lo único que faltaba era ESTE div, y el propio comentario del CSS
+       decía "agregar a mano, curso por curso". Se agregaba en cero
+       cursos (kit-base v1.9.71, §7.17): sin él, un teléfono vertical
+       real muestra el lienzo 2:1 letterboxeado a una altura mínima, sin
+       decir por qué. Va como PRIMER hijo de `.d-stage` porque necesita
+       el `position:relative` que ese contenedor ya tiene.
+       `aria-hidden`: es un affordance visual: un lector de pantalla no
+       percibe proporción de pantalla. -->
+  <div class="d-rotate-notice" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="7" y="2" width="10" height="16" rx="2"/>
+      <path d="M12 15h.01"/>
+      <path d="M20 9a8 8 0 0 1-1.5 7"/>
+      <path d="M20 5v4h-4"/>
+    </svg>
+    <b>Girá tu dispositivo</b>
+    <span>Este curso se ve mejor en horizontal.</span>
+  </div>
+{{SLIDES}}
+</main>
+
+<!-- ==============================================================
+     PANTALLA DE SALIDA  ·  #d-salida
+     La usa `salirDelCurso()` (coto-cierre.js). El CSS ya viaja en
+     `coto-base-addendum-v1.8.css` desde v1.8; el bloque no lo generaba
+     nadie (kit-base v1.9.71, §7.17).
+     Por qué importa: "Salir del curso" cierra la sesión SCORM y después
+     intenta `window.close()`, que DENTRO DEL IFRAME DE UN LMS —o sea,
+     en el único lugar donde el curso corre de verdad— no hace nada y
+     tampoco tira error. Sin este bloque, el alumno toca el botón
+     principal del final del curso y no pasa absolutamente nada en
+     pantalla. La despedida es el mecanismo; el `close()` es el extra.
+     ============================================================== -->
+<div id="d-salida" class="d-salida" hidden role="status">
+  <div class="d-salida-card">
+    <div class="d-salida-ic" aria-hidden="true">👋</div>
+    <h2>¡Gracias por hacer el curso!</h2>
+    <p>Ya podés cerrar esta ventana. Tu avance quedó guardado.</p>
+    <button class="btn-ic" type="button" data-salida-volver>Volver al resumen</button>
+  </div>
+</div>
+
+<!-- ==============================================================
+     BARRA INFERIOR — navegación y progreso.
+     Contrato del motor: `[data-nav="prev"]`/`[data-nav="next"]`,
+     `[data-progress-track]` con `[data-slide-progress]` adentro,
+     `[data-slide-thumb]` (arrastrable) y `[data-slide-counter]`.
+     `[data-nav-label]` es el texto del botón "Siguiente": el motor lo
+     cambia a "Empezar"/"Siguiente"/"Terminar" según dónde está.
+     ============================================================== -->
+<footer class="d-bottom">
+  <button class="d-nav-btn d-nav-btn--prev" type="button" data-nav="prev" aria-label="Diapositiva anterior">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    <span>Anterior</span>
+  </button>
+
+  <div class="d-progress" data-progress-track>
+    <div class="d-progress-fill" data-slide-progress></div>
+    <span class="d-progress-thumb" data-slide-thumb role="slider" tabindex="0" aria-label="Progreso del curso: usá las flechas para navegar" aria-valuemin="1" aria-valuemax="{{TOTAL}}" aria-valuenow="1" aria-valuetext="Diapositiva 1 de {{TOTAL}}"></span>
+  </div>
+
+  <span class="d-counter" data-slide-counter>1 / {{TOTAL}}</span>
+
+  <button class="d-nav-btn d-nav-btn--next" type="button" data-nav="next" aria-label="Siguiente diapositiva">
+    <span data-nav-label>Empezar</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>
+</footer>
+
+</div><!-- /.d-app -->
+
+<!-- ==============================================================
+     ÍNDICE LATERAL · contrato del kit (addendum §8).
+     Los `[data-goto]` los cablea el motor solo; `curso.js` solo marca
+     `.is-done` y `disabled` en lo no visto (§7.3 punto 3) — para eso
+     está `initIndexJumps()`, que si no se llama deja el índice como
+     un atajo para saltarse el gate de avance.
+     ============================================================== -->
+<div class="modal modal--drawer" data-popup="sidenav" role="dialog" aria-modal="true" aria-label="Índice del curso">
+  <div class="modal-back" data-popup-close></div>
+  <div class="modal-card d-sidenav">
+    <div class="d-sidenav-hd">
+      <h2>Índice de contenidos</h2>
+      <button class="modal-x" type="button" data-popup-close aria-label="Cerrar">✕</button>
+    </div>
+    <nav class="d-sidenav-list" aria-label="Diapositivas">
+      <p id="d-sidenav-progress" class="d-sidenav-progress" aria-live="polite"></p>
+{{SIDENAV_ITEMS}}
+    </nav>
+  </div>
+</div>
+
+<!-- ==============================================================
+     GLOSARIO — opcional. Si el curso no lo usa, borrar este bloque
+     Y el botón que lo abre en la barra superior.
+     `initGlossarySearch()` filtra por texto; `initGlossaryUnlock()`
+     va revelando entradas según el progreso real. Los dos leen los
+     `<dt>` de `dl.d-glossary` EN EL ORDEN DEL HTML — el kit nunca los
+     reordena, así que el orden lo decide este archivo.
+     ============================================================== -->
+<div class="modal modal--drawer-right" data-popup="glosario" role="dialog" aria-modal="true" aria-label="Glosario">
+  <div class="modal-back" data-popup-close></div>
+  <div class="modal-card d-drawer-r">
+    <div class="modal-hd">
+      <button class="modal-x" type="button" data-popup-close aria-label="Cerrar">✕</button>
+      <h3 style="margin:0;color:inherit">Glosario</h3>
+    </div>
+    <div class="modal-bd">
+      <!-- `data-gloss-search` NO es decorativo: `initGlossarySearch()`
+           (coto-ui.js) busca el campo por ESE atributo, no por la
+           clase. Sin él la función sale por su `return` temprano y el
+           buscador se ve, se puede tipear y no filtra nada — sin un
+           solo error en consola (kit-base v1.9.71, §7.17). La clase es
+           para el CSS; el atributo es el contrato con el JS. Lo mismo
+           `data-gloss-empty` en el cartel de "sin resultados". -->
+      <!-- `.d-gloss-search` es un CONTENEDOR en el CSS del kit
+           (`.d-gloss-search input{...}` en el addendum), no la clase del
+           input. El boilerplate ponía `.d-glossary-search` —un nombre
+           que no existe en ningún CSS del kit—, así que el campo se
+           veía con el estilo por defecto del navegador y funcionaba
+           igual, porque lo funcional lo decide el atributo (§7.19). -->
+      <div class="d-gloss-search">
+        <!-- El CSS reserva 2.3rem de padding a la izquierda del input
+             para esta lupa: sin el <svg> queda un hueco vacío. -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+        <input data-gloss-search type="search" placeholder="Buscar un término…" aria-label="Buscar en el glosario">
+      </div>
+      <p class="d-gloss-empty" data-gloss-empty hidden>No encontramos ese término.</p>
+      <dl class="d-glossary">
+        <!-- <dt>Término</dt><dd>Definición.</dd> -->
+      </dl>
+    </div>
+  </div>
+</div>
+
+<!-- ==============================================================
+     MIS LOGROS — la grilla la dibuja `initLogros()` (coto-logros.js)
+     dentro de #d-badges-list. No escribir tarjetas a mano acá: el
+     módulo las regenera enteras en cada `unlock()`.
+     ============================================================== -->
+<div class="modal" data-popup="logros" role="dialog" aria-modal="true" aria-label="Mis logros">
+  <div class="modal-back" data-popup-close></div>
+  <div class="modal-card d-wide">
+    <div class="modal-hd">
+      <button class="modal-x" type="button" data-popup-close aria-label="Cerrar">✕</button>
+      <h3 style="margin:0;color:inherit">Mis logros</h3>
+    </div>
+    <div class="modal-bd">
+      <p class="d-badges-intro" data-narrate-only>Vas sumando <strong>✦ puntos</strong> a medida que avanzás, y ganás un <strong>🏆 logro</strong> al completar cada unidad.</p>
+      <div class="d-badges-grid" id="d-badges-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==============================================================
+     ORDEN DE LOS SCRIPTS — no es arbitrario:
+     · `motor-slides.js` primero: define `Motor`, que `curso.js` usa.
+     · `scorm-api.js`/`xapi.js` antes que nada que reporte progreso.
+     · `coto-logros.js` antes de `curso.js`: define `initLogros()`.
+     · `curso.js` SIEMPRE último: es el único que orquesta al resto.
+     Todos son autocontenidos y toleran que falte el marcado que
+     buscan, así que se pueden dejar cargados aunque el curso no use
+     esa pieza — lo que NO se puede es cambiarlos de orden.
+     ============================================================== -->
+<script src="js/motor-slides.js"></script>
+<script src="js/scorm-api.js"></script>
+<script src="js/xapi.js"></script>
+<script src="js/narrador.js"></script>
+<script src="js/fx.js"></script>
+<script src="js/coto-player.js"></script>
+<script src="js/coto-ui.js"></script>
+<script src="js/coto-media.js"></script>
+<script src="js/coto-piezas.js"></script>
+<script src="js/coto-visor.js"></script>
+<script src="js/coto-hotspots.js"></script>
+<script src="js/coto-cierre.js"></script>
+<script src="js/coto-logros.js"></script>
+{{JS_EXTRA}}
+<script src="js/curso.js"></script>
+</body>
+</html>

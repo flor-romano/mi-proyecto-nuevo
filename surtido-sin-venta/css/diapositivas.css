@@ -192,9 +192,13 @@
   --mj-ancho: min(73.65cqw, 57.4cqh * 1856 / 723);
   justify-content:center;
 }
-.d-mj-top, .d-mj-body, .d-mj-fb, .d-mj-next{
+.d-mj-top, .d-mj-body, .d-mj-fb{
   width:var(--mj-ancho); margin-inline:auto; max-width:100%;
 }
+/* El botón de avance NO entra en el ancho compartido: el kit lo define
+   `inline-flex` + `align-self:center` y estirarlo a todo el ancho del
+   panel lo convertía en una barra, no en un botón. Solo se lo centra. */
+.d-mj-next{ align-self:center; }
 .d-mj-top{
   display:flex; align-items:center; justify-content:space-between;
   gap:1rem; flex-wrap:wrap; flex:none;

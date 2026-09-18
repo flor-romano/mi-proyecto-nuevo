@@ -16,6 +16,14 @@
         de ícono, y por eso se veía una caja grande de esquinas vivas).
      3. Al responder en el mini juego, la consigna se corta y arranca la
         devolución: ni superposición ni silencio.
+
+   Segunda tanda de reportes:
+     4. El ícono del curso de la barra superior es el real, no el
+        placeholder de 1x1 que deja el generador.
+     5. El chip de logros NUNCA puede mostrar más obtenidos que el total
+        del catálogo ("7/6"), ni siquiera con estado viejo guardado.
+     6. Tras responder MAL también hay botón para avanzar: el alumno no
+        puede quedar sin salida visible.
 */
 import { openCourse, report, requireUrl, irASlide } from './_shared.mjs';
 import { chromium } from 'playwright-core';
@@ -195,6 +203,103 @@ for (const t of TARJETAS) {
   if (!dijoBien.includes('es el código interno de Coto')) {
     fails.push('al responder BIEN no se locuta la devolución ' +
       `(se dijo: "${dijoBien.slice(0, 70) || '(nada)'}").`);
+  }
+}
+
+/* ---- 4 · el ícono del curso no es el placeholder ---------------- */
+{
+  const ico = await page.evaluate(() => {
+    const img = document.querySelector('.d-brand .lg img');
+    if (!img) return null;
+    return { w: img.naturalWidth, h: img.naturalHeight, src: img.getAttribute('src'),
+             radio: getComputedStyle(img.closest('.lg')).borderTopLeftRadius };
+  });
+  if (!ico) fails.push('no hay <img> de marca en la barra superior.');
+  else if (ico.w <= 1 || ico.h <= 1) {
+    fails.push(`el ícono del curso sigue siendo el placeholder de ${ico.w}x${ico.h} que escribe ` +
+      '`new-course.mjs` (un WebP de 1x1 transparente): la pastilla dorada se ve vacía.');
+  }
+  if (ico && ico.radio !== '50%') {
+    fails.push(`la pastilla del ícono tiene radio ${ico.radio} y tiene que ser un círculo (50%).`);
+  }
+}
+
+/* ---- 5 · el chip de logros no puede pasarse del total -----------
+   Se fuerza el caso real: `suspend_data` con un id de logro que ya no
+   está en el catálogo (lo que queda al probar builds sucesivos sobre la
+   misma carpeta, porque `scorm-api.js` deriva su clave de la ruta del
+   paquete). `Logros.restore()` del kit no cruza esos ids contra el
+   catálogo y el chip terminaba mostrando "7/6". */
+{
+  await page.evaluate(() => {
+    const s = window.SCORM.loadState() || {};
+    s.b = ['conceptos', 'reporte', 'acciones', 'juego', 'preciso', 'curso', 'fantasma-de-otra-version'];
+    window.SCORM.saveState(s);
+  });
+  await page.reload();
+  await page.waitForTimeout(700);
+  const chip = await page.evaluate(() => ({
+    txt: document.getElementById('d-badge-count').textContent,
+    tarjetas: document.querySelectorAll('#d-badges-list .d-badge').length
+  }));
+  const m = /^(\d+)\/(\d+)$/.exec(chip.txt.trim());
+  if (!m) {
+    fails.push(`el chip de logros dice "${chip.txt}" y no tiene la forma N/M.`);
+  } else if (+m[1] > +m[2]) {
+    fails.push(`el chip muestra "${chip.txt}": más logros obtenidos que el total del catálogo. ` +
+      'Un id guardado que ya no existe se sigue contando — `Logros.restore()` no lo valida y ' +
+      '`unlock()` sí, así que las dos puertas al mismo conjunto no aplican el mismo criterio.');
+  }
+  if (m && +m[2] !== chip.tarjetas) {
+    fails.push(`el chip dice que hay ${m[2]} logros y la grilla dibuja ${chip.tarjetas} tarjetas.`);
+  }
+  // se deja el estado limpio para lo que venga después
+  await page.evaluate(() => { try { localStorage.clear(); } catch (e) {} });
+  await page.reload();
+  await page.waitForTimeout(500);
+}
+
+/* ---- 6 · tras responder MAL hay salida ------------------------- */
+{
+  await irASlide(page, 'minijuego');
+  await page.waitForTimeout(250);
+  await page.click('[data-slide="minijuego"] [data-target="mj-juego"]');
+  await page.waitForTimeout(300);
+  const r = await page.evaluate(async () => {
+    const raiz = document.querySelector('[data-slide="minijuego"]');
+    const opts = () => Array.from(raiz.querySelectorAll('[data-mj-opciones] .d-mj-opt'));
+    opts()[1].click();                       // incorrecta en la pregunta 1
+    await new Promise(r => setTimeout(r, 200));
+    const boton = raiz.querySelector('.d-mj-next');
+    const antes = raiz.querySelector('[data-mj-n]').textContent;
+    const vivas = opts().filter(b => !b.disabled).length;
+    // el cartel se lee ANTES de avanzar: `render()` lo limpia al pasar
+    // de pregunta, y leerlo después devolvía siempre vacío.
+    const fb = raiz.querySelector('[data-mj-fb]').textContent;
+    if (boton) boton.click();
+    await new Promise(r => setTimeout(r, 250));
+    return {
+      habiaBoton: !!boton,
+      rotulo: boton ? boton.textContent : null,
+      vivasTrasError: vivas,
+      preguntaAntes: antes,
+      preguntaDespues: raiz.querySelector('[data-mj-n]').textContent,
+      fb: fb
+    };
+  });
+  if (!r.habiaBoton) {
+    fails.push('tras responder MAL no aparece ningún botón para avanzar: el alumno ve la ' +
+      'devolución y no tiene salida visible.');
+  }
+  if (r.vivasTrasError < 2) {
+    fails.push(`tras el error quedaron ${r.vivasTrasError} opciones habilitadas: la opción errada ` +
+      'se deshabilita, el resto tiene que seguir viva para poder reintentar.');
+  }
+  if (r.preguntaDespues === r.preguntaAntes) {
+    fails.push(`el botón de avance no pasó de pregunta (sigue en la ${r.preguntaDespues}).`);
+  }
+  if (!/probar otra opción o seguir/i.test(r.fb || '')) {
+    fails.push('el cartel de error no avisa que se puede reintentar o seguir.');
   }
 }
 

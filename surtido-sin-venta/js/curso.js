@@ -217,7 +217,33 @@
     (s.mo || []).forEach(function (id) { estado.mjOk[id] = true; });
     (s.me || []).forEach(function (id) { estado.mjErr[id] = true; });
     estado.mjFin = !!s.mf;
-    if (Logros) Logros.restore(s);
+    if (Logros) Logros.restore(sanearLogros(s));
+  }
+
+  /* `Logros.restore()` (coto-logros.js) confía en lo que viene del
+     `suspend_data` sin cruzarlo contra el catálogo:
+       (s.b || []).forEach(function (id) { obtenidos[id] = true; });
+     `unlock()` SÍ valida —si el id no está en `BADGES` devuelve false y
+     no inventa ninguna tarjeta— así que las dos puertas de entrada al
+     mismo conjunto no aplican el mismo criterio. Consecuencia medida:
+     con un id viejo guardado, el chip del header muestra "7/6" mientras
+     la grilla sigue dibujando 6 tarjetas; el número se pasa del total y
+     nada más lo delata.
+     De dónde sale un id que ya no existe: de probar builds sucesivos
+     sobre la misma carpeta/LMS. `scorm-api.js` deriva su clave de
+     respaldo de la ruta del paquete, así que dos versiones del curso
+     servidas desde el mismo lugar comparten estado — si entre una y
+     otra cambió el catálogo de logros, el id viejo sobrevive.
+     Se filtra del lado del curso, que es donde vive el catálogo, en vez
+     de parchear el archivo del kit. Relayado (K11). */
+  function sanearLogros(s) {
+    if (!s) return s;
+    var validos = {};
+    BADGES.forEach(function (b) { validos[b.id] = true; });
+    var limpio = {};
+    Object.keys(s).forEach(function (k) { limpio[k] = s[k]; });
+    limpio.b = (s.b || []).filter(function (id) { return validos[id]; });
+    return limpio;
   }
 
   function contar(mapa) { return Object.keys(mapa).length; }
@@ -512,7 +538,7 @@
 
     function panel(id) {
       var trig = raiz.querySelector('[data-target="' + id + '"]');
-      if (trig) { trig.click(); return; }
+      if (trig) { trig.click(); recolocarOverlays(); return; }
       /* Sin disparador en el marcado (las pantallas finales no lo
          tienen: se llega por lógica, no por un clic), se mueve a mano
          el mismo juego de capas que maneja el motor. */
@@ -522,6 +548,70 @@
       document.dispatchEvent(new CustomEvent('layerchange', {
         bubbles: true, detail: { target: id }
       }));
+      recolocarOverlays();
+    }
+
+    /* `_initShots()` escribe left/top/width/height EN PÍXELES sobre cada
+       `[data-hit]`/`[data-place]`, y para uno que vive dentro de un
+       `[data-panel][hidden]` no puede calcular nada: la imagen mide 0.
+       El motor lo reintenta cuando el elemento se vuelve visible, pero
+       vía `ResizeObserver` — o sea, un frame DESPUÉS. En ese hueco los
+       dos números del panel final del mini juego se pintan en (0,0), en
+       la esquina, y recién después saltan a su lugar.
+       Lo agarró `overlays-colocados` de la suite, y de forma
+       intermitente: 1 de cada 3 corridas los medía en (0, 788). Un
+       `slidechange` sí dispara el recálculo; un `layerchange` no —
+       así que le toca al curso pedirlo. Relayado (K12). */
+    function recolocarOverlays() {
+      if (!window.motor || !motor._initShots) return;
+      motor._initShots();
+    }
+
+    /* Los dos números del panel final viven en un `[data-panel][hidden]`,
+       y un `[data-shot]` oculto mide 0x0: `_initShots()` no puede
+       calcular nada, así que el motor les pone su ANCLA PROVISIONAL
+       (`left:0; top:0`, kit-base v1.9.72 §7.18 K2) hasta que se revelan.
+       Eso deja dos efectos:
+         · para el alumno, un frame con los números en la esquina del
+           arte la primera vez que se abre el panel;
+         · para `overlays-colocados` de la suite, un fallo INTERMITENTE
+           —1 de cada 3 corridas— midiéndolos en (0, 788), porque el
+           test revela la capa y mide en el mismo turno, sin que el
+           ResizeObserver llegue a correr.
+       Se resuelve posicionándolos UNA vez al arranque: se revelan, se
+       mide y se vuelven a ocultar, todo en el mismo turno (el navegador
+       no pinta en el medio, así que no se ve nada). A partir de ahí
+       tienen coordenadas reales y el ancla no vuelve a aplicar.
+       Por eso, además, esos dos `.d-shot-img` NO llevan `loading="lazy"`
+       (a diferencia del resto, §3 punto 13): una imagen lazy dentro de
+       un panel oculto no se descarga nunca, y sin `naturalWidth` no hay
+       nada que medir. Son 145 KB que se adelantan a propósito.
+       Relayado (K12). */
+    function preposicionarPanelesOcultos() {
+      if (!window.motor || !motor._initShots) return;
+      var ocultos = [];
+      raiz.querySelectorAll('[data-panel][hidden]').forEach(function (pan) {
+        if (!pan.querySelector('[data-shot] [data-hit], [data-shot] [data-place]')) return;
+        ocultos.push(pan);
+        pan.hidden = false;
+      });
+      if (!ocultos.length) return;
+      motor._initShots();
+      ocultos.forEach(function (pan) { pan.hidden = true; });
+    }
+    /* Hay que esperar a que las imágenes tengan `naturalWidth`: sin eso
+       `place()` sale por su guard y la medición no ocurre. */
+    function cuandoCarguenLasImagenes(fn) {
+      var imgs = Array.prototype.slice.call(
+        raiz.querySelectorAll('[data-panel] .d-shot-img'));
+      var faltan = imgs.filter(function (im) { return !im.complete || !im.naturalWidth; });
+      if (!faltan.length) { fn(); return; }
+      var pendientes = faltan.length;
+      faltan.forEach(function (im) {
+        function listo() { if (--pendientes === 0) fn(); }
+        im.addEventListener('load', listo, { once: true });
+        im.addEventListener('error', listo, { once: true });
+      });
     }
 
     function render() {
@@ -572,7 +662,12 @@
     function feedback(ok, txt) {
       if (!elFb) return;
       elFb.className = 'd-mj-fb ' + (ok ? 'is-ok' : 'is-bad');
-      elFb.textContent = txt;
+      /* Tras un error el cartel dice las DOS salidas que hay. Sin esa
+         línea, el alumno ve la explicación y nada más: las opciones que
+         quedan vivas no se leen como "probá otra", y el botón nuevo
+         podría leerse como la única salida. */
+      elFb.textContent = ok ? txt
+        : txt + ' Podés probar otra opción o seguir al siguiente concepto.';
     }
 
     function responder(k, btn) {
@@ -600,7 +695,7 @@
            consigna seguía de fondo y la devolución no se escuchaba. */
         narrar(q.why);
         hud();
-        siguientePaso();
+        siguientePaso(true);
         persistir();
       } else {
         btn.classList.add('is-bad');
@@ -612,6 +707,12 @@
         feedback(false, q.mal);
         hud();
         persistir();
+        /* Tras un error el juego NO avanza solo: las opciones que quedan
+           siguen vivas para volver a intentar. Pero sin un botón, la
+           única diferencia visible contra el flujo de acierto era la
+           AUSENCIA de salida — y eso se lee como "quedé trabado"
+           (reportado por el cliente). Ahora la salida está siempre. */
+        if (vidas > 0) siguientePaso(false);
         /* Si este error fue el último, la devolución y el resultado se
            narran JUNTOS, en una sola emisión: narrar el "por qué" y
            enseguida pisarlo con la pantalla final dejaría al alumno sin
@@ -621,19 +722,34 @@
       }
     }
 
-    function siguientePaso() {
+    /* `acerto` decide el rótulo, el estilo y el foco — NO si el botón
+       existe: existe siempre. Si el alumno erró y después acierta, esta
+       función corre de nuevo, de ahí el `remove()` del botón anterior
+       para no terminar con dos. */
+    function siguientePaso(acerto) {
+      var previo = raiz.querySelector('.d-mj-next');
+      if (previo) previo.remove();
+      var ultima = i + 1 >= MJ.length;
       var b = document.createElement('button');
       b.type = 'button';
-      b.className = 'btn btn-cat d-mj-next';
-      b.textContent = i + 1 < MJ.length ? 'Siguiente concepto' : 'Ver resultado';
+      b.className = 'd-mj-next btn ' + (acerto ? 'btn-cat' : 'btn-cat-ghost');
+      b.textContent = ultima
+        ? 'Ver resultado'
+        : (acerto ? 'Siguiente concepto' : 'Seguir al siguiente');
       b.addEventListener('click', function () {
         b.remove();
-        if (i + 1 < MJ.length) { i++; render(); }
-        else terminar(true);
+        if (!ultima) { i++; render(); }
+        else terminar(acertoUltima());
       });
       elFb.after(b);
-      b.focus();
+      /* El foco se mueve solo si la pregunta quedó cerrada. Con un error
+         todavía hay opciones vivas: llevarle el foco al botón de seguir
+         empuja a saltear justo cuando conviene reintentar. */
+      if (acerto) b.focus();
     }
+    /* Terminar "bien" es haber acertado la ÚLTIMA pregunta, no haber
+       llegado al final: ahora al final se puede llegar salteando. */
+    function acertoUltima() { return !!estado.mjOk[MJ[MJ.length - 1].id]; }
 
     function terminar(gano, preludio) {
       estado.mjFin = true;
@@ -683,6 +799,7 @@
     });
 
     pintarVidas();
+    cuandoCarguenLasImagenes(preposicionarPanelesOcultos);
 
     return {
       alEntrar: function () { hud(); },
@@ -729,9 +846,18 @@
           else if (modo === 'pesimo') btn = erroneaViva;
           else btn = estado.mjErr[q.id] ? elOpciones.children[q.ok] : erroneaViva;
           if (!btn || btn.disabled) break;
+          /* Desde que el botón de avance también aparece al ERRAR, hay
+             que mirar QUÉ se tocó antes de tocarlo: clickearlo siempre
+             haría que 'insistente' saltee la pregunta en vez de
+             corregirla, y que 'pesimo' vaya pasando de pregunta en vez
+             de agotar las vidas. Solo se avanza después de un acierto —
+             que es, además, lo que hace un alumno que está jugando. */
+          var eraCorrecta = (btn === elOpciones.children[q.ok]);
           btn.click();
-          var next = elFb.nextElementSibling;
-          if (next && next.classList.contains('d-mj-next')) next.click();
+          if (eraCorrecta) {
+            var next = raiz.querySelector('.d-mj-next');
+            if (next) next.click();
+          }
         }
         return { aciertos: aciertos, puntos: puntos, vidas: vidas, fin: finAbierto() };
       }

@@ -40,3 +40,18 @@
 @media (max-height:560px){
   .d-mj-play{ padding-right:4.6rem; }
 }
+
+/* ---- Ícono del curso en la barra superior ----
+   `new-course.mjs` deja ahí un WebP de 1x1 TRANSPARENTE como
+   placeholder deliberado (lo explica en su propio comentario: un `src`
+   roto sería un 404, y la suite cuenta cualquier error de consola como
+   fallo, así que un curso recién generado arrancaría en rojo por un
+   asset que el diseñador todavía no entregó). O sea que la pastilla se
+   veía vacía porque el ícono real nunca se había puesto — no porque
+   algo lo pisara.
+   El ícono es ahora la zorra/carrito que el propio PDF dibuja en la
+   página 2 ("Introducción"), recortada de ahí con alfa real.
+   `.d-brand .lg` del kit es una pastilla de esquinas redondeadas con el
+   degradado de la categoría; acá pasa a círculo, que es como lo pidió
+   el cliente. El degradado dorado lo sigue poniendo el kit. */
+.d-brand .lg{ border-radius:50%; }

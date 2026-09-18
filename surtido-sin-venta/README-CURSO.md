@@ -507,6 +507,100 @@ conteo real contra el documentado los mantendría sincronizados solos.
   quedó instalado antes de medir: dos líneas que convierten un test que
   puede volverse mudo en uno que avisa.
 
+### K11 · `Logros.restore()` no valida contra el catálogo y `unlock()` sí — PROBADO
+
+- **Síntoma.** El chip del header mostró **"7/6 logros"**: más obtenidos
+  que el total del catálogo. La grilla, mientras tanto, seguía dibujando
+  6 tarjetas — o sea que el número miente y nada más lo delata.
+- **Diagnóstico contra el código real.** Las dos puertas de entrada al
+  mismo conjunto aplican criterios distintos (`coto-logros.js`):
+  - `unlock(id)` valida: `var b = BADGES.filter(x => x.id === id)[0];
+    if (!b) return false;` — un id que no está en el catálogo no entra.
+  - `restore(s)` NO valida:
+    `(s.b || []).forEach(function (id) { obtenidos[id] = true; });`
+  Y el HUD hace `Object.keys(obtenidos).length + '/' + BADGES.length`,
+  así que cualquier id de más infla el numerador contra un denominador
+  fijo.
+- **De dónde sale un id que ya no existe.** De probar builds sucesivos
+  sobre la misma carpeta o el mismo LMS: `scorm-api.js` deriva su clave
+  de respaldo de la RUTA del paquete, así que dos versiones del curso
+  servidas desde el mismo lugar comparten estado. Si entre una y otra
+  cambió el catálogo de logros, el id viejo sobrevive en el
+  `suspend_data` y se sigue contando. Es la misma familia que §7.3
+  punto 20 (el cliente probando builds encima del anterior).
+- **Verificación.** Reproducido de forma determinística: se escribe un
+  `suspend_data` con los 6 ids reales + `'fantasma'`, se recarga, y el
+  chip dice exactamente `7/6` con 6 tarjetas dibujadas. Queda como
+  chequeo permanente en `tools/tests/reporte-cliente.mjs`.
+- **Lo que NO era.** La hipótesis del reporte —un logro contándose dos
+  veces al reingresar a una diapositiva— no puede pasar: `obtenidos` es
+  un conjunto indexado por id y `unlock()` corta con
+  `if (obtenidos[id]) return false;`. Otorgar dos veces el mismo logro
+  no suma dos.
+- **Parche local.** Se filtra en `curso.js`, antes de llamar a
+  `restore()`, contra el catálogo que vive ahí mismo — no se tocó el
+  archivo del kit, así que el próximo zip de `kit-base/` no se lleva
+  puesto el arreglo por accidente.
+- **Propuesta.** Que `restore()` aplique el mismo criterio que
+  `unlock()`: ignorar los ids que no estén en `BADGES`. Es una línea, y
+  deja el invariante "obtenidos ≤ total" garantizado por el módulo en
+  vez de por cada curso.
+
+### K12 · El ancla provisional de §7.18 K2 hace fallar a `overlays-colocados`, de forma intermitente — PROBADO
+
+- **Síntoma.** `overlays-colocados` falló **1 de cada 3 corridas** con
+  `[minijuego] (capa "mj-fin-ok") "d-place d-mj-fin-stat": cae fuera de
+  su [data-shot] (0, 788 sobre 1600×780)`. En las otras dos, verde. Un
+  test que a veces está rojo es exactamente lo que §6.60 / §7.3 punto 17
+  dicen que enseña a mirar la suite y asumir que "siempre está así".
+- **Diagnóstico.** Los dos overlays viven en un `[data-panel][hidden]`.
+  Un `[data-shot]` oculto mide 0×0, así que `_initShots()` no puede
+  calcular coordenadas y el motor les aplica su **ancla provisional**
+  (`left:0; top:0`, kit-base v1.9.72, §7.18 K2) — que es una mejora
+  deliberada, para que no caigan fuera del lienzo. El problema es que
+  `overlays-colocados` revela la capa y mide **en el mismo turno
+  sincrónico**, sin que el `ResizeObserver` llegue a correr: lo que mide
+  es el ancla. Y el ancla, sobre `.d-mj-fin > .d-shot`, cae en (0, 788),
+  fuera del `[data-shot]`.
+  O sea: **la mitigación del kit dispara el test del kit.** La
+  intermitencia viene de que el ancla solo se aplica
+  `if (!h.style.left)` — una vez que algo posicionó los overlays de
+  verdad, no vuelve.
+- **Lo mismo, del lado del alumno.** Un `slidechange` sí dispara el
+  recálculo; un `layerchange` **no**. Un curso que pone overlays dentro
+  de capas depende del `ResizeObserver`, o sea de un frame de más: la
+  primera vez que se abre el panel final, los dos números se pintan un
+  instante en la esquina del arte y después saltan a su lugar.
+- **Verificación.** Antes: 2 fallos en 6 corridas. Después de
+  posicionar los paneles ocultos UNA vez al arranque (revelar → medir →
+  volver a ocultar, todo en el mismo turno, sin que el navegador pinte
+  en el medio): **10 corridas seguidas en verde**. Requiere además sacar
+  `loading="lazy"` de esas dos imágenes — una imagen lazy dentro de un
+  panel oculto no se descarga nunca, y sin `naturalWidth` `place()` sale
+  por su guard y no hay nada que medir.
+- **Propuesta.** Dos caminos, no excluyentes: que `_initShots()` se
+  vuelva a correr ante `layerchange` igual que ante `slidechange` (es
+  donde el kit ya tiene el resto de la familia "¿quién lo apaga?", y
+  `initLayerVideos` es el precedente exacto para la mitad de video); y
+  que `overlays-colocados` espere un frame entre revelar una capa y
+  medirla, para no medir el ancla que el propio kit puso.
+
+### K13 · Nada avisa si un curso se entrega con el ícono placeholder — PROPUESTA, no bug
+
+`new-course.mjs` deja en `img/icono-<cat>.webp` un WebP de **1×1
+transparente**, y lo hace por una buena razón que documenta ahí mismo:
+un `src` roto sería un 404, y la suite cuenta cualquier error de consola
+como fallo, así que un curso recién generado arrancaría en rojo por un
+asset que el diseñador todavía no entregó.
+
+El costo es que la pastilla dorada del header se ve **vacía** y ningún
+test lo nota: no hay error, el `src` resuelve, la imagen "existe". Este
+curso se entregó así una vuelta entera. Un chequeo de una línea
+—`naturalWidth <= 1` en el `<img>` de marca— lo convierte en un aviso.
+Encaja en `markup-sanity` (que ya mira este tipo de cosas) o en
+`gamificacion` (que ya decide si el curso "está en construcción" por
+cantidad de contenido, y podría no exigirlo hasta ese piso).
+
 ### Lo que NO es relay
 
 Cosas que aparecieron y que, mirándolas, son de este curso y no del kit:
@@ -577,7 +671,60 @@ medir cortes a mitad de frase **no se instala** (relay K10).
 
 ---
 
-## 8. Pendiente / próximo paso
+## 8. Tercera vuelta — 3 puntos más reportados
+
+**1 · El ícono del curso.** No se había revertido: **nunca se había
+puesto**. `img/icono-salon.webp` era el WebP de 1×1 transparente que
+escribe `new-course.mjs` como placeholder deliberado (un `src` roto sería
+un 404 y la suite lo contaría como fallo), y el archivo tenía **un solo
+commit** en todo el historial, el del armado inicial. Nada posterior lo
+pisó porque no había nada que pisar.
+Tampoco llegó adjunto el ícono de referencia que menciona el reporte, así
+que el ícono se armó **desde el arte del propio PDF**: la zorra/carrito
+que el diseñador dibuja en la página 2 ("Introducción"), recortada de
+`x[380,597] y[90,292]` y pasada a blanco con alfa real (el canal se
+calcula por cercanía al blanco contra el `#B47800` del fondo, así los
+bordes suavizados no quedan con orla dorada). La pastilla del kit ya
+aportaba el degradado dorado; se le agregó `border-radius:50%` para que
+sea el círculo que pide el reporte.
+Si tenían otro archivo pensado, reemplazar `img/icono-salon.webp` y
+listo — el HTML no cambia.
+
+**2 · El contador "7/6".** Reproducido y corregido. La causa no es la
+del reporte (un logro contándose dos veces es imposible: `obtenidos` es
+un conjunto por id y `unlock()` corta si ya está). Lo que pasa es que
+`Logros.restore()` mete en ese conjunto **cualquier id que venga del
+`suspend_data`, sin cruzarlo contra el catálogo**, mientras que
+`unlock()` sí lo valida. Con un id de una versión anterior guardado, el
+numerador crece contra un denominador fijo. Detalle: el estado viejo
+sobrevive entre builds porque `scorm-api.js` deriva su clave de la RUTA
+del paquete — probar zips sucesivos en la misma carpeta lo reproduce.
+Se filtra ahora del lado del curso (relay K11).
+
+**3 · Sin salida tras responder mal.** Cierto como reporte de UX, con un
+matiz: el juego no estaba trabado —las otras opciones seguían vivas— pero
+**no había nada que lo dijera**, y contra el flujo de acierto, que sí
+muestra botón, la ausencia se lee como bloqueo. Ahora, tras un error:
+el cartel avisa que se puede *probar otra opción o seguir*, aparece un
+botón "Seguir al siguiente" (fantasma, para que no compita con las
+opciones) y el foco **no** se mueve al botón — con opciones vivas,
+llevarle el foco a "seguir" empuja a saltear justo cuando conviene
+reintentar. Con acierto, el botón sigue siendo el sólido de siempre.
+Consecuencia de diseño: ahora se puede llegar al final salteando, así que
+"terminaste con éxito" pasó a depender de haber acertado la última
+pregunta y no de haber llegado.
+El recorrido instrumentado se ajustó en la misma vuelta: ahora solo
+avanza después de un acierto, porque clickear el botón nuevo siempre
+habría hecho que el modo "insistente" saltee en vez de corregir.
+
+Probar esto destapó, además, un fallo **intermitente** de la suite que
+venía de antes (1 de cada 3 corridas) y que no era de estos cambios:
+el ancla provisional del kit sobre los overlays de una capa oculta
+(relay K12). Corregido y verificado con 10 corridas seguidas en verde.
+
+---
+
+## 9. Pendiente / próximo paso
 
 - **Videos.** `video/como-hacemos-el-reporte.mp4` y
   `video/que-hacemos-con-los-productos.mp4` son placeholders de 0 bytes
@@ -591,5 +738,5 @@ medir cortes a mitad de frase **no se instala** (relay K10).
 - **El zip de entrega NO está armado**: se arma con
   `python3 tools/build-zip.py . ../surtido-sin-venta.zip` y solo a
   pedido explícito (§3.12).
-- Los 10 hallazgos de kit (K1 a K10) se llevan en un prompt al chat de
+- Los 13 hallazgos de kit (K1 a K13) se llevan en un prompt al chat de
   `kit-base/`. Desde acá no se editó `kit-base/`.

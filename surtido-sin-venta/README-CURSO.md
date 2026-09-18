@@ -16,7 +16,7 @@ no se editó ni una línea de `kit-base/` (CLAUDE.md §0.1).
 | | |
 |---|---|
 | Diapositivas | 13 (de 31 páginas de PDF) |
-| Suite | **18 de 18 en verde** (17 del kit + 1 propio) |
+| Suite | **19 de 19 en verde** (17 del kit + 2 propios) |
 | Máximo de puntos medido | **199** (sin los videos reales; 219 con ellos) |
 | Medalla | bronce 74 · plata 127 · oro 180 |
 | Videos | **placeholder de 0 bytes** con el nombre final — el cliente los reemplaza sin tocar código |
@@ -442,6 +442,71 @@ exactamente la clase de afirmación que §6.60 dice que no se escribe a
 mano — un chequeo de una línea en `npm run test:kit` que compare el
 conteo real contra el documentado los mantendría sincronizados solos.
 
+### K9 · `[data-narrate-only]` funciona en los pop-ups y no en las diapositivas — PROBADO
+
+- **Síntoma.** El cliente pidió que la diapositiva de índice locutara
+  solo su título y el nombre del curso, sin enumerar los 7 ítems del
+  temario (que en pantalla están horneados en la captura, y en el DOM
+  viven como `<ul class="sr-only">` porque son el único acceso que tiene
+  un lector de pantalla a esa imagen). O sea: sacar algo de la VOZ sin
+  sacarlo de la accesibilidad.
+- **Diagnóstico.** El kit ya tiene exactamente esa convención:
+  `initPopupNarration()` (coto-ui.js) hace
+  `pop.querySelector('[data-narrate-only]') || pop.querySelector('.modal-card')`
+  y narra solo ese nodo. Pero la narración de DIAPOSITIVA no pasa por
+  ahí: `initPlayer()` recibe `speakSlide` y el curso le pasa la
+  `<section>` entera a `Narrador.textOf()`. La convención existe, está
+  documentada, y del lado de las diapositivas no la mira nadie.
+  Los otros dos atributos de la familia (`[data-narrate-last]`,
+  `[data-narrate-prefix]`) sí viven dentro de `textOf()` y por eso
+  funcionan en los dos lados; `[data-narrate-only]` quedó del lado de
+  quien llama.
+- **Verificación.** Con `speakSlide` mirando primero
+  `s.querySelector('[data-narrate-only]')`, el índice pasa de locutar el
+  temario completo a decir exactamente *"Índice de contenidos. Control
+  de surtido sin venta."*, y la lista sigue intacta en el DOM (7 `<li>`,
+  chequeado en `tools/tests/reporte-cliente.mjs`).
+- **Propuesta.** Que la plantilla `js/curso.js` traiga ese
+  `querySelector` en su `speakSlide` —son dos líneas y es el lugar donde
+  cada curso lo copia—, o que `textOf()` respete el atributo desde
+  adentro, como ya hace con los otros dos.
+
+### K10 · El motor de voz falso de `locucion-control.mjs` nunca se instala — PROBADO
+
+- **Síntoma.** Armando un test propio copié la técnica del kit
+  (`tools/tests/locucion-control.mjs`): reemplazar `speechSynthesis` por
+  un motor falso que tarda 300ms por fragmento, para poder medir el caso
+  "responder a MITAD de la locución". No medía nada: el motor falso no
+  registraba una sola emisión.
+- **Diagnóstico.** `locucion-control.mjs` instala su motor con una
+  **asignación simple** dentro de `addInitScript`:
+  `window.speechSynthesis = { … }`. `speechSynthesis` es un accessor de
+  solo lectura del `Window`, así que en modo sloppy —que es como corre
+  un `addInitScript`— **la asignación falla en silencio**: no tira, no
+  avisa, y `window.speechSynthesis` sigue siendo el motor real.
+- **Verificación, medida en el mismo Chromium de la suite**
+  (`/opt/pw-browsers/chromium-1194`):
+  - después de `window.speechSynthesis = {…}`, `getVoices()` sigue
+    devolviendo la lista real (vacía en headless), no la del falso;
+  - con `Object.defineProperty(window, 'speechSynthesis', {…})` sí queda
+    una propiedad propia que tapa al accessor, y a partir de ahí el
+    motor falso registra todo.
+  Mi test usa `defineProperty` por eso, con el porqué escrito al lado.
+- **El límite de lo que probé, y vale decirlo:** verifiqué que el motor
+  falso NO se instala. **No** audité una por una las aserciones de
+  `locucion-control.mjs` para decir cuáles quedan vacías — el test pasa
+  en verde y algunas de sus cuentas (cuántas veces se llamó a
+  `Narrador.speak`) siguen siendo válidas contra el motor real. Lo que sí
+  es seguro es que el escenario por el que ese test dice existir
+  —*"sin esto, el caso 'silenciar a mitad de la frase' —que es justo el
+  que importa— no existe"*, dice su propio encabezado— no se está
+  ejercitando.
+- **Propuesta.** Cambiar las dos asignaciones por `defineProperty` (el
+  test también reemplaza `SpeechSynthesisUtterance`, con el mismo
+  problema) y, ya que estamos, que el propio test verifique que su motor
+  quedó instalado antes de medir: dos líneas que convierten un test que
+  puede volverse mudo en uno que avisa.
+
 ### Lo que NO es relay
 
 Cosas que aparecieron y que, mirándolas, son de este curso y no del kit:
@@ -458,7 +523,61 @@ Cosas que aparecieron y que, mirándolas, son de este curso y no del kit:
 
 ---
 
-## 7. Pendiente / próximo paso
+## 7. Segunda vuelta — 3 puntos reportados por el cliente
+
+Los tres quedaron cubiertos por un test propio,
+`tools/tests/reporte-cliente.mjs`: son fallas que no se ven en pantalla
+ni dan error (qué se dice en voz alta, qué forma tiene un realce, en qué
+orden arranca un audio), así que sin test vuelven solas.
+
+**1 · La locución del índice enumeraba el temario.** Ahora dice
+exactamente *"Índice de contenidos. Control de surtido sin venta."* La
+lista sigue en pantalla (está horneada en la captura) y sigue en el DOM
+para el lector de pantalla: se sacó de la VOZ, no de la accesibilidad.
+El mecanismo es `[data-narrate-only]`, la misma convención que el kit ya
+usa en los pop-ups — que del lado de las diapositivas no estaba cableada
+(relay K9).
+
+**2 · El hover de las 2 tarjetas de repaso era una caja grande.** La
+causa es la que sospechaba el reporte: el hitbox no es la tarjeta, es la
+tarjeta MÁS el aro de ícono que asoma arriba (los dos son el mismo botón
+a los ojos del alumno, y así tiene que seguir siendo). El realce que
+hereda de `.d-shot-hit:hover` es un outline sobre todo el hitbox, o sea
+un rectángulo de esquinas vivas que incluye el aro.
+Ahora el realce lo dibuja un `::after` que cubre **solo la tarjeta**, con
+su radio real. Las dos medidas salen del render, no del ojo: la tarjeta
+arranca a **24.28%** del alto del hitbox (y=574 dentro de 440..992 en un
+repaso, y=559 dentro de 424..979 en el otro: 24.23% y 24.32%, medio
+píxel de diferencia) y su radio de esquina es de **~40px sobre el lienzo
+de 2520**, o sea 5.71% del ancho de la tarjeta.
+Ese 5.71% se expresa en `cqw` del **propio hitbox** (`container-type:
+inline-size`) y no del escenario, por lo mismo que las píldoras de
+consejos: fuera del rango donde la captura llena el frame, `.d-shot`
+queda letterboxeada y `1cqw` del escenario deja de ser 1% del arte.
+`:focus-visible` se dejó como viene del kit a propósito: por teclado, un
+anillo sobre el hitbox entero es lo correcto, porque muestra el área que
+realmente se activa.
+
+**3 · El audio del mini juego se superponía y la devolución no sonaba.**
+Las dos mitades eran una sola cosa y el error era mío: `responder()`
+pintaba el cartel de devolución pero **no narraba nada**. Como
+`Narrador.speak()` arranca llamando a `cancel()` (narrador.js), no
+narrar la devolución significaba además que nadie cortaba la consigna,
+que seguía sonando por abajo. Ahora toda la voz del juego pasa por un
+único `narrar()`, así cada cambio de estado corta lo anterior antes de
+empezar lo siguiente.
+Un detalle que salió de probarlo: si el error que se acaba de cometer es
+el que agota las vidas, la devolución y la pantalla de resultado se
+locutan **juntas, en una sola emisión** (`terminar(false, q.mal)`) — si
+no, el "por qué te equivocaste" se pisaba con el "te quedaste sin vidas"
+justo cuando más falta hace.
+Y el test de esto obligó a resolver un problema aparte, que terminó
+siendo hallazgo de kit: el motor de voz falso que usa la suite para
+medir cortes a mitad de frase **no se instala** (relay K10).
+
+---
+
+## 8. Pendiente / próximo paso
 
 - **Videos.** `video/como-hacemos-el-reporte.mp4` y
   `video/que-hacemos-con-los-productos.mp4` son placeholders de 0 bytes
@@ -472,5 +591,5 @@ Cosas que aparecieron y que, mirándolas, son de este curso y no del kit:
 - **El zip de entrega NO está armado**: se arma con
   `python3 tools/build-zip.py . ../surtido-sin-venta.zip` y solo a
   pedido explícito (§3.12).
-- Los 8 hallazgos de kit (K1 a K8) se llevan en un prompt al chat de
+- Los 10 hallazgos de kit (K1 a K10) se llevan en un prompt al chat de
   `kit-base/`. Desde acá no se editó `kit-base/`.

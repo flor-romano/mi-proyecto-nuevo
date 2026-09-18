@@ -550,8 +550,17 @@
        (spec-motor-slides.md §3): aparece cuando el alumno decide arrancar,
        no de prepo al entrar. -->
   <section class="slide d-shot-slide d-shot-slide--bg-layered" data-slide="indice" data-slide-index="2" data-gate-popup="instrucciones">
-    <h2 class="sr-only" data-slide-title>Índice de contenidos</h2>
-    <p class="sr-only">Control de surtido sin venta.</p>
+    <!-- `[data-narrate-only]` acota la LOCUCIÓN de esta diapositiva a
+         estas dos líneas: el índice se enumera en pantalla (está
+         horneado en la captura) pero leerlo entero en voz alta era
+         escuchar el temario dos veces, una acá y otra al llegar a cada
+         sección. La lista sigue en el DOM, fuera de este bloque, porque
+         es el ÚNICO acceso que tiene un lector de pantalla al contenido
+         de la imagen — se saca de la voz, no de la accesibilidad. -->
+    <div class="sr-only" data-narrate-only>
+      <h2 data-slide-title>Índice de contenidos</h2>
+      <p>Control de surtido sin venta.</p>
+    </div>
     <ul class="sr-only">
       <li>¿Qué es el control de surtido sin venta?</li>
       <li>Algunos conceptos importantes.</li>
@@ -643,8 +652,8 @@
     <p class="sr-only">Repasemos algunos puntos importantes. Abrí las dos fichas para seguir.</p>
     <div class="d-shot" data-shot>
       <img class="d-shot-img" src="img/repaso-reporte.webp" loading="lazy" alt="" aria-hidden="true">
-      <button class="d-shot-hit" type="button" data-hit data-popup-trigger="rep-para-que" aria-haspopup="dialog" data-l="20.000" data-t="34.921" data-w="27.778" data-h="43.889"><span class="sr-only">¿Para qué sirve el reporte?</span></button>
-      <button class="d-shot-hit" type="button" data-hit data-popup-trigger="rep-como" aria-haspopup="dialog" data-l="50.913" data-t="34.921" data-w="27.778" data-h="43.889"><span class="sr-only">¿Cómo lo generamos?</span></button>
+      <button class="d-shot-hit d-hit-ficha" type="button" data-hit data-popup-trigger="rep-para-que" aria-haspopup="dialog" data-l="20.000" data-t="34.921" data-w="27.778" data-h="43.889"><span class="sr-only">¿Para qué sirve el reporte?</span></button>
+      <button class="d-shot-hit d-hit-ficha" type="button" data-hit data-popup-trigger="rep-como" aria-haspopup="dialog" data-l="50.913" data-t="34.921" data-w="27.778" data-h="43.889"><span class="sr-only">¿Cómo lo generamos?</span></button>
     </div>
   </section>
 
@@ -670,8 +679,8 @@
     <p class="sr-only">Repasamos cómo gestionar los productos que aparecen en el reporte de surtido sin venta. Abrí las dos fichas para seguir.</p>
     <div class="d-shot" data-shot>
       <img class="d-shot-img" src="img/repaso-acciones.webp" loading="lazy" alt="" aria-hidden="true">
-      <button class="d-shot-hit" type="button" data-hit data-popup-trigger="rep-acciones" aria-haspopup="dialog" data-l="20.754" data-t="33.651" data-w="27.778" data-h="44.048"><span class="sr-only">¿Qué acciones tomar?</span></button>
-      <button class="d-shot-hit" type="button" data-hit data-popup-trigger="rep-mejorar" aria-haspopup="dialog" data-l="51.627" data-t="33.651" data-w="27.778" data-h="44.048"><span class="sr-only">¿Cómo mejorar la venta?</span></button>
+      <button class="d-shot-hit d-hit-ficha" type="button" data-hit data-popup-trigger="rep-acciones" aria-haspopup="dialog" data-l="20.754" data-t="33.651" data-w="27.778" data-h="44.048"><span class="sr-only">¿Qué acciones tomar?</span></button>
+      <button class="d-shot-hit d-hit-ficha" type="button" data-hit data-popup-trigger="rep-mejorar" aria-haspopup="dialog" data-l="51.627" data-t="33.651" data-w="27.778" data-h="44.048"><span class="sr-only">¿Cómo mejorar la venta?</span></button>
     </div>
   </section>
 

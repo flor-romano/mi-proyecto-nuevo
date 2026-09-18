@@ -242,7 +242,16 @@
     restaurar();
 
     var Player = initPlayer({
-      speakSlide: function (s) { Narrador.speak(Narrador.textOf(s), 'slide'); },
+      /* `[data-narrate-only]` acota la locución a una parte de la
+         diapositiva, igual que ya hace `initPopupNarration()` con los
+         pop-ups (coto-ui.js). El kit sostiene esa convención SOLO del
+         lado de los pop-ups: `speakSlide` recibe la `<section>` entera y
+         no la mira. Lo usa el índice, que muestra el temario en pantalla
+         pero no lo enumera en voz alta. Relayado (K9). */
+      speakSlide: function (s) {
+        var solo = s.querySelector('[data-narrate-only]');
+        Narrador.speak(Narrador.textOf(solo || s), 'slide');
+      },
       visitedIndexes: function () {
         return motor.slides
           .filter(function (s) { return estado.vistas[s.getAttribute('data-slide')]; })
@@ -538,9 +547,26 @@
          (CLAUDE.md §1). El guard de `hidden` evita narrar en el render
          inicial, con la capa todavía oculta. */
       var capa = elOpciones && elOpciones.closest('[data-panel]');
-      if (Narrador.isNarrating() && capa && !capa.hidden && !raiz.hidden) {
-        Narrador.speak(q.consigna + ' ' + q.opts.join('. '), 'other');
+      if (capa && !capa.hidden && !raiz.hidden) {
+        narrar(q.consigna + ' ' + q.opts.join('. '));
       }
+    }
+
+    /* TODA la voz del juego pasa por acá, y por un motivo concreto:
+       `Narrador.speak()` arranca llamando a `cancel()` (narrador.js),
+       así que enrutar cada cambio de estado por esta función garantiza
+       que lo anterior se corte antes de que empiece lo siguiente. Es el
+       mismo "¿quién lo apaga?" de §6.10.1 punto 1, aplicado a la voz:
+       el motor corta la locución al cambiar de DIAPOSITIVA y al cerrar
+       un POP-UP, pero un `layerchange` —que es lo que pasa acá— no corta
+       nada, así que le toca al curso. */
+    function narrar(txt) {
+      if (!txt || !window.Narrador) return;
+      Narrador.speak(txt, 'other');
+    }
+    function textoDePanel(id) {
+      var p = raiz.querySelector('[data-panel="' + id + '"] .sr-only');
+      return p ? p.textContent.trim() : '';
     }
 
     function feedback(ok, txt) {
@@ -569,6 +595,10 @@
                        'Concepto ' + (i + 1) + ' de 5');
         }
         feedback(true, q.why);
+        /* Corta la consigna si todavía estaba sonando y arranca la
+           devolución. Antes no se narraba ninguna de las dos cosas: la
+           consigna seguía de fondo y la devolución no se escuchaba. */
+        narrar(q.why);
         hud();
         siguientePaso();
         persistir();
@@ -582,7 +612,12 @@
         feedback(false, q.mal);
         hud();
         persistir();
-        if (vidas <= 0) terminar(false);
+        /* Si este error fue el último, la devolución y el resultado se
+           narran JUNTOS, en una sola emisión: narrar el "por qué" y
+           enseguida pisarlo con la pantalla final dejaría al alumno sin
+           la explicación justo cuando más la necesita. */
+        if (vidas <= 0) terminar(false, q.mal);
+        else narrar(q.mal);
       }
     }
 
@@ -600,7 +635,7 @@
       b.focus();
     }
 
-    function terminar(gano) {
+    function terminar(gano, preludio) {
       estado.mjFin = true;
       Logros.unlock('juego');
       if (gano && aciertos === MJ.length && !Object.keys(estado.mjErr).length) {
@@ -610,6 +645,7 @@
       setTextoNodo('[data-mj-' + suf + '-aciertos]', aciertos + '/' + MJ.length);
       setTextoNodo('[data-mj-' + suf + '-puntos]', String(puntos));
       panel('mj-fin-' + suf);
+      narrar([preludio, textoDePanel('mj-fin-' + suf)].filter(Boolean).join(' '));
       persistir();
       motor._syncNav();
     }

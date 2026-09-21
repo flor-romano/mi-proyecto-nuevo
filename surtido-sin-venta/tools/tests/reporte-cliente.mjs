@@ -59,6 +59,10 @@
         al entrar por primera vez el botón de play queda mal ubicado.
     20. Los pop-ups no se comen la pantalla en un iPad vertical.
     21. El mini juego no deja avanzar hasta APROBARLO.
+
+   Novena tanda:
+    22. En una pantalla grande la interfaz escala (y los botones con
+        etiqueta no se aplastan al hacerlo).
 */
 import { openCourse, report, requireUrl, irASlide } from './_shared.mjs';
 import { chromium } from 'playwright-core';
@@ -888,6 +892,67 @@ for (const t of TARJETAS) {
       'aprobado.');
   }
   await j.close();
+}
+
+/* ---- 22 · la interfaz escala en pantallas grandes --------------
+   Dos cosas que van juntas y que se rompieron una a la otra mientras se
+   arreglaba esto, así que las dos quedan medidas:
+
+   · la raíz tiene que crecer por encima de 1700px (el kit escribe todo
+     el chrome en `rem` pero nunca define el tamaño de raíz, así que la
+     interfaz quedaba de 16px en cualquier monitor), y por debajo tiene
+     que seguir exactamente en 16 para no mover nada de lo ya probado;
+   · los botones CON etiqueta tienen que seguir siendo más anchos que
+     altos. `.d-iconbtn--labeled` es una sola clase, igual de específica
+     que `.d-iconbtn`: una regla de ancho sobre `.d-iconbtn` en el CSS
+     del curso —que carga último— le gana al `width:auto` del kit y los
+     aplasta a una caja cuadrada, con los rótulos encimados. Pasó de
+     verdad y se vio en el render. */
+{
+  for (const [nom, w, h, raizEsperada] of [['grande', 1920, 1080, 'mayor'], ['normal', 1440, 900, 'igual']]) {
+    const g = await browser.newPage({ viewport: { width: w, height: h } });
+    await g.goto(url);
+    await g.waitForFunction(() => window.motor);
+    await g.waitForTimeout(500);
+    const m = await g.evaluate(() => {
+      const et = document.querySelector('.d-iconbtn--labeled');
+      const r = et ? et.getBoundingClientRect() : null;
+      const st = document.querySelector('.d-stage').getBoundingClientRect();
+      const sh = document.querySelector('.slide.is-active .d-shot').getBoundingClientRect();
+      return {
+        raiz: parseFloat(getComputedStyle(document.documentElement).fontSize),
+        etiqueta: r ? { w: Math.round(r.width), h: Math.round(r.height) } : null,
+        lienzo: { w: sh.width, h: sh.height },
+        escenario: { w: st.width, h: st.height }
+      };
+    });
+    await g.close();
+    if (raizEsperada === 'mayor' && !(m.raiz > 16.5)) {
+      fails.push(`en ${w}x${h} la tipografía de raíz sigue en ${m.raiz}px: la interfaz no escala y ` +
+        'en un monitor grande queda proporcionalmente más chica que en un notebook.');
+    }
+    if (raizEsperada === 'igual' && !cerca(m.raiz, 16, 0.01)) {
+      fails.push(`en ${w}x${h} la raíz quedó en ${m.raiz}px y tiene que ser 16: el escalado sólo ` +
+        'arranca por encima de 1700px, para no mover nada de lo ya verificado.');
+    }
+    if (m.etiqueta && m.etiqueta.w <= m.etiqueta.h + 4) {
+      fails.push(`en ${w}x${h} los botones con etiqueta quedaron en ${m.etiqueta.w}x${m.etiqueta.h}: ` +
+        'se aplastaron a una caja cuadrada y los rótulos se enciman. Una regla de ancho sobre ' +
+        '`.d-iconbtn` le gana al `width:auto` de `.d-iconbtn--labeled` — misma especificidad, y el ' +
+        'CSS del curso carga después.');
+    }
+    /* El lienzo es 2:1 fijo, así que llena UNA de las dos dimensiones —
+       la que limite— y deja franja en la otra. Lo que no puede pasar es
+       que le sobre lugar en las dos: eso sí sería un lienzo de tamaño
+       fijo perdido en el medio, que es lo que el cliente creyó ver. */
+    const llenaAncho = m.lienzo.w >= m.escenario.w - 2;
+    const llenaAlto = m.lienzo.h >= m.escenario.h - 2;
+    if (!llenaAncho && !llenaAlto) {
+      fails.push(`en ${w}x${h} el lienzo mide ${Math.round(m.lienzo.w)}x${Math.round(m.lienzo.h)} ` +
+        `dentro de un escenario de ${Math.round(m.escenario.w)}x${Math.round(m.escenario.h)}: le ` +
+        'sobra lugar en los dos ejes, o sea que no está escalando con la ventana.');
+    }
+  }
 }
 
 if (errors.length) fails.push(...errors.map((e) => 'error de consola: ' + e));

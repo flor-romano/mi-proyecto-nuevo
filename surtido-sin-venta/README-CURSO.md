@@ -877,6 +877,53 @@ al volver de pantalla completa el layout no está estabilizado en el
 mismo turno.
 
 
+### K21 · El kit escribe todo el chrome en `rem` pero nunca define el tamaño de raíz — PROBADO
+
+**Síntoma.** En un monitor grande el curso "queda chico y perdido en el
+medio". Reportado por el cliente con una captura de 1900×1200.
+
+**Diagnóstico contra el código real.** Hay que separar dos cosas que se
+ven parecidas.
+
+El LIENZO sí escala, y se midió: a 1900×1200 la captura sale 1900×950
+(todo el ancho), a 2560×1440 sale 2560×1280, a 1920×1080 sale 1920×960.
+No hay `max-width` en ninguna parte.
+
+Lo que no escalaba es la INTERFAZ. El kit escribe la barra, los
+botones, los chips, los modales y el resumen en `rem` —lo correcto—
+pero **ningún archivo define `html{font-size}`**, así que la raíz se
+queda en los 16px del navegador para siempre. Medido: tipografía de
+16px y barra de 56px tanto en 1440 como en 2560. A mayor pantalla, la
+interfaz ocupa proporcionalmente MENOS.
+
+El propio kit ya tiene el argumento escrito, pero solo mirando para
+abajo: en la regla que achica el chrome en pantallas bajas
+(`coto-player-chrome.css` §58, v1.9.79) dice *"que el alto del chrome
+no dependa del alto de la pantalla, es real y es del kit"*. Vale igual
+para arriba.
+
+**Cómo se verificó.** Se midió `getComputedStyle(document.documentElement).fontSize`
+y el alto de `.d-top`/`.d-bottom` en 1440, 1920 y 2560: 16px y 56/64 en
+los tres. Con el escalado del curso dan 16, 17.3 y 21, y las barras
+acompañan. Punto 22 de `tools/tests/reporte-cliente.mjs`.
+
+**Trampa que este curso pisó al arreglarlo, y que conviene que el kit
+evite de raíz:** `.d-iconbtn--labeled` es UNA sola clase, igual de
+específica que `.d-iconbtn`. Cualquier regla de ancho sobre
+`.d-iconbtn` escrita en el CSS del curso —que carga último— le gana al
+`width:auto` del botón etiquetado y lo aplasta a una caja cuadrada, con
+los rótulos encimados ("SonidoLocución GlosarioAmpliar"). Pasó acá y se
+vio en el render.
+
+**Propuesta.** Dos cosas: (a) que el kit defina la raíz con un `clamp()`
+que crezca con el ancho por encima de un umbral —lo que hace que TODO
+el `rem` que ya escribió empiece a escalar sin tocar una sola regla
+más— y las filas del `.d-app` en `rem` en vez de px; y (b) que
+`.d-iconbtn--labeled` gane especificidad (por ejemplo
+`.d-iconbtn.d-iconbtn--labeled`) para que no dependa del orden de
+carga.
+
+
 ---
 
 ## 7. Segunda vuelta — 3 puntos reportados por el cliente
@@ -1727,7 +1774,75 @@ vuelve a cerrar.
 
 ---
 
-## 20. Pendiente / próximo paso
+## 21. Novena vuelta — escalado en pantallas grandes
+
+El reclamo fue: en una pantalla grande el curso no se ajusta a la
+ventana, "queda como un stage de tamaño fijo centrado". Medido, son dos
+cosas distintas y solo una era un bug.
+
+### 21.1 · El lienzo SÍ escala (y hay que decirlo con los números)
+
+| ventana | escenario | lienzo |
+|---|---|---|
+| 1440×900 | 1440×780 | 1440×720 — todo el ancho |
+| 1920×1080 | 1920×950 | 1920×950 — todo el ancho y todo el alto |
+| 1900×1200 | 1900×1071 | 1900×950 — todo el ancho |
+| 2560×1440 | 2560×1283 | 2560×1280 — todo el ancho |
+
+No hay ningún `max-width`: el arte usa todo el ancho disponible en
+cualquier tamaño. Lo que el cliente ve como espacio de más son **las
+franjas de arriba y abajo**, que son el 2:1 fijo que esta captura
+necesita para no recortarse. Con un arte de proporción fija y una
+ventana que no la tiene, o hay franja o hay recorte — y el recorte ya
+se descartó en la vuelta anterior, porque en este PDF cae sobre
+contenido real (§19.2 y K18). A 1900×1200 la franja es de 60px arriba y
+60 abajo sobre 1071, el 11% del alto.
+
+### 21.2 · La interfaz NO escalaba — eso sí era un bug
+
+El kit escribe todo el chrome en `rem`, que es lo correcto, pero ningún
+archivo define `html{font-size}`. Resultado medido: tipografía de 16px
+y barra de 56px tanto en un notebook de 1440 como en un monitor de
+2560. A mayor pantalla, la interfaz ocupa proporcionalmente menos — que
+es exactamente la sensación que describió el cliente.
+
+La raíz pasa a crecer con la ventana:
+`clamp(16px, 16px + (100vw − 1700px) × 0.006, 21px)`. Con eso escala
+solo todo lo que el kit ya escribió en `rem`. Se suman las tres piezas
+de la barra que habían quedado en píxeles crudos (el botón redondo, su
+ícono y el recuadro de marca) y el alto de las dos barras, con sus
+MISMOS valores convertidos a `rem`.
+
+El arranque en 1700px es a propósito: por debajo de eso la raíz da
+exactamente 16px, así que ni los tamaños de la suite (1600×900 el más
+grande) ni ningún teléfono o tablet cambian una sola medida.
+Verificado midiendo raíz, barras y botones en 1440, 1600, 1024, 820 y
+844: idénticos a antes.
+
+| | 1440 | 1920 | 2560 |
+|---|---|---|---|
+| raíz | 16px | 17.3px | 21px |
+| barra superior | 56px | 61px | 74px |
+| barra inferior | 64px | 69px | 84px |
+
+### 21.3 · Lo que se rompió arreglándolo, y por qué queda anotado
+
+La primera versión puso `width` sobre `.d-iconbtn` a secas. Eso aplastó
+los botones CON etiqueta a una caja cuadrada y los rótulos quedaron
+encimados: "SonidoLocución GlosarioAmpliar". La causa es de
+especificidad: `.d-iconbtn--labeled` es una sola clase, igual que
+`.d-iconbtn`, y el CSS del curso carga último, así que le gana al
+`width:auto` del kit.
+
+Se vio en el render, no en los números — las medidas de la barra daban
+bien. Quedó corregido con `:not(.d-iconbtn--labeled)` y, sobre todo,
+medido en el test: los botones con etiqueta tienen que seguir siendo
+más anchos que altos. Va al kit como parte de **K21**.
+
+
+---
+
+## 22. Pendiente / próximo paso
 
 - **Videos.** Los **cuatro** `.mp4` de `video/` son placeholders de 0
   bytes con su nombre final:
@@ -1757,5 +1872,5 @@ vuelve a cerrar.
   `python3 tools/build-zip.py . ../surtido-sin-venta.zip` y solo a
   pedido explícito (§3.12).
 
-- Los **20 hallazgos de kit (K1 a K20)** se llevan en un prompt al chat
+- Los **21 hallazgos de kit (K1 a K21)** se llevan en un prompt al chat
   de `kit-base/`. Desde acá no se editó `kit-base/`.

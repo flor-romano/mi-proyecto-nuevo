@@ -201,3 +201,66 @@
   }
   .modal-card.d-instr-modal{ width:min(620px, 66vw); }
 }
+
+/* ---- Escalado de la interfaz en pantallas grandes ----------------
+   Reporte del cliente: en una pantalla grande el curso "queda chico y
+   perdido en el medio".
+
+   Lo primero es separar dos cosas que se ven parecidas:
+
+   · EL LIENZO SÍ ESCALA, y se midió: a 1900x1200 la captura sale
+     1900x950 (todo el ancho), a 2560x1440 sale 2560x1280, a 1920x1080
+     sale 1920x960. No hay `max-width` en ninguna parte — el arte usa
+     todo el ancho disponible en cualquier tamaño. Las franjas de arriba
+     y abajo son el 2:1 fijo que esta captura necesita para no
+     recortarse (ver el bloque anterior y K18): con un arte de
+     proporción fija y una ventana que no la tiene, o hay franja o hay
+     recorte, y el recorte ya se descartó porque caía sobre contenido.
+
+   · LA INTERFAZ NO ESCALABA. Y eso sí es un bug: el kit escribe toda
+     la barra, los botones, los chips, los modales y el resumen en
+     `rem`, pero nadie define el tamaño de raíz — queda en los 16px del
+     navegador para siempre. Medido: barra de 56px y tipografía de 16px
+     tanto en 1440 como en 2560. O sea que a mayor pantalla, la interfaz
+     ocupa proporcionalmente MENOS, que es exactamente la sensación que
+     describió el cliente.
+
+   Acá la raíz pasa a crecer con la ventana, y con ella todo lo que el
+   kit escribió en `rem`. El arranque está en 1700px a propósito: por
+   debajo de eso el tamaño es exactamente 16px, así que ni los tamaños
+   de la suite (1600x900 el más grande) ni ningún teléfono o tablet
+   cambian una sola medida. El techo de 21px evita que en un monitor
+   ultrawide la interfaz se vuelva gigante. */
+html{
+  font-size: clamp(16px, calc(16px + (100vw - 1700px) * 0.006), 21px);
+}
+
+/* Las pocas piezas de la barra que el kit dejó en píxeles crudos y que
+   por eso se quedaban chicas mientras el texto de al lado crecía. Se
+   pasan a `rem` con su MISMO valor a 16px (38/16, 20/16, 32/16), así
+   en cualquier pantalla por debajo de 1700px no cambia absolutamente
+   nada y por arriba acompañan al resto. */
+/* `:not(.d-iconbtn--labeled)` no es adorno: `.d-iconbtn--labeled` es UNA
+   clase, igual de específica que `.d-iconbtn`, así que una regla suelta
+   de `.d-iconbtn` en este archivo —que carga último— le gana al
+   `width:auto` del kit y aplasta los botones con etiqueta a 38px, con
+   los rótulos encimados ("SonidoLocución GlosarioAmpliar"). Pasó, se
+   vio en el render y por eso está anotado acá. Los redondos llevan caja
+   cuadrada; los etiquetados, solo el alto. */
+.d-iconbtn:not(.d-iconbtn--labeled){ width:2.375rem; height:2.375rem; }
+.d-iconbtn--labeled{ height:2.375rem; }
+.d-iconbtn svg{ width:1.25rem; height:1.25rem; }
+.d-brand .lg{ width:2rem; height:2rem; }
+.d-brand .lg img{ width:1.25rem; height:1.25rem; }
+
+/* Y el alto de las dos barras, que el kit fija en píxeles
+   (`grid-template-rows: 56px 1fr 64px`). El propio kit ya reconoce el
+   problema cuando escribe la regla que las achica en pantallas bajas:
+   "que el alto del chrome no dependa del alto de la pantalla, es real y
+   es del kit". Vale para el otro lado también: en un monitor grande,
+   56px de barra sobre una interfaz que creció se ven como una tira.
+   Mismos valores en `rem` (56/16 y 64/16), así que a 16px de raíz —o
+   sea por debajo de 1700px— dan exactamente 56 y 64. */
+@media (min-width:1700px){
+  .d-app{ grid-template-rows:3.5rem 1fr 4rem; }
+}

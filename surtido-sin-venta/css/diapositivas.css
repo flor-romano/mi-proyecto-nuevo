@@ -467,6 +467,18 @@
 .d-mj-grid{
   grid-template-columns:repeat(4, minmax(0,1fr));
   gap:.9rem;
+  /* El kit trae `align-items:start` (coto-minijuego.css §318), que hace
+     que cada tarjeta mida solo su propio contenido: la opción cuyo
+     texto envuelve en dos renglones queda MÁS ALTA que las otras tres.
+     Medido en 1024x768 con la pregunta 2: 52px contra 36px. Es lo que
+     el cliente reportó como "tamaño desparejo".
+     `stretch` las iguala a la altura de la fila; el `display:flex` de
+     abajo vuelve a centrar el texto dentro de la tarjeta ya estirada,
+     que si no queda pegado arriba. */
+  align-items:stretch;
+}
+.d-mj-opt{
+  display:flex; align-items:center; justify-content:center;
 }
 @media (max-width:820px){
   .d-mj-grid{ grid-template-columns:repeat(2, minmax(0,1fr)); }

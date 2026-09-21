@@ -104,11 +104,15 @@ async function recorrido(page, { conceptos, fichas, juego }) {
   const { browser, page, errors } = await openCourse(url);
   const piso = await page.evaluate(() => window.__CURSO__ && window.__CURSO__.pisoGate);
   const bronce = await page.evaluate(() => window.__CURSO__.niveles.find((n) => n.id === 'bronce').desde);
-  /* Lo mínimo que el gate obliga: los conceptos, las fichas y terminar
-     el juego (con o sin aciertos). Los videos NO entran: hoy son
-     placeholder y `initVideoGate` los exime, así que sus puntos no se
-     pueden conseguir y no pueden sostener ningún umbral (§7.3 p.19). */
-  const medido = await recorrido(page, { conceptos: true, fichas: true, juego: 'pesimo' });
+  /* Lo mínimo que el gate obliga: los conceptos, las fichas y APROBAR
+     el mini juego — desde que el cliente pidió que no se pueda avanzar
+     sin aprobarlo, terminarlo perdiendo ya no alcanza. El modo 'minimo'
+     es el recorrido más barato que el gate acepta: 3 aciertos de 5, y
+     los 3 pagados tras haber errado (10 en vez de 25).
+     Los videos NO entran: hoy son placeholder y `initVideoGate` los
+     exime, así que sus puntos no se pueden conseguir y no pueden
+     sostener ningún umbral (§7.3 p.19). */
+  const medido = await recorrido(page, { conceptos: true, fichas: true, juego: 'minimo' });
   console.log(`  · piso medido (solo lo obligatorio): ${medido} · declarado: ${piso} · bronce: ${bronce}`);
   if (medido !== piso) {
     fails.push(`el piso MEDIDO haciendo solo lo que el gate obliga es ${medido} y el declarado ` +

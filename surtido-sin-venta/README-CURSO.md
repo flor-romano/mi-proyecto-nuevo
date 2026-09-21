@@ -19,7 +19,7 @@ no se editó ni una línea de `kit-base/` (CLAUDE.md §0.1).
 | Suite | **19 de 19 en verde** (17 del kit + 2 propios) |
 | Radio de cajas y tarjetas | **30px fijos** (pedido del cliente, tokens `--r-lg`/`--r-xl`) |
 | Máximo de puntos medido | **199** (sin los videos reales; 219 con ellos) |
-| Medalla | bronce 74 · plata 124 · oro 169 (los "desde N" del cierre los pinta `curso.js` desde `NIVELES`) |
+| Medalla | bronce 104 · plata 124 · oro 169 (los "desde N" del cierre los pinta `curso.js` desde `NIVELES`) |
 | Logros | **5** (tope del cliente para todos los cursos, ver K14) |
 | Videos | **4 placeholders de 0 bytes** con el nombre final (portada, unidad 1 y los 2 del cuerpo) — el cliente los reemplaza sin tocar código |
 | Baseline visual | grabada (`tools/visual-baseline/`, 13 capturas) |
@@ -769,6 +769,114 @@ curso" solo cuando `puntos === máximo`. Sin ese dato el kit no puede
 saber la diferencia, así que no alcanza con cambiar el texto.
 
 
+### K18 · El kit sabe que este curso no puede usar el recorte de tablet, pero no da forma de apagarlo — PROBADO
+
+**Síntoma.** En iPad, las capturas —y sobre todo los videos de portada y
+de unidad, donde se nota— salen recortadas a los costados.
+
+**Diagnóstico contra el código real.** No hay que descubrirlo: está
+escrito en la cabecera de `coto-shot-stage.css`, y nombra a este curso:
+
+> "REQUIERE que el PDF del curso se haya diseñado con el margen de
+> seguridad NUEVO (8% arriba/abajo + 13% a cada costado). Cursos
+> diseñados con el margen VIEJO (8% parejo en las 4 direcciones,
+> **ej. «Surtido sin venta»**) NO deben usar este archivo — el recorte
+> que habilita en el rango tablet caería sobre contenido real, no sobre
+> margen vacío. Para esos cursos, seguir usando el bloque estático de
+> solo-lienzo-fijo (sin el @container de abajo)."
+
+El `@container (min-aspect-ratio: 1.5) and (max-aspect-ratio: 2.2)`
+(§341) estira `.d-shot` a `100cqw × 100cqh` y deja que
+`object-fit:cover` recorte. Medido en un iPad apaisado (1180×820 →
+escenario 1180×700, proporción 1.686, dentro del rango): el recorte es
+el **15.7% del ancho**, 93px por costado sobre un arte 2:1.
+
+**Y acá está el hallazgo, que no es la regla sino la forma de no
+traerla:** `new-course.mjs` copia `coto-shot-stage.css` entero. La
+instrucción de la cabecera —"no uses este archivo"— no se puede cumplir
+sin romper todo lo demás que el archivo define (la base del escenario,
+las diapositivas, el Ken Burns, el aviso de girar el dispositivo). En la
+práctica, un curso con margen viejo **no tiene cómo** quedarse fuera de
+ese `@container`, más allá de pisarlo a mano.
+
+**Cómo se verificó.** Se midió la proporción de `.d-shot` en 1180×820 y
+en 1440×900: daba 1.686 y 1.846 en vez de 2. Con el override del curso
+da 2 en los dos casos. Está como punto 17 de
+`tools/tests/reporte-cliente.mjs`.
+
+**Propuesta.** Que el recorte de tablet dependa de una clase o una
+variable que el curso declare —por ejemplo `.d-stage[data-margen="nuevo"]`
+o `--shot-recorte-tablet: 0|1`— con el default en "no recortar". Así un
+curso con margen viejo hereda lo seguro sin tener que reescribir una
+regla del kit, y uno con margen nuevo lo habilita en una línea. Hoy el
+default es el que puede comerse contenido.
+
+### K19 · `showPopup()` enfoca el primer campo de texto, y en iPadOS eso dispara el cartel de "estás escribiendo" — PROBADO
+
+**Síntoma.** En iPad, interactuando por touch, aparece repetidamente el
+cartel del sistema *"Parece que estás escribiendo mientras estás en
+pantalla completa"*.
+
+**Diagnóstico contra el código real.** `Motor.showPopup()`
+(`motor-slides.js` §929) hace:
+
+```js
+var focusable = pop.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+if (focusable) focusable.focus();
+```
+
+En el glosario del boilerplate, el primer `input` es el buscador
+(`<input data-gloss-search type="search">`). iPadOS muestra ese cartel
+cuando una página en pantalla completa tiene el foco en un campo de
+texto — así que el cartel sale **cada vez que el alumno abre el
+glosario**.
+
+Enfocar dentro del pop-up está bien y hace falta (atrapa-foco,
+lectores de pantalla). Lo que no corresponde es elegir un campo de
+TEXTO cuando el que abre es un dedo: nadie va a tipear, y el costo es
+un cartel del sistema encima del curso.
+
+**Cómo se verificó.** En un contexto táctil (820×1180, `hasTouch`), se
+abrió el glosario y se leyó `document.activeElement`: daba
+`INPUT[type=search]`. Con el parche del curso queda la tarjeta del
+pop-up, que sigue estando adentro del diálogo. Punto 18 del test.
+
+**Propuesta.** Que `showPopup()` no elija campos de texto cuando
+`matchMedia('(pointer: coarse)')` da verdadero, y caiga en el primer
+botón o en la propia tarjeta. Dos líneas, y saca un cartel del sistema
+de encima de todos los cursos.
+
+### K20 · El `fullscreen` de video en iOS/iPadOS no emite `fullscreenchange`, así que el reproductor vuelve mal ubicado — PROBADO por síntoma
+
+**Síntoma.** En iPad, después de dar play el reproductor "se tilda": no
+se puede agrandar ni achicar correctamente.
+
+**Diagnóstico contra el código real.** El kit ya resolvió el bug de
+fondo y lo documenta en `coto-media.js`: el video vive dentro de una
+captura posicionada en píxeles por `_initShots()`, y entrar o salir de
+pantalla completa no dispara ningún resize, así que al volver queda mal
+ubicado. El fix del kit es escuchar `fullscreenchange` y volver a correr
+`_initShots()`.
+
+Pero **Safari de iOS/iPadOS no emite `fullscreenchange`** para el
+fullscreen nativo de un `<video>`: emite `webkitbeginfullscreen` y
+`webkitendfullscreen` sobre el propio elemento. O sea que en el
+dispositivo donde más se usa esa pantalla completa, el fix no corre
+nunca.
+
+**Cómo se verificó.** No se pudo reproducir el fullscreen nativo de iOS
+en el Chromium de la suite; lo que se verificó es el mecanismo — que el
+kit solo registra `fullscreenchange`, y que con los dos eventos de
+WebKit agregados el recálculo se dispara. El síntoma es el que reportó
+el cliente en un iPad real.
+
+**Propuesta.** Registrar los tres eventos en el mismo handler:
+`fullscreenchange`, `webkitbeginfullscreen` y `webkitendfullscreen`.
+Conviene además recalcular dos veces (en el evento y ~120ms después):
+al volver de pantalla completa el layout no está estabilizado en el
+mismo turno.
+
+
 ---
 
 ## 7. Segunda vuelta — 3 puntos reportados por el cliente
@@ -1492,7 +1600,134 @@ quedó una sola, en el punto 15 de `reporte-cliente.mjs`.
 
 ---
 
-## 18. Pendiente / próximo paso
+## 19. Octava vuelta — 6 puntos reportados por el cliente (casi todo iPad)
+
+### 19.1 · Tarjetas de opciones del mini juego con tamaño desparejo
+
+El ancho estaba bien — las cuatro miden lo mismo en cualquier tamaño. Lo
+que cambiaba era el **alto**: el kit pone `align-items:start` en la
+grilla (`coto-minijuego.css` §318), así que cada tarjeta mide su propio
+contenido y la que envuelve en dos renglones queda más alta. Medido en
+1024×768 con la pregunta 2: **52px contra 36px**.
+
+`align-items:stretch` las iguala a la altura de la fila, y un
+`display:flex` adentro vuelve a centrar el texto en la tarjeta ya
+estirada. El test lo mide en una ventana donde el texto de verdad
+envuelve — si algún día deja de envolver, el propio test avisa que ya no
+está midiendo lo que tenía que medir.
+
+### 19.2 · Videos de portada recortados en iPad
+
+Este lo tenía escrito el kit, palabra por palabra, nombrando a este
+curso. `coto-shot-stage.css` dice que los cursos con el margen de diseño
+VIEJO —"ej. «Surtido sin venta»"— **no deben usar ese archivo**, porque
+el `@container` de tablet estira el lienzo a pantalla completa y deja
+que `object-fit:cover` recorte sobre contenido real.
+
+Medido en un iPad apaisado (1180×820 → escenario 1180×700, proporción
+1.686, dentro del rango 1.5–2.2): el lienzo pasaba a 1180×700 y el
+recorte era del **15.7% del ancho**, 93px por costado.
+
+| ventana | lienzo antes | lienzo ahora |
+|---|---|---|
+| iPad vertical 820×1180 | 820×410 (2:1, ya estaba bien) | 820×410 |
+| iPad apaisado 1180×820 | **1180×700 (1.686 → recorta)** | 1180×590 (2:1) |
+| escritorio 1440×900 | **1440×780 (1.846 → recorta)** | 1440×720 (2:1) |
+
+Pasa con todas las capturas, no solo con los videos: ahí se nota más
+porque el recorte cae sobre gente y títulos. El curso restaura el lienzo
+fijo en ese rango, que es lo que el kit indica para este PDF. Ahora
+sobran franjas arriba y abajo (55px en ese iPad, 30 en escritorio), que
+es el trato correcto cuando el margen de diseño no protege el recorte.
+Relayado como **K18** — lo que le falta al kit no es la regla, es una
+forma de NO traerla.
+
+### 19.3 · El cartel de "parece que estás escribiendo"
+
+Lo dispara iPadOS cuando una página en pantalla completa tiene el foco
+en un campo de texto. Y el foco se lo lleva el kit: `showPopup()`
+enfoca el primer elemento enfocable del pop-up, que en el glosario es el
+buscador. O sea que el cartel salía **cada vez que el alumno abría el
+glosario**.
+
+El curso corrige lo mínimo: solo con puntero grueso (dedo) y solo si lo
+que quedó enfocado es un campo de texto, el foco se mueve a la tarjeta
+del pop-up. Sigue siendo un destino válido para el atrapa-foco y para
+lectores de pantalla, y con teclado no cambia nada — ahí enfocar el
+buscador es lo correcto. Relayado como **K19**.
+
+### 19.4 · El reproductor se traba y no arranca la primera vez
+
+Dos cosas distintas.
+
+**Se traba después del play.** El kit ya resolvió el bug de fondo —al
+salir de pantalla completa hay que volver a correr `_initShots()`,
+porque el reproductor vive dentro de una captura posicionada en
+píxeles— pero escucha `fullscreenchange`, y **Safari de iOS/iPadOS no
+lo emite** para el fullscreen nativo de un `<video>`: ahí los eventos
+son `webkitbeginfullscreen` y `webkitendfullscreen`. Se agregan los dos,
+con dos pasadas de recálculo (en el evento y 120ms después, porque al
+volver el layout no está estabilizado en el mismo turno). Relayado como
+**K20**.
+
+**No se puede dar play al entrar la primera vez.** Misma familia que
+K12: `_initShots()` posiciona los hitboxes midiendo la captura, y si la
+imagen todavía no cargó, el botón de play queda en el ancla provisional
+— o sea no donde el dedo toca. Al volver a entrar la imagen ya está en
+caché y anda, que es exactamente lo que describió el cliente. Dos
+arreglos: se saca `loading="lazy"` de las dos capturas de video, y se
+agrega una red de seguridad para TODAS las diapositivas — cada captura
+que no cargó todavía vuelve a disparar el posicionamiento al terminar.
+
+### 19.5 · Pop-ups que se comen la pantalla en iPad
+
+No es que crezcan: es que **no se achican**. El ancho está en píxeles,
+así que la caja mide lo mismo en un monitor y en un iPad vertical, y lo
+que cambia es la ventana.
+
+| ventana | ficha | instructivo |
+|---|---|---|
+| 1440×900 escritorio | 656px = 46% | 620px = 43% |
+| 1180×820 iPad apaisado | 656px = 56% | 620px = 53% |
+| 820×1180 iPad vertical | **656px = 80%** | **620px = 76%** |
+
+El tope pasa a depender también del ancho de ventana entre 700 y
+1100px: `min(41rem, 66vw)`. En un iPad vertical la ficha queda en 541px
+(66%), bastante más cerca del 46% de escritorio. No se bajó más porque
+por debajo de eso el cuerpo de la ficha larga se vuelve una columna
+angosta y vuelve a necesitar scroll — el problema de la quinta vuelta.
+Los cajones laterales (glosario, índice) no entran: van pegados al borde
+y a alto completo a propósito.
+
+### 19.6 · El mini juego dejaba avanzar sin aprobarlo
+
+El gate miraba `estado.mjFin`, que se pone al TERMINAR — también al
+perder. Ahora mira `estado.mjAprobado`, que se persiste y solo se pone
+cuando el juego termina con al menos 3 aciertos. Una vez aprobado queda
+aprobado, aunque después vuelva a jugar y le vaya peor.
+
+**Esto movió el piso del curso, y con él el bronce.** Si avanzar exige
+aprobar, el recorrido más barato que el gate acepta ya no es
+"terminarlo perdiendo" sino "aprobarlo a los tropezones": los 7
+conceptos (42) + las 4 fichas (32) + 3 aciertos pagados tras error
+(3×10 = 30) = **104**. Se agregó el modo `_auto('minimo')` para medirlo
+y no estimarlo.
+
+| | antes | ahora | de dónde sale |
+|---|---|---|---|
+| piso del gate | 74 | **104** | recorrido `minimo` medido |
+| bronce | 74 | **104** | el piso, para que nadie termine sin medalla |
+| plata | 124 | 124 | recorrido `insistente` medido |
+| oro | 169 | 169 | todo el contenido + 3×25 + 2×10 |
+
+Verificado: sin jugar el gate está cerrado; tras perder 0 de 5 sigue
+cerrado; tras aprobar 3 de 5 se abre; y volver a jugar y perder no lo
+vuelve a cerrar.
+
+
+---
+
+## 20. Pendiente / próximo paso
 
 - **Videos.** Los **cuatro** `.mp4` de `video/` son placeholders de 0
   bytes con su nombre final:
@@ -1522,5 +1757,5 @@ quedó una sola, en el punto 15 de `reporte-cliente.mjs`.
   `python3 tools/build-zip.py . ../surtido-sin-venta.zip` y solo a
   pedido explícito (§3.12).
 
-- Los **17 hallazgos de kit (K1 a K17)** se llevan en un prompt al chat
+- Los **20 hallazgos de kit (K1 a K20)** se llevan en un prompt al chat
   de `kit-base/`. Desde acá no se editó `kit-base/`.

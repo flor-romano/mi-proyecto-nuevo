@@ -46,6 +46,19 @@
     14. El mini juego aprueba con 3 de 5 (y no aprueba con 2).
     15. El ícono del curso es un cuadrado de esquinas redondeadas, no un
         círculo.
+
+   Octava tanda — casi toda de iPad:
+    16. Las 4 tarjetas de opciones del mini juego miden lo mismo aunque
+        una envuelva en dos renglones.
+    17. El lienzo 2:1 no se recorta en el rango tablet (este curso tiene
+        el margen de diseño VIEJO — lo advierte el propio kit).
+    18. Abrir un pop-up con el dedo no deja el foco en un campo de texto
+        (es lo que dispara el cartel de iPadOS "parece que estás
+        escribiendo en pantalla completa").
+    19. Las capturas de las diapositivas de video no son `lazy`: si no,
+        al entrar por primera vez el botón de play queda mal ubicado.
+    20. Los pop-ups no se comen la pantalla en un iPad vertical.
+    21. El mini juego no deja avanzar hasta APROBARLO.
 */
 import { openCourse, report, requireUrl, irASlide } from './_shared.mjs';
 import { chromium } from 'playwright-core';
@@ -696,6 +709,185 @@ for (const t of TARJETAS) {
         'esquinas al asset del cliente.');
     }
   }
+}
+
+/* ---- 16 · las 4 opciones del mini juego miden lo mismo ---------
+   El kit pone `align-items:start` en la grilla (coto-minijuego.css
+   §318), así que cada tarjeta mide su propio contenido y la que
+   envuelve en dos renglones queda más alta. Se mide en la pregunta 2,
+   que es la del texto largo, y en una ventana donde de verdad envuelve. */
+{
+  const chico = await browser.newPage({ viewport: { width: 1024, height: 768 } });
+  await chico.goto(url);
+  await chico.waitForFunction(() => window.motor && window.__CURSO__);
+  await chico.evaluate(() => {
+    const i = Array.from(document.querySelectorAll('.slide')).findIndex((e) => e.dataset.slide === 'minijuego');
+    window.motor.go(i);
+  });
+  await chico.waitForTimeout(400);
+  const cajas = await chico.evaluate(async () => {
+    const raiz = document.querySelector('[data-slide="minijuego"]');
+    window.__CURSO__.mj._reiniciar();
+    await new Promise((r) => setTimeout(r, 300));
+    const claves = window.__CURSO__.mj._claves();
+    raiz.querySelectorAll('.d-mj-opt')[claves[0]].click();       // pasar a la pregunta 2
+    await new Promise((r) => setTimeout(r, 250));
+    raiz.querySelector('.d-mj-next')?.click();
+    await new Promise((r) => setTimeout(r, 400));
+    return Array.from(raiz.querySelectorAll('.d-mj-opt')).map((e) => {
+      const r = e.getBoundingClientRect();
+      return { t: e.textContent.trim().slice(0, 24), w: Math.round(r.width), h: Math.round(r.height),
+               lineas: Math.round(r.height / parseFloat(getComputedStyle(e).lineHeight)) };
+    });
+  });
+  await chico.close();
+  const envuelve = cajas.some((c) => c.lineas > 1);
+  const anchos = new Set(cajas.map((c) => c.w));
+  const altos = new Set(cajas.map((c) => c.h));
+  if (!envuelve) {
+    fails.push('en 1024x768 ninguna opción envuelve en dos renglones: el test ya no mide lo que ' +
+      'tenía que medir (cambió el texto o el ancho). Revisar el caso a mano.');
+  }
+  if (altos.size > 1) {
+    fails.push(`las tarjetas de opciones tienen altos distintos (${[...altos].join(', ')}px): la que ` +
+      'envuelve en dos renglones queda más alta. Falta `align-items:stretch` en la grilla — el kit ' +
+      'trae `start`.');
+  }
+  if (anchos.size > 1) {
+    fails.push(`las tarjetas de opciones tienen anchos distintos (${[...anchos].join(', ')}px).`);
+  }
+}
+
+/* ---- 17 · el lienzo no se recorta en tablet -------------------
+   El propio kit avisa en la cabecera de `coto-shot-stage.css` que este
+   curso —margen de diseño viejo— NO debe usar el `@container` que
+   estira el lienzo a pantalla completa entre 1.5 y 2.2 de proporción:
+   ahí `object-fit:cover` recorta sobre contenido real. Medido en un
+   iPad apaisado, el recorte era del 15.7% del ancho. */
+{
+  for (const [nom, w, h] of [['iPad apaisado', 1180, 820], ['escritorio', 1440, 900]]) {
+    const tab = await browser.newPage({ viewport: { width: w, height: h } });
+    await tab.goto(url);
+    await tab.waitForFunction(() => window.motor);
+    await tab.waitForTimeout(400);
+    const m = await tab.evaluate(() => {
+      const shot = document.querySelector('.slide.is-active .d-shot');
+      const r = shot.getBoundingClientRect();
+      const st = document.querySelector('.d-stage').getBoundingClientRect();
+      return { ratio: r.width / r.height, stage: st.width / st.height };
+    });
+    await tab.close();
+    if (!cerca(m.ratio, 2, 0.02)) {
+      fails.push(`[${nom}] el lienzo quedó en ${m.ratio.toFixed(3)}:1 en vez de 2:1 (el escenario ` +
+        `es ${m.stage.toFixed(3)}:1). Con el lienzo estirado, el \`cover\` de la captura recorta ` +
+        'a los costados, y el PDF de este curso no tiene margen lateral de seguridad para eso.');
+    }
+  }
+}
+
+/* ---- 18 · el foco no queda en un campo de texto con el dedo -----
+   `Motor.showPopup()` enfoca el primer elemento enfocable del pop-up
+   (motor-slides.js §929), que en el glosario es el buscador. En
+   iPadOS, un campo de texto enfocado en pantalla completa dispara el
+   cartel "parece que estás escribiendo". Se mide en un contexto TÁCTIL,
+   que es donde el curso aplica el parche. */
+{
+  const ctxTouch = await browser.newContext({ viewport: { width: 820, height: 1180 }, hasTouch: true, isMobile: true });
+  const tap = await ctxTouch.newPage();
+  await tap.goto(url);
+  await tap.waitForFunction(() => window.motor);
+  await tap.evaluate(() => document.querySelector('[data-popup-trigger="glosario"]').click());
+  await tap.waitForTimeout(600);
+  const foco = await tap.evaluate(() => {
+    const el = document.activeElement;
+    const tipo = (el.getAttribute && el.getAttribute('type')) || '';
+    return { tag: el.tagName, tipo, dentroDelPopup: !!(el.closest && el.closest('[data-popup="glosario"]')) };
+  });
+  await ctxTouch.close();
+  const esTexto = foco.tag === 'TEXTAREA' ||
+    (foco.tag === 'INPUT' && ['', 'text', 'search', 'email', 'url', 'tel', 'number', 'password'].includes(foco.tipo));
+  if (esTexto) {
+    fails.push(`con el dedo, abrir el glosario deja el foco en <${foco.tag} type="${foco.tipo}">. ` +
+      'En iPadOS eso dispara el cartel "parece que estás escribiendo mientras estás en pantalla ' +
+      'completa", una y otra vez.');
+  }
+  if (!foco.dentroDelPopup) {
+    fails.push('al mover el foco fuera del campo de texto se fue afuera del pop-up: el atrapa-foco ' +
+      'del motor y los lectores de pantalla quedan sin destino.');
+  }
+}
+
+/* ---- 19 · las capturas de video no son `lazy` ------------------
+   `_initShots()` posiciona los hitboxes midiendo la captura. Si la
+   imagen todavía no cargó, el botón de play queda en el ancla
+   provisional y el primer toque no le pega — el cliente lo describió
+   como "hay que salir y volver a entrar para que se destrabe". */
+{
+  const lazy = await page.evaluate(() =>
+    Array.from(document.querySelectorAll('[data-slide^="video-"] .d-shot-img'))
+      .filter((i) => i.getAttribute('loading') === 'lazy')
+      .map((i) => i.closest('[data-slide]').dataset.slide));
+  if (lazy.length) {
+    fails.push(`las capturas de ${lazy.join(', ')} tienen loading="lazy": al entrar por primera vez ` +
+      'el botón de play puede quedar mal ubicado hasta que la imagen cargue.');
+  }
+}
+
+/* ---- 20 · los pop-ups no se comen la pantalla en iPad ---------- */
+{
+  const tab = await browser.newPage({ viewport: { width: 820, height: 1180 } });
+  await tab.goto(url);
+  await tab.waitForFunction(() => window.motor);
+  await tab.evaluate(() => {
+    const i = Array.from(document.querySelectorAll('.slide')).findIndex((e) => e.dataset.slide === 'repaso-reporte');
+    window.motor.go(i);
+  });
+  await tab.waitForTimeout(400);
+  await tab.evaluate(() => document.querySelector('[data-popup-trigger="rep-como"]').click());
+  await tab.waitForTimeout(600);
+  const pct = await tab.evaluate(() => {
+    const c = document.querySelector('[data-popup="rep-como"] .modal-card.d-ficha');
+    return (c.getBoundingClientRect().width / window.innerWidth) * 100;
+  });
+  await tab.close();
+  if (pct > 70) {
+    fails.push(`en un iPad vertical la ficha ocupa el ${pct.toFixed(0)}% del ancho. El ancho está ` +
+      'en píxeles, así que no se achica con la ventana: hay que topearlo también en `vw`.');
+  }
+}
+
+/* ---- 21 · no se avanza sin aprobar el mini juego --------------- */
+{
+  const j = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  await j.goto(url);
+  await j.waitForFunction(() => window.motor && window.__CURSO__);
+  await j.evaluate(() => {
+    const i = Array.from(document.querySelectorAll('.slide')).findIndex((e) => e.dataset.slide === 'minijuego');
+    window.motor.go(i);
+  });
+  await j.waitForTimeout(400);
+  const gate = () => j.evaluate(() => window.motor.canAdvance(document.querySelector('[data-slide="minijuego"]')));
+  if (await gate()) fails.push('el mini juego deja avanzar sin haberlo jugado.');
+  await j.evaluate(() => window.__CURSO__.mj._auto('pesimo'));
+  await j.waitForTimeout(700);
+  if (await gate()) {
+    fails.push('el mini juego deja avanzar después de TERMINARLO perdiendo (0 de 5). El gate tiene ' +
+      'que pedir aprobarlo, no solo llegar al final.');
+  }
+  await j.evaluate(() => window.__CURSO__.mj._reiniciar());
+  await j.waitForTimeout(350);
+  await j.evaluate(() => window.__CURSO__.mj._auto('minimo'));
+  await j.waitForTimeout(700);
+  if (!await gate()) fails.push('tras APROBAR el mini juego (3 de 5) el gate sigue cerrado.');
+  await j.evaluate(() => window.__CURSO__.mj._reiniciar());
+  await j.waitForTimeout(350);
+  await j.evaluate(() => window.__CURSO__.mj._auto('pesimo'));
+  await j.waitForTimeout(700);
+  if (!await gate()) {
+    fails.push('volver a jugar y perder volvió a cerrar el gate: aprobar una vez tiene que quedar ' +
+      'aprobado.');
+  }
+  await j.close();
 }
 
 if (errors.length) fails.push(...errors.map((e) => 'error de consola: ' + e));

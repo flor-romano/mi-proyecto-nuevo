@@ -129,3 +129,75 @@
 [data-inline-video].is-poster .d-shot-hit-poster-img{
   object-fit:cover;
 }
+
+/* ---- Lienzo fijo 2:1 también en el rango tablet -------------------
+   Reporte del cliente: en iPad los videos de portada y de unidad se ven
+   RECORTADOS. Pasa con todas las capturas, no solo con los videos —
+   ahí se nota más porque el recorte cae sobre gente y títulos.
+
+   Y no es un bug que haya que descubrir: lo dice el propio kit en la
+   cabecera de `coto-shot-stage.css`, nombrando a este curso:
+
+     "REQUIERE que el PDF del curso se haya diseñado con el margen de
+      seguridad NUEVO (8% arriba/abajo + 13% a cada costado). Cursos
+      diseñados con el margen VIEJO (8% parejo en las 4 direcciones,
+      ej. «Surtido sin venta») NO deben usar este archivo — el recorte
+      que habilita en el rango tablet caería sobre contenido real, no
+      sobre margen vacío. Para esos cursos, seguir usando el bloque
+      estático de solo-lienzo-fijo (sin el @container de abajo)."
+
+   El PDF de este curso es del margen viejo. Pero `new-course.mjs` copia
+   el archivo entero, así que el `@container (1.5 … 2.2)` que estira el
+   lienzo a pantalla completa vino puesto igual. Medido en un iPad
+   apaisado (1180x820 → escenario 1180x700, proporción 1.686, dentro de
+   ese rango): el lienzo pasa a 1180x700 y `object-fit:cover` sobre un
+   arte 2:1 se come el **15.7% del ancho**, 93px por lado.
+
+   Esto restaura el lienzo fijo que el kit indica para este curso: la
+   captura entra entera y sobran franjas arriba y abajo (55px en ese
+   iPad), que es el trato correcto cuando el margen de diseño no
+   protege el recorte. Se relaya como K18 — lo que le falta al kit no es
+   la regla, es una forma de NO traerla. */
+@container (min-aspect-ratio: 1.5) and (max-aspect-ratio: 2.2) {
+  .d-shot-slide--bg-layered > .d-shot,
+  .d-shot-slide--bg-video > .d-shot,
+  .slide-cierre .d-cierre-shot .d-shot{
+    aspect-ratio:2 / 1;
+    width:min(100cqw, 100cqh * 2 / 1);
+    height:min(100cqh, 100cqw * 1 / 2);
+  }
+}
+
+/* ---- Pop-ups en tablet: que no se coman la pantalla --------------
+   Reporte del cliente: "algunos popups se agrandan demasiado y
+   terminan ocupando toda la pantalla en iPad".
+
+   No es que crezcan: es que NO se achican. El ancho está en píxeles
+   (`min(41rem,100%)` la ficha, `min(620px,100%)` el instructivo), así
+   que la caja mide lo mismo en un monitor y en un iPad vertical — y lo
+   que cambia es la ventana. Medido:
+
+     ventana            ficha          instructivo
+     -------------------------------------------------
+     1440x900  (escritorio)  656px = 46%   620px = 43%
+     1180x820  (iPad apais.) 656px = 56%   620px = 53%
+      820x1180 (iPad vert.)  656px = 80%   620px = 76%   ← el reclamo
+
+   El tope pasa a depender también del ancho de ventana en el rango de
+   tablet. Se topea en 66vw y no menos: por debajo de eso, en 820px de
+   ancho, el cuerpo de la ficha larga se vuelve una columna angosta y
+   vuelve a necesitar scroll — que es el problema de la vuelta pasada.
+   Con 66vw la ficha queda en 541px (66%), bastante más cerca del 46%
+   de escritorio y sin apretar el texto.
+
+   El rango llega hasta 1100px: arriba de eso `min()` ya elige los
+   píxeles y la regla no cambia nada. Los cajones laterales (glosario,
+   índice) NO entran: son `drawer` a propósito, van pegados al borde y
+   a alto completo en todos los tamaños. */
+@media (min-width:700px) and (max-width:1100px){
+  .modal-card.d-ficha{
+    width:min(41rem, 66vw);
+    margin-top:calc(min(41rem, 66vw) * .181);
+  }
+  .modal-card.d-instr-modal{ width:min(620px, 66vw); }
+}

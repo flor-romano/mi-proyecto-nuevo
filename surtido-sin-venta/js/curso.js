@@ -138,9 +138,13 @@
   };
   /* Máximo alcanzable HOY (sin los videos reales) = 42 + 32 + 125 = 199.
      Con los videos cargados pasa a 219; los umbrales siguen valiendo.
-     Piso garantizado por el gate = 42 + 32 = 74 (terminar el mini juego
-     no paga por sí solo), así que el bronce arranca ahí: quien termina
-     el curso nunca se queda sin medalla (§6.10.6).
+     Piso garantizado por el gate = 104, y subió: desde que avanzar exige
+     APROBAR el mini juego (3 de 5, pedido del cliente), el recorrido
+     más barato que el gate acepta ya no es "terminarlo perdiendo" sino
+     "aprobarlo a los tropezones" — los 7 conceptos (42) + las 4 fichas
+     (32) + 3 aciertos pagados tras error (3×10 = 30). Medido con
+     `_auto('minimo')`: 104. El bronce arranca ahí, así que quien
+     termina el curso nunca se queda sin medalla (§6.10.6).
 
      LOS TRES UMBRALES SALEN DE RECORRIDOS MEDIDOS, no de repartir el
      máximo en tercios (§7.3 punto 19). Medido con `_auto()` sobre el
@@ -148,12 +152,14 @@
 
        recorrido            juego                       puntaje
        ------------------------------------------------------------
-       pésimo               0 de 5, se queda sin vidas       74
+       mínimo               3 de 5, las 3 tras errar        104
        insistente           5 de 5, cada una tras un error  124
        perfecto             5 de 5 a la primera             199
 
-     · bronce = 74  — el piso que el gate garantiza. Quien termina el
-       curso tiene medalla, siempre.
+     · bronce = 104 — el piso que el gate garantiza. Quien termina el
+       curso tiene medalla, siempre. Antes era 74, que era el piso
+       cuando alcanzaba con TERMINAR el juego; ahora hay que aprobarlo,
+       y aprobarlo paga.
      · plata = 124 — el recorrido insistente, EXACTO. Antes estaba en
        127 y era un umbral imposible de una forma que no se veía: quien
        exploraba todo el curso y terminaba el juego acertando las cinco
@@ -172,7 +178,7 @@
      puntos contra umbrales y nada más; el catálogo de logros no entra
      en la cuenta. Lo que bloqueaba era el aire entre 180 y 199. */
   var MAX_SIN_VIDEOS = 199;
-  var PISO_GATE = 74;
+  var PISO_GATE = 104;
   var NIVELES = [
     { id: 'bronce', desde: PISO_GATE, nombre: 'bronce', icono: '🥉' },
     { id: 'plata', desde: 124, nombre: 'plata', icono: '🥈' },
@@ -239,7 +245,7 @@
             que reintentar recupere 10 y no 25)
        mf = el juego se terminó alguna vez (gate de avance) */
   var estado = { vistas: {}, conceptos: {}, popups: {}, videos: {},
-                 mjOk: {}, mjErr: {}, mjFin: false };
+                 mjOk: {}, mjErr: {}, mjFin: false, mjAprobado: false };
 
   function persistir() {
     if (!window.SCORM || !Logros) return;
@@ -250,7 +256,8 @@
       vg: Object.keys(estado.videos),
       mo: Object.keys(estado.mjOk),
       me: Object.keys(estado.mjErr),
-      mf: estado.mjFin ? 1 : 0
+      mf: estado.mjFin ? 1 : 0,
+      ma: estado.mjAprobado ? 1 : 0
     }, Logros.serialize()));
   }
   function restaurar() {
@@ -264,6 +271,7 @@
     (s.mo || []).forEach(function (id) { estado.mjOk[id] = true; });
     (s.me || []).forEach(function (id) { estado.mjErr[id] = true; });
     estado.mjFin = !!s.mf;
+    estado.mjAprobado = !!s.ma;
     if (Logros) Logros.restore(sanearLogros(s));
   }
 
@@ -344,6 +352,80 @@
     initSummaryPrint();
     initTiempoActivo();
     initVideoSafetyNet();
+
+    /* ---- iPad: tres parches de plataforma ------------------------
+       Los tres son del kit y los tres se arreglan acá porque desde este
+       chat no se edita `kit-base/` (§0.1). Van relayados como K19, K20
+       y K21. */
+
+    /* (a) El cartel "Parece que estás escribiendo mientras estás en
+       pantalla completa". Lo muestra iPadOS cuando una página en
+       pantalla completa tiene el foco en un campo de TEXTO. Y el foco
+       se lo lleva el propio kit: `Motor.showPopup()` (motor-slides.js
+       §929) enfoca el primer elemento enfocable del pop-up, que en el
+       glosario es `<input type="search">`. O sea que cada vez que el
+       alumno abre el glosario, iPadOS le tira el cartel encima.
+       Acá se corrige lo mínimo: SOLO en punteros gruesos (dedo) y SOLO
+       si lo que quedó enfocado es un campo de texto, el foco se mueve a
+       la tarjeta del pop-up. La tarjeta sigue siendo un destino válido
+       para lectores de pantalla (se le pone `tabindex="-1"`), el
+       atrapa-foco del motor sigue funcionando, y con teclado —puntero
+       fino— no cambia nada: ahí enfocar el buscador es lo correcto. */
+    var dedo = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    if (dedo) {
+      document.addEventListener('popupopen', function () {
+        var el = document.activeElement;
+        if (!el) return;
+        var tag = el.tagName;
+        var tipo = (el.getAttribute('type') || 'text').toLowerCase();
+        var esTexto = tag === 'TEXTAREA' ||
+          (tag === 'INPUT' && ['text', 'search', 'email', 'url', 'tel', 'number', 'password'].indexOf(tipo) !== -1);
+        if (!esTexto) return;
+        var card = el.closest('.modal-card') || el.closest('[data-popup]');
+        if (!card) { el.blur(); return; }
+        card.setAttribute('tabindex', '-1');
+        try { card.focus({ preventScroll: true }); } catch (e) { card.focus(); }
+      });
+    }
+
+    /* (b) Pantalla completa del video en iOS/iPadOS. El kit ya resuelve
+       el bug de fondo —al salir de pantalla completa hay que volver a
+       correr `_initShots()`, porque el reproductor vive dentro de una
+       captura posicionada en píxeles y `fullscreenchange` no dispara
+       ningún resize— pero escucha `fullscreenchange`, que en Safari de
+       iOS/iPadOS NO se emite para el fullscreen nativo de un `<video>`:
+       ahí los eventos son `webkitbeginfullscreen` / `webkitendfullscreen`.
+       Resultado medido por el cliente: después de dar play, el
+       reproductor "se tilda" y no se puede agrandar ni achicar.
+       Se agregan los dos eventos de WebKit con el mismo tratamiento. */
+    Array.prototype.forEach.call(document.querySelectorAll('.d-shot-hit-video, .d-shot-video'), function (v) {
+      ['webkitbeginfullscreen', 'webkitendfullscreen'].forEach(function (ev) {
+        v.addEventListener(ev, function () {
+          /* Dos pasadas: al volver de pantalla completa el layout del
+             escenario todavía no se estabilizó en el mismo turno. */
+          if (motor && motor._initShots) {
+            motor._initShots();
+            setTimeout(function () { motor._initShots(); }, 120);
+          }
+        });
+      });
+    });
+
+    /* (c) "Al entrar por primera vez a una diapositiva de video no se
+       puede dar play; hay que salir y volver". Misma familia que el
+       hallazgo K12: `_initShots()` posiciona los `[data-hit]` midiendo
+       la captura, y si la imagen todavía no cargó, el botón de play
+       queda en el ancla provisional — o sea NO donde el dedo toca. Al
+       volver a entrar la imagen ya está en caché, se mide bien y anda.
+       Red de seguridad para TODAS las diapositivas, no solo las de
+       video: cada captura que todavía no cargó vuelve a disparar el
+       posicionamiento cuando termina. */
+    Array.prototype.forEach.call(document.querySelectorAll('.d-shot-img'), function (img) {
+      if (img.complete && img.naturalWidth > 0) return;
+      img.addEventListener('load', function () {
+        if (motor && motor._initShots) motor._initShots();
+      }, { once: true });
+    });
 
     /* ---- Videos de fondo (portada y unidad 1) ----
        Patrón 1 de coto-media.js. Es la pieza que §7.17 marca como la
@@ -428,7 +510,15 @@
     }
     function faltaJuego(slideEl) {
       if (!slideEl || slideEl.getAttribute('data-slide') !== 'minijuego') return [];
-      return estado.mjFin ? [] : ['minijuego'];
+      /* Se pide APROBAR, no solo terminar (pedido del cliente). Antes
+         alcanzaba con `estado.mjFin`, que se pone igual al perder: se
+         podía seguir el curso sin haber acertado una sola. Ahora el
+         gate mira `mjAprobado`, que se persiste y solo se pone cuando
+         el juego termina con al menos `MJ_APROBACION` aciertos.
+         Reintentar es ilimitado y el umbral es 3 de 5, así que nadie
+         queda encerrado; y una vez aprobado queda aprobado, aunque
+         después vuelva a jugar y le vaya peor. */
+      return estado.mjAprobado ? [] : ['minijuego'];
     }
 
     motor.canAdvance = function (slideEl) {
@@ -906,6 +996,8 @@
 
     function terminar(gano, preludio) {
       estado.mjFin = true;
+      /* Nunca se baja: si ya aprobó una vez, el gate queda abierto. */
+      if (gano) estado.mjAprobado = true;
       Logros.unlock('juego');
       if (gano && aciertos === MJ.length && !Object.keys(estado.mjErr).length) {
         Logros.unlock('preciso');
@@ -957,8 +1049,8 @@
        guarda `estado.mjOk`, persistido en `suspend_data`, así que una
        segunda vuelta no paga de nuevo; `estado.mjErr` también persiste,
        así que tampoco se puede "limpiar el prontuario" para arrancar el
-       logro `preciso`; y `estado.mjFin` queda en true, así que el gate
-       de la diapositiva no vuelve a cerrarse mientras se rejuega. */
+       logro `preciso`; y `estado.mjAprobado` nunca se baja, así que el
+       gate de la diapositiva no vuelve a cerrarse mientras se rejuega. */
     var btnRejugar = raiz.querySelector('[data-mj-rejugar]');
     if (btnRejugar) btnRejugar.addEventListener('click', function () {
       if (btnRejugar.closest('[data-panel]').hidden) return;
@@ -1038,7 +1130,12 @@
            'insistente' → yerra cada pregunta una vez y recién después
                           la acierta, reintentando cuantas veces haga
                           falta — es el alumno de §7.14, el que "se
-                          equivocó bastante y llegó igual al máximo". */
+                          equivocó bastante y llegó igual al máximo";
+           'minimo'     → lo más barato que el gate acepta: aprueba con
+                          3 de 5 y cada una de esas 3 tras haber errado,
+                          o sea 10 puntos por pregunta en vez de 25. De
+                          acá sale el PISO del gate desde que avanzar
+                          exige aprobar. */
       /* Para los tests: qué opción es la correcta en cada pregunta. Lo
          necesita el chequeo del umbral de aprobación (3 de 5), que
          tiene que acertar exactamente 3 y fallar 2 — algo que `_auto()`
@@ -1083,6 +1180,16 @@
           var btn;
           if (modo === 'perfecto') btn = elOpciones.children[q.ok];
           else if (modo === 'pesimo') btn = erroneaViva;
+          else if (modo === 'minimo') {
+            /* Lo MÁS BARATO que el gate acepta desde que hay que
+               aprobar: errar una vez cada una de las 3 primeras y recién
+               ahí acertarlas (10 en vez de 25), y las 2 últimas errarlas
+               y seguir de largo. Con eso el juego queda aprobado (3 de
+               5) pagando lo mínimo posible. Es el recorrido del que sale
+               el piso del gate, y por lo tanto el bronce. */
+            btn = (i < MJ_APROBACION && estado.mjErr[q.id])
+              ? elOpciones.children[q.ok] : erroneaViva;
+          }
           else btn = estado.mjErr[q.id] ? elOpciones.children[q.ok] : erroneaViva;
           if (!btn || btn.disabled) break;
           /* Desde que el botón de avance también aparece al ERRAR, hay
@@ -1093,7 +1200,11 @@
              que es, además, lo que hace un alumno que está jugando. */
           var eraCorrecta = (btn === elOpciones.children[q.ok]);
           btn.click();
-          if (eraCorrecta) {
+          /* En 'minimo' hay que avanzar TAMBIÉN tras errar las dos
+             últimas: si no, se queda reintentándolas y nunca llega al
+             final. En los otros modos avanzar tras un error cambiaría
+             lo que cada uno mide (ver el comentario de abajo). */
+          if (eraCorrecta || (modo === 'minimo' && i >= MJ_APROBACION)) {
             var next = raiz.querySelector('.d-mj-next');
             if (next) next.click();
           }

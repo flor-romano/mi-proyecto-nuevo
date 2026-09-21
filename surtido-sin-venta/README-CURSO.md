@@ -1840,6 +1840,62 @@ medido en el test: los botones con etiqueta tienen que seguir siendo
 más anchos que altos. Va al kit como parte de **K21**.
 
 
+### 21.4 · Las franjas de arriba y abajo (corrección de §19.2)
+
+El cliente volvió sobre la misma captura: *"¿ves que hay márgenes
+arriba y abajo?"*. Sí — y eran la otra cara del arreglo de la octava
+vuelta.
+
+Los dos reclamos tiran para lados opuestos: "en iPad los videos se ven
+recortados" (§19.2) y "hay márgenes arriba y abajo" (este). Con un arte
+de proporción fija y una ventana que no la tiene, o se llena la
+pantalla y se recorta a los costados, o se respeta el arte y quedan
+franjas. La pregunta correcta no era cuál de las dos, sino **hasta
+cuánto se puede recortar sin tocar contenido** — y eso no se había
+medido: se había aplicado la advertencia del kit, que asume el peor
+caso de todo el rango.
+
+Ahora sí se midió, recortando cada una de las 22 capturas por los
+costados y mirando el resultado:
+
+| recorte por lado | proporción de escenario | resultado |
+|---|---|---|
+| 5.75% | 1.77 | todo entero |
+| 7.85% | 1.686 | todo entero |
+| 12.5% | 1.50 | **roto**: se cortan las píldoras de los dos costados en "Últimos consejos", y el índice y la unidad pierden su anillo |
+
+Con 8% por lado como presupuesto —el margen de diseño de este PDF— el
+lienzo puede llenar la pantalla mientras la proporción del escenario
+sea **1.68 o mayor**. Eso cubre el monitor del reporte (1.774), un iPad
+apaisado (1.686) y cualquier notebook 16:9. Por debajo de 1.68 vuelve el
+lienzo fijo, porque ahí el recorte ya se come las píldoras.
+
+Resultado medido después del cambio:
+
+| ventana | proporción | franja | recorte por lado |
+|---|---|---|---|
+| 1912×1200 (el reporte) | 1.786 | **0** | 5.3% |
+| 1440×900 | 1.846 | **0** | 3.9% |
+| 1180×820 (iPad apaisado) | 1.686 | **0** | 7.9% |
+| 1024×768 | 1.580 | 136px | — (llenar costaría 10.5%) |
+| 820×1180 · 844×390 | fuera de rango | sin cambios | — |
+
+El test lo verifica de los dos lados, porque un umbral solo se sostiene
+si falla cuando tiene que fallar: por encima de 1.68 no puede quedar
+franja, y por debajo no puede llenarse.
+
+Lo que sigue valiendo de **K18** es lo que se relayó: el kit no da forma
+de elegir ese umbral — lo tiene fijo en 1.5 para todos los cursos.
+
+**⚠️ Para cuando lleguen los videos.** Portada y unidad 1 entran en esta
+misma regla, así que el .mp4 se recorta igual que la captura. Hay que
+pedirle al editor que **no ponga nada importante en el 8% de cada
+costado**, el mismo margen que respeta el diseño. Si algún video viene
+con texto pegado al borde, la solución es una línea: sacar
+`.d-shot-slide--bg-video` de ese bloque y esas dos diapositivas vuelven
+al 2:1 fijo, sin tocar el resto.
+
+
 ---
 
 ## 22. Pendiente / próximo paso
@@ -1857,7 +1913,10 @@ más anchos que altos. Va al kit como parte de **K21**.
     del kit y no del curso: una `.d-shot-slide--bg-video` **no se
     narra** (el audio lo pone el video), así que esas dos diapositivas
     están mudas hasta que lleguen los archivos.
-  Proporción a pedirle al editor: **2:1** (mismo criterio que el PDF).
+  Proporción a pedirle al editor: **2:1** (mismo criterio que el PDF),
+  y **sin nada importante en el 8% de cada costado** — a partir de
+  la novena vuelta el lienzo llena la pantalla en el rango habitual
+  y ese margen es el que se recorta (§21.4).
   Al subir los dos del cuerpo el máximo pasa de 199 a 219 y conviene
   volver a correr `npm test` — `puntaje-curso.mjs` lo va a decir solo.
 

@@ -130,35 +130,53 @@
   object-fit:cover;
 }
 
-/* ---- Lienzo fijo 2:1 también en el rango tablet -------------------
-   Reporte del cliente: en iPad los videos de portada y de unidad se ven
-   RECORTADOS. Pasa con todas las capturas, no solo con los videos —
-   ahí se nota más porque el recorte cae sobre gente y títulos.
+/* ---- Hasta dónde se puede llenar la pantalla sin comer contenido --
+   Dos reclamos del cliente que tiran para lados opuestos:
+     · "en iPad los videos de portada se ven recortados" (octava vuelta);
+     · "hay márgenes arriba y abajo" (novena).
 
-   Y no es un bug que haya que descubrir: lo dice el propio kit en la
-   cabecera de `coto-shot-stage.css`, nombrando a este curso:
+   Son la misma decisión vista de los dos lados: con un arte de
+   proporción fija (2:1) y una ventana que no la tiene, o se llena la
+   pantalla y se recorta a los costados, o se respeta el arte y quedan
+   franjas. La pregunta correcta no es cuál de las dos, sino HASTA
+   CUÁNTO se puede recortar sin tocar contenido.
 
-     "REQUIERE que el PDF del curso se haya diseñado con el margen de
-      seguridad NUEVO (8% arriba/abajo + 13% a cada costado). Cursos
-      diseñados con el margen VIEJO (8% parejo en las 4 direcciones,
-      ej. «Surtido sin venta») NO deben usar este archivo — el recorte
-      que habilita en el rango tablet caería sobre contenido real, no
-      sobre margen vacío. Para esos cursos, seguir usando el bloque
-      estático de solo-lienzo-fijo (sin el @container de abajo)."
+   Y eso se midió, sobre las 22 capturas del curso: se recortó cada una
+   por los costados y se miró el resultado.
 
-   El PDF de este curso es del margen viejo. Pero `new-course.mjs` copia
-   el archivo entero, así que el `@container (1.5 … 2.2)` que estira el
-   lienzo a pantalla completa vino puesto igual. Medido en un iPad
-   apaisado (1180x820 → escenario 1180x700, proporción 1.686, dentro de
-   ese rango): el lienzo pasa a 1180x700 y `object-fit:cover` sobre un
-   arte 2:1 se come el **15.7% del ancho**, 93px por lado.
+     recorte por lado   proporción de escenario   resultado
+     ---------------------------------------------------------------
+     5.75%              1.77                      todo entero
+     7.85%              1.686                     todo entero
+     12.5%              1.5                       ROTO: en "Últimos
+                                                  consejos" se cortan
+                                                  las píldoras de los
+                                                  dos costados; el
+                                                  índice y la unidad
+                                                  pierden el anillo
 
-   Esto restaura el lienzo fijo que el kit indica para este curso: la
-   captura entra entera y sobran franjas arriba y abajo (55px en ese
-   iPad), que es el trato correcto cuando el margen de diseño no
-   protege el recorte. Se relaya como K18 — lo que le falta al kit no es
-   la regla, es una forma de NO traerla. */
-@container (min-aspect-ratio: 1.5) and (max-aspect-ratio: 2.2) {
+   Con 8% por lado como presupuesto (el margen de diseño de este PDF),
+   el lienzo puede llenar la pantalla mientras la proporción del
+   escenario sea **1.68 o mayor** — que cubre un iPad apaisado (1.686),
+   cualquier notebook 16:9 y el monitor del reporte (1.774). Por debajo
+   de 1.68 vuelve el lienzo fijo, porque ahí el recorte ya se come las
+   píldoras.
+
+   La vuelta anterior esto estaba resuelto con el lienzo fijo en TODO el
+   rango, siguiendo al pie de la letra la advertencia del kit para los
+   cursos con margen viejo. Era correcto pero conservador de más: la
+   advertencia asume el peor caso del rango (1.5) y acá se midió el
+   caso real de cada proporción. Lo que sigue valiendo del hallazgo K18
+   es que el kit no da forma de elegir el umbral — hoy es 1.5 fijo.
+
+   ⚠️ PARA CUANDO LLEGUEN LOS VIDEOS: portada y unidad 1 son
+   `--bg-video` y entran en esta misma regla, así que el .mp4 se recorta
+   igual que la captura. Hay que pedirle al editor que **no ponga nada
+   importante en el 8% de cada costado** — mismo margen que respeta el
+   diseño. Si algún video viene con texto pegado al borde, la solución
+   es sacar `.d-shot-slide--bg-video` de este bloque: esas dos
+   diapositivas vuelven al 2:1 fijo y el resto sigue llenando. */
+@container (min-aspect-ratio: 1.5) and (max-aspect-ratio: 1.679) {
   .d-shot-slide--bg-layered > .d-shot,
   .d-shot-slide--bg-video > .d-shot,
   .slide-cierre .d-cierre-shot .d-shot{

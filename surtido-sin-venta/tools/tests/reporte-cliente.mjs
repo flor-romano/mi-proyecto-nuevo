@@ -50,8 +50,9 @@
    Octava tanda — casi toda de iPad:
     16. Las 4 tarjetas de opciones del mini juego miden lo mismo aunque
         una envuelva en dos renglones.
-    17. El lienzo 2:1 no se recorta en el rango tablet (este curso tiene
-        el margen de diseño VIEJO — lo advierte el propio kit).
+    17. El lienzo llena la pantalla mientras el recorte que eso cuesta
+        entre en el margen del diseño (medido: hasta 8% por lado), y
+        vuelve al 2:1 fijo por debajo de ese umbral.
     18. Abrir un pop-up con el dedo no deja el foco en un campo de texto
         (es lo que dispara el cartel de iPadOS "parece que estás
         escribiendo en pantalla completa").
@@ -762,29 +763,53 @@ for (const t of TARJETAS) {
   }
 }
 
-/* ---- 17 · el lienzo no se recorta en tablet -------------------
-   El propio kit avisa en la cabecera de `coto-shot-stage.css` que este
-   curso —margen de diseño viejo— NO debe usar el `@container` que
-   estira el lienzo a pantalla completa entre 1.5 y 2.2 de proporción:
-   ahí `object-fit:cover` recorta sobre contenido real. Medido en un
-   iPad apaisado, el recorte era del 15.7% del ancho. */
+/* ---- 17 · hasta dónde se llena la pantalla ---------------------
+   Dos reclamos opuestos del cliente —"en iPad los videos se ven
+   recortados" y "hay márgenes arriba y abajo"— se resuelven con un
+   único número: cuánto se puede recortar por costado sin tocar
+   contenido. Se midió sobre las capturas recortándolas y mirándolas:
+   a 5.75% y a 7.85% por lado queda todo entero; a 12.5% se cortan las
+   píldoras de "Últimos consejos" y los anillos del índice y la unidad.
+   De ahí sale el umbral de 1.68 de proporción de escenario.
+
+   Se verifica de los DOS lados, porque un umbral solo se sostiene si
+   falla cuando tiene que fallar:
+     · por encima de 1.68 el lienzo llena la pantalla (sin franjas);
+     · por debajo, vuelve el lienzo fijo 2:1 (con franjas), porque ahí
+       el recorte ya se comería contenido. */
 {
-  for (const [nom, w, h] of [['iPad apaisado', 1180, 820], ['escritorio', 1440, 900]]) {
+  const CASOS = [
+    ['monitor del reporte', 1912, 1200, 'llena'],
+    ['iPad apaisado', 1180, 820, 'llena'],
+    ['escritorio', 1440, 900, 'llena'],
+    ['tablet angosta', 1024, 768, 'franjas']
+  ];
+  for (const [nom, w, h, esperado] of CASOS) {
     const tab = await browser.newPage({ viewport: { width: w, height: h } });
     await tab.goto(url);
     await tab.waitForFunction(() => window.motor);
     await tab.waitForTimeout(400);
     const m = await tab.evaluate(() => {
-      const shot = document.querySelector('.slide.is-active .d-shot');
-      const r = shot.getBoundingClientRect();
       const st = document.querySelector('.d-stage').getBoundingClientRect();
-      return { ratio: r.width / r.height, stage: st.width / st.height };
+      const sh = document.querySelector('.slide.is-active .d-shot').getBoundingClientRect();
+      return { razon: st.width / st.height, franja: st.height - sh.height, ratioLienzo: sh.width / sh.height };
     });
     await tab.close();
-    if (!cerca(m.ratio, 2, 0.02)) {
-      fails.push(`[${nom}] el lienzo quedó en ${m.ratio.toFixed(3)}:1 en vez de 2:1 (el escenario ` +
-        `es ${m.stage.toFixed(3)}:1). Con el lienzo estirado, el \`cover\` de la captura recorta ` +
-        'a los costados, y el PDF de este curso no tiene margen lateral de seguridad para eso.');
+    const llena = m.franja < 2;
+    const recorte = ((2 - m.razon) / 4) * 100;
+    if (esperado === 'llena' && !llena) {
+      fails.push(`[${nom} ${w}x${h}] quedan ${Math.round(m.franja)}px de franja. A esa proporción ` +
+        `(${m.razon.toFixed(3)}) llenar cuesta ${recorte.toFixed(1)}% de recorte por lado, que está ` +
+        'dentro del margen del diseño: no corresponde dejar franja.');
+    }
+    if (esperado === 'franjas' && llena) {
+      fails.push(`[${nom} ${w}x${h}] el lienzo llena la pantalla, pero a esa proporción ` +
+        `(${m.razon.toFixed(3)}) eso cuesta ${recorte.toFixed(1)}% de recorte por lado — medido, ahí ` +
+        'ya se cortan las píldoras de "Últimos consejos". Tiene que volver al lienzo fijo 2:1.');
+    }
+    if (!llena && !cerca(m.ratioLienzo, 2, 0.02)) {
+      fails.push(`[${nom} ${w}x${h}] hay franja pero el lienzo no quedó en 2:1 sino en ` +
+        `${m.ratioLienzo.toFixed(3)}: está recortando Y dejando franja a la vez.`);
     }
   }
 }

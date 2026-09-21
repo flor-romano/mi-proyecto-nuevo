@@ -1271,7 +1271,77 @@ el único texto que se ve es el del HTML, que está bien escrito.
 
 ---
 
-## 14. Pendiente / próximo paso
+## 15. Sexta vuelta — 2 puntos reportados por el cliente
+
+### 15.1 · El video no llenaba el marco dibujado
+
+Medido sobre el arte (lienzo 2520×1260): la pantalla que el diseñador
+dibujó dentro del marco va de **x[842,1686] y[504,993]** — 845×490, o
+sea **1.7245:1** — y el hitbox calza exactamente ahí (lo confirma
+`verify-hitboxes`). El video real es **16:9 = 1.7778:1**.
+
+El kit le pone a esta variante `object-fit:contain`
+(`[data-inline-video].is-poster .d-shot-hit-video`), pensado para que el
+video no se recorte contra el marco. Pero `contain` con un video **más
+ancho** que su caja hace justo lo que el cliente reportó: entra entero y
+deja franja arriba y abajo. La cuenta da 15px de los 490 del arte, que
+es exactamente el aire que se ve en su captura.
+
+Arreglo: `cover` en el `<video>` **y** en la carátula. Lo que se recorta
+es el ANCHO —la caja es proporcionalmente más alta que 16:9—, 1.5% por
+lado; los subtítulos quemados del video van centrados, así que no los
+toca.
+
+Dos detalles que valen la pena anotar:
+
+- **La especificidad no es capricho.** `coto-media.js` documenta la
+  trampa: el `<video>` de esta variante está bajo
+  `[data-inline-video].is-poster .d-shot-hit-video`, tres selectores, y
+  un override más liviano le gana al `<img>` de la carátula pero NO al
+  `<video>`. Resultado: un encuadre en pausa y otro al reproducir, o sea
+  el marco "saltando" al arrancar. El override del curso repite el
+  prefijo entero en las dos reglas.
+- **Se verificó viendo, no deduciendo.** Como el .mp4 todavía es un
+  placeholder de 0 bytes, se metió una imagen de prueba 16:9 en la
+  carátula y se compararon los dos `object-fit`: con `contain` asoma el
+  fondo del marco arriba y abajo, con `cover` la imagen llega a los dos
+  bordes.
+
+### 15.2 · Los íconos de los pop-ups no eran los del diseñador
+
+El cliente los describió como "deformados" y comparó contra su PDF. No
+estaban estirados: **eran otro dibujo**. Los `<svg>` estaban escritos a
+mano en `index.html` —una aproximación de tres engranajes, de una
+etiqueta con "$", de un listado con tildes— y por más que el aro sea
+cuadrado y el `viewBox` correcto, una aproximación no va a coincidir
+nunca con el original. Es §6.32 al pie de la letra: se usa el arte del
+diseñador, no se reinterpreta.
+
+Ahora los cuatro íconos son el **recorte del círculo dorado de su propia
+página del PDF** (16, 17, 20 y 21), con el fondo hecho transparente. La
+alfa no se estimó: se midió el oro real del círculo (239/199/70) y se
+derivó pixel a pixel cuánto se acerca cada uno al blanco viniendo de ese
+oro.
+
+El recorte abarca el **círculo entero**, no solo el glifo, y el `<img>`
+ocupa el 100% del aro. Eso tiene una consecuencia que es el punto del
+diseño: el glifo cae exactamente donde el diseñador lo puso, con su
+tamaño y su centrado, **sin una sola constante de posición escrita a
+mano** — que es lo que se habría desalineado en la próxima vuelta.
+
+| ficha | página | tamaño del glifo |
+|---|---|---|
+| ¿Para qué sirve el reporte? | 16 | 49.5% del diámetro |
+| ¿Cómo lo generamos? | 17 | 65.5% |
+| ¿Qué acciones tomar? | 20 | 54.5% |
+| ¿Cómo mejorar la venta? | 21 | 52.1% |
+
+Los cuatro pesan entre 5 y 26 KB (`check-assets` en verde).
+
+
+---
+
+## 16. Pendiente / próximo paso
 
 - **Videos.** Los **cuatro** `.mp4` de `video/` son placeholders de 0
   bytes con su nombre final:

@@ -35,6 +35,12 @@
         otra.
     11. Las píldoras de "Últimos consejos" no tienen texto horneado
         debajo del HTML (era lo que se veía "duplicado" al animarse).
+
+   Sexta tanda:
+    12. El video llena el marco que el diseñador dibujó, sin franjas
+        arriba y abajo.
+    13. Los íconos de las fichas son el recorte del PDF, cuadrados y sin
+        deformar — no un `<svg>` dibujado a mano acá.
 */
 import { openCourse, report, requireUrl, irASlide } from './_shared.mjs';
 import { chromium } from 'playwright-core';
@@ -506,6 +512,102 @@ for (const t of TARJETAS) {
         'a la vez, que es el "doble render" que reportó el cliente.');
     }
   });
+}
+
+/* ---- 12 · el video llena el marco dibujado --------------------
+   La pantalla que dibujó el diseñador mide 845x490 del lienzo
+   (x[842,1686] y[504,993]), o sea 1.7245:1, y el video real es 16:9.
+   Con el `object-fit:contain` que el kit le pone a esta variante,
+   quedaban 15px de franja arriba y abajo. Se chequean las dos cosas
+   que tienen que valer juntas: que el hitbox siga calzando con el
+   marco, y que el video Y la carátula estén los dos en `cover` — si
+   uno solo lo está, el encuadre cambia al arrancar y el marco "salta"
+   (la trampa de especificidad que documenta coto-media.js). */
+{
+  const RATIO = 845 / 490;
+  for (const slide of ['video-reporte', 'video-acciones']) {
+    await irASlide(page, slide);
+    await page.waitForTimeout(300);
+    const m = await page.evaluate(() => {
+      const w = document.querySelector('.slide.is-active [data-inline-video]');
+      if (!w) return null;
+      const v = w.querySelector('.d-shot-hit-video');
+      const im = w.querySelector('.d-shot-hit-poster-img');
+      const r = w.getBoundingClientRect();
+      return {
+        video: v ? getComputedStyle(v).objectFit : null,
+        poster: im ? getComputedStyle(im).objectFit : null,
+        ratio: r.width / r.height
+      };
+    });
+    if (!m) { fails.push(`[${slide}] no hay ningún [data-inline-video].`); continue; }
+    if (m.video !== 'cover') {
+      fails.push(`[${slide}] el <video> está en object-fit:${m.video}. Con "contain" un video 16:9 ` +
+        'entra entero en un marco de 1.7245:1 y deja franjas arriba y abajo — el reporte del cliente.');
+    }
+    if (m.poster !== 'cover') {
+      fails.push(`[${slide}] la carátula está en object-fit:${m.poster} y el video en ` +
+        `${m.video}: el encuadre cambia al arrancar y el marco salta.`);
+    }
+    if (!cerca(m.ratio, RATIO, 0.01)) {
+      fails.push(`[${slide}] la caja del video es ${m.ratio.toFixed(4)}:1 y la pantalla dibujada es ` +
+        `${RATIO.toFixed(4)}:1. Con "cover" eso ya no deja franjas, pero recorta de más: revisar ` +
+        'las coordenadas del hitbox contra el arte.');
+    }
+  }
+}
+
+/* ---- 13 · los íconos de las fichas son los del PDF --------------
+   El cliente los vio "deformados". No estaban estirados: eran `<svg>`
+   dibujados a mano acá, o sea otro dibujo. Ahora son el recorte del
+   círculo dorado de su propia página del PDF. Se chequea que sean
+   imágenes, que carguen, que el archivo sea cuadrado y que el aro
+   también — un aro no cuadrado sí los estiraría. */
+{
+  for (const [slide, ids] of [['repaso-reporte', ['rep-para-que', 'rep-como']],
+                              ['repaso-acciones', ['rep-acciones', 'rep-mejorar']]]) {
+    await irASlide(page, slide);
+    await page.waitForTimeout(250);
+    for (const id of ids) {
+      await page.evaluate((x) => document.querySelector(`[data-popup-trigger="${x}"]`).click(), id);
+      await page.waitForTimeout(450);
+      const m = await page.evaluate((x) => {
+        const aro = document.querySelector(`[data-popup="${x}"] .d-ficha-ic`);
+        if (!aro) return null;
+        const img = aro.querySelector('img');
+        const r = aro.getBoundingClientRect();
+        return {
+          hayImg: !!img,
+          haySvg: !!aro.querySelector('svg'),
+          cargo: img ? (img.complete && img.naturalWidth > 0) : false,
+          natural: img ? [img.naturalWidth, img.naturalHeight] : null,
+          fit: img ? getComputedStyle(img).objectFit : null,
+          aro: [r.width, r.height]
+        };
+      }, id);
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(250);
+      if (!m) { fails.push(`[${id}] la ficha no tiene .d-ficha-ic.`); continue; }
+      if (!m.hayImg) {
+        fails.push(`[${id}] el ícono volvió a ser un dibujo propio (${m.haySvg ? '<svg> inline' : 'nada'}) ` +
+          'en vez del recorte del PDF: el cliente ya reportó que esos dibujos no son los suyos.');
+        continue;
+      }
+      if (!m.cargo) fails.push(`[${id}] el ícono no carga (img/ic-${id}.webp).`);
+      else if (m.natural[0] !== m.natural[1]) {
+        fails.push(`[${id}] el archivo del ícono es ${m.natural[0]}x${m.natural[1]}: no es cuadrado, ` +
+          'así que el recorte no abarca el círculo entero y el glifo no va a caer donde lo puso el diseñador.');
+      }
+      if (!cerca(m.aro[0], m.aro[1], 1)) {
+        fails.push(`[${id}] el aro mide ${m.aro[0].toFixed(1)}x${m.aro[1].toFixed(1)}: no es cuadrado ` +
+          'y el ícono sale estirado.');
+      }
+      if (m.fit !== 'contain') {
+        fails.push(`[${id}] el ícono está en object-fit:${m.fit}; con algo distinto de "contain" ` +
+          'se deforma si el aro deja de ser cuadrado.');
+      }
+    }
+  }
 }
 
 if (errors.length) fails.push(...errors.map((e) => 'error de consola: ' + e));

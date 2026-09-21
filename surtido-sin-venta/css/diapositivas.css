@@ -198,7 +198,14 @@
   display:grid; place-items:center;
   box-shadow:0 10px 26px -12px rgba(20,30,60,.45);
 }
-.d-ficha-ic svg{ width:17.5cqw; height:17.5cqw; }
+/* El recorte abarca el círculo entero, así que el `<img>` ocupa el aro
+   completo y el glifo cae solo donde el diseñador lo puso — no hay un
+   tamaño de ícono escrito a mano que pueda quedar desproporcionado.
+   `object-fit:contain` es el cinturón: aunque el aro dejara de ser
+   cuadrado por cualquier motivo, el dibujo no se estira. */
+.d-ficha-ic img{
+  width:100%; height:100%; display:block; object-fit:contain;
+}
 /* El hueco del círculo es un ESPACIADOR DE LA TARJETA, no padding del
    cuerpo — y ese cambio arregla un bug que el cliente reportó: cuando
    el cuerpo scrolleaba, el título subía y se montaba encima del aro

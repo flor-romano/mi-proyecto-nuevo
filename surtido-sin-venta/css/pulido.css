@@ -95,3 +95,31 @@
   opacity:1; pointer-events:auto; visibility:visible;
   transform:translateY(0) scale(1);
 }
+
+/* ---- El video llena el marco dibujado, sin franjas ---------------
+   Reporte del cliente: al reproducir quedaba aire arriba y abajo entre
+   el borde del marco y la imagen.
+
+   Medido: la pantalla que el diseñador dibujó va de x[842,1686] a
+   y[504,993] del lienzo 2520x1260 — 845x490, o sea **1.7245:1** — y el
+   hitbox calza exactamente ahí (verificado con verify-hitboxes). El
+   video real es 16:9 = 1.7778:1. Con el `object-fit:contain` que el kit
+   le pone a esta variante, un video más ancho que su caja entra entero
+   y deja franjas arriba y abajo: 15px de los 490 del arte, que es
+   exactamente lo que se ve en la captura.
+
+   `cover` lo llena. Lo que se recorta es el ANCHO, no el alto —la caja
+   es proporcionalmente más alta que 16:9—, y son 1.5% por lado: los
+   subtítulos quemados del video van centrados, así que no los toca.
+
+   La especificidad NO es capricho: el kit avisa (coto-media.js, §
+   "Trampa de especificidad") que el `<video>` de esta variante está
+   bajo `[data-inline-video].is-poster .d-shot-hit-video` —tres
+   selectores—, así que un override más liviano le gana al `<img>` de
+   la carátula pero NO al `<video>`, y el resultado es un encuadre en
+   pausa y otro al reproducir: el marco "salta" justo al arrancar.
+   Por eso acá se repite el prefijo entero en las dos reglas. */
+[data-inline-video].is-poster .d-shot-hit-video,
+[data-inline-video].is-poster .d-shot-hit-poster-img{
+  object-fit:cover;
+}

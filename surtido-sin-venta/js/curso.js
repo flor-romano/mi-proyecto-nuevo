@@ -701,6 +701,7 @@
         });
       }
       hud();
+      ajustarEscena();
       /* El motor no se entera de un `innerHTML`: si esta función no
          narrara, el juego quedaría mudo a partir del primer concepto
          (CLAUDE.md §1). El guard de `hidden` evita narrar en el render
@@ -901,8 +902,66 @@
       reiniciar();
     });
 
+    /* ---- Alto real de la escena (reporte del cliente: "el mini juego
+       se ve apretado en pantallas chicas") ----
+       El ancho compartido de las tres filas está topeado por el alto que
+       le sobra a la ilustración, y ese alto no se puede escribir en CSS:
+       depende de cuánto miden la fila de estado, las opciones y la zona
+       de devolución, que son contenido. Peor: la fila de estado ENVUELVE
+       cuando el ancho se achica, así que una constante en `cqh` se muerde
+       la cola —bajarla hace envolver la fila, que se come el alto recién
+       liberado— y esa es exactamente la forma que tenía el bug.
+       Acá se mide y se publica como `--mj-alto-escena`; el CSS lo usa
+       como segundo tope de `--mj-ancho`.
+
+       Dos pasadas a propósito: la primera cambia el ancho, eso puede
+       hacer que la fila de estado deje de envolver (o empiece), y la
+       segunda mide ya con el layout nuevo. Converge ahí — se verificó
+       midiendo los huecos en 6 tamaños. */
+    var AIRE = 10;               // respiro mínimo entre filas, en px
+    function ajustarEscena() {
+      var play = raiz.querySelector('.d-mj-play');
+      if (!play) return;
+      var capa = play.closest('[data-panel]');
+      if (!capa || capa.hidden || raiz.hidden) return;
+      var top = play.querySelector('.d-mj-top');
+      var body = play.querySelector('.d-mj-body');
+      var grid = play.querySelector('.d-mj-grid');
+      var zona = play.querySelector('.d-mj-zona-fb');
+      if (!top || !body || !grid || !zona) return;
+      /* Una sola pasada alcanza desde que la fila de estado, las
+         opciones y la zona de devolución NO siguen el ancho de la
+         escena (ver el comentario en diapositivas.css): sus altos ya no
+         dependen de lo que esta medición decida, así que no hay
+         realimentación que iterar. */
+      {
+        var cs = getComputedStyle(play);
+        var gapPlay = parseFloat(cs.rowGap) || 0;
+        var gapBody = parseFloat(getComputedStyle(body).rowGap) || 0;
+        var libre = play.clientHeight
+          - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)
+          - top.offsetHeight - grid.offsetHeight - zona.offsetHeight
+          - gapPlay * 2 - gapBody - AIRE;
+        /* Piso de 90px: por debajo de eso la ilustración ya no se lee y
+           conviene que sobresalga un poco antes que desaparecer. */
+        play.style.setProperty('--mj-alto-escena', Math.max(90, Math.round(libre)) + 'px');
+      }
+    }
+    /* `ResizeObserver` y no `resize`: el escenario también cambia de alto
+       cuando se abre el teclado en un teléfono o cuando el navegador
+       esconde su barra, y eso no emite `resize` en todos lados. */
+    if (window.ResizeObserver) {
+      var ro = new ResizeObserver(function () { ajustarEscena(); });
+      var elPlay = raiz.querySelector('.d-mj-play');
+      if (elPlay) ro.observe(elPlay);
+    }
+    document.addEventListener('layerchange', function (e) {
+      if (e.detail && e.detail.target === 'mj-juego') ajustarEscena();
+    });
+
     pintarVidas();
     cuandoCarguenLasImagenes(preposicionarPanelesOcultos);
+    cuandoCarguenLasImagenes(ajustarEscena);
 
     return {
       alEntrar: function () { hud(); },

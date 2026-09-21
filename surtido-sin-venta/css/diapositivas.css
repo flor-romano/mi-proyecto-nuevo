@@ -22,6 +22,31 @@
    color sale del token `--cat` y no de un hex copiado a mano — es
    literalmente el mismo amarillo del PDF (#F0BE00 = Salón) y así
    `check-raw-cat-colors.mjs` no tiene nada que marcar. */
+/* ---- Radio de bordes: 30px fijos en cajas y tarjetas -----------
+   Pedido explícito del cliente, para TODO el curso y no solo para los
+   pop-ups: el radio estaba en porcentaje (o en `cqw`, que es lo mismo
+   contra un contenedor) y se veía distinto según el tamaño de la caja
+   — una tarjeta angosta salía casi ovalada y la misma tarjeta ancha
+   apenas redondeada.
+
+   Se redefinen los DOS tokens del kit que usan las cajas y tarjetas
+   (`coto-base.css` §85: `--r-lg:22px` y `--r-xl:32px`), no cada regla
+   suelta: así entran de una vez los modales, las tarjetas de logro, el
+   cartel de devolución del mini juego, los paneles del cierre y
+   cualquier caja que el kit dibuje.
+
+   Lo que NO se toca, a propósito:
+   · `--r-pill` (999px), que es la forma de los botones y los chips —
+     no son "cajas ni tarjetas";
+   · `--r-sm` (8px) y `--r` (14px), que visten campos de formulario y
+     detalles chicos, donde 30px se comería el elemento entero;
+   · `.d-ficha-ring` y `.d-shot-hit--tab`, que NO son cajas del curso
+     sino realces calcados sobre formas DIBUJADAS en el arte: su radio
+     tiene que seguir escalando con la imagen (en `cqw`), porque si se
+     fija en píxeles deja de calzar en cuanto cambia el tamaño de
+     pantalla. */
+:root{ --r-lg:30px; --r-xl:30px; }
+
 /* `container-type:inline-size` y NO `cqw` del escenario: fuera del
    rango de proporción donde la captura llena el frame, `.d-shot` queda
    letterboxeada y bastante más angosta que `.d-stage` — o sea que
@@ -155,7 +180,7 @@
   container-type:inline-size;
   width:min(41rem,100%); overflow:visible;
   margin-top:calc(min(41rem,100%) * .181);   /* el círculo asoma entero */
-  border-radius:6.5cqw; text-align:center;
+  border-radius:30px; text-align:center;
   /* El kit le pone a `.modal-card` `max-height:88vh; overflow:auto`, y
      acá `overflow` TIENE que ser `visible` (si no, el aro dorado que
      asoma por arriba queda cortado) — pero `overflow:visible` también
@@ -174,17 +199,32 @@
   box-shadow:0 10px 26px -12px rgba(20,30,60,.45);
 }
 .d-ficha-ic svg{ width:17.5cqw; height:17.5cqw; }
-/* Arriba: lo que asoma del círculo (15cqw) + el aire hasta el título
-   (82/1418 ≈ 5.8cqw). Laterales y pie, medidos en la página 17. */
+/* El hueco del círculo es un ESPACIADOR DE LA TARJETA, no padding del
+   cuerpo — y ese cambio arregla un bug que el cliente reportó: cuando
+   el cuerpo scrolleaba, el título subía y se montaba encima del aro
+   dorado (el aro es absoluto sobre la tarjeta y no se mueve con el
+   scroll). Con el hueco afuera del área que scrollea, el texto no
+   puede entrar nunca ahí.
+   `cqw` funciona en el `::before` porque un pseudo-elemento es HIJO de
+   la tarjeta, y la tarjeta es su contenedor de consulta.
+   15cqw es lo que asoma el círculo (top -18.1 + alto 33.1) y 3.4cqw el
+   aire hasta el título. */
+.modal-card.d-ficha::before{
+  content:""; display:block; flex:none; height:18.4cqw;
+}
+/* Padding interno más chico (pedido del cliente): con 12cqw a cada
+   lado el texto entraba en 76cqw de ancho y se iba de alto; con 7cqw
+   entra en 86 y la ficha larga deja de necesitar scroll. */
 .modal-card.d-ficha > .modal-bd{
-  padding:20.8cqw 12cqw 11cqw;
+  padding:0 7cqw 8cqw;
   min-height:0; overflow-y:auto;
-  /* 88vh es el tope del kit; los 8rem que se restan son lo que asoma el
-     círculo por encima de la tarjeta (18.1% de 41rem ≈ 119px). `svh`
+  /* Red de seguridad para pantallas muy bajas, no el caso normal: lo
+     que asoma el círculo (18.1% de 41rem ≈ 119px ≈ 7.5rem) ya no entra
+     en el cuerpo, así que se descuenta del tope del kit (88vh). `svh`
      donde exista: en un teléfono, `vh` cuenta la barra del navegador
      como si no estuviera y la ficha se sigue yendo abajo del borde. */
-  max-height:calc(88vh - 8rem);
-  max-height:calc(88svh - 8rem);
+  max-height:calc(88vh - 9rem);
+  max-height:calc(88svh - 9rem);
 }
 .d-ficha-tit{
   margin:0; font-family:var(--font-title); font-weight:900;
@@ -229,7 +269,7 @@
   .modal-card.d-ficha p,
   .d-ficha-lista{ font-size:max(3.53cqw, .95rem); }
   .d-ficha-tit{ font-size:max(4.44cqw, 1.15rem); }
-  .modal-card.d-ficha > .modal-bd{ padding:20.8cqw 8cqw 8cqw; }
+  .modal-card.d-ficha > .modal-bd{ padding:0 5cqw 6cqw; }
 }
 
 /* "Volver a jugar" en la pantalla de éxito del mini juego. El
@@ -299,9 +339,47 @@
    estado terminan en el mismo borde derecho, así que las tres filas
    comparten un ancho común en vez de tener cada una su margen. ---- */
 .d-mj-play{
-  --mj-ancho: min(73.65cqw, 57.4cqh * 1856 / 723);
+  /* 57.4cqh era el alto del panel en el arte, y ALCANZABA mientras la
+     pantalla tenía tres filas. Desde que la zona de devolución se
+     reserva desde el primer render (ronda 4), hay una cuarta fila fija
+     que ese presupuesto no descontaba: en 1152x648 la escena se comía
+     18px de la fila de estado y las tarjetas CONCEPTO/PUNTOS/VIDAS
+     quedaban cortadas — el "apretado" que reportó el cliente.
+     44cqh es lo que queda para la escena una vez descontadas las otras
+     tres filas, medido; y el `max-height` de abajo es el cinturón que
+     hace que un presupuesto optimista encoja la escena en vez de
+     montarse sobre el cartel. */
+  /* El ANCHO compartido de las tres filas sale de dos topes: el del
+     arte (73.65% del lienzo) y el del alto que sobra para la escena.
+
+     Ese segundo tope NO se puede escribir en CSS y el curso ya lo pagó
+     dos veces. La cuenta real es
+        alto de escena = alto del panel − (fila de estado + opciones +
+                         zona de devolución + gaps + padding)
+     y ninguno de esos sumandos es una fracción del escenario: la fila
+     de estado, por ejemplo, mide 61px cuando entra en una línea y 123px
+     cuando el ancho la obliga a envolver — y envuelve JUSTAMENTE cuando
+     achicamos este ancho para ganar alto. Con una constante `Ncqh` la
+     cuenta se muerde la cola: bajarla hacía envolver la fila, que comía
+     el alto que acabábamos de liberar. Medido en 1152x648: la escena se
+     montaba 18px sobre las tarjetas CONCEPTO/PUNTOS/VIDAS.
+
+     Así que el alto disponible lo MIDE `curso.js` (`ajustarEscena()`) y
+     lo deja acá como `--mj-alto-escena`. El `41cqh` es solo el valor de
+     arranque, para el primer pintado antes de que corra la medición. */
+  --mj-ancho: 73.65cqw;
+  --mj-escena-ancho: min(var(--mj-ancho), var(--mj-alto-escena, 41cqh) * 1856 / 723);
   justify-content:center;
 }
+/* La fila de estado, las opciones y la zona de devolución se quedan en
+   el ancho del ARTE y no siguen a la escena cuando esta se angosta por
+   falta de alto. Perder esa alineación en pantallas bajas es el precio
+   —chico— de no entrar en la espiral que tenían antes: al achicar el
+   ancho compartido, la fila de estado envolvía en dos líneas, las
+   opciones pasaban a dos filas y el molde de la devolución se iba de
+   2 a 5 renglones… lo que dejaba MENOS alto para la escena, que volvía
+   a angostarse. Medido en 1152x648: la zona de devolución llegó a 285px
+   de los 528 del panel y la ilustración quedó en 74. */
 .d-mj-top, .d-mj-body, .d-mj-zona-fb{
   width:var(--mj-ancho); margin-inline:auto; max-width:100%;
 }
@@ -344,7 +422,12 @@
 .d-mj-body{
   display:flex; flex-direction:column; justify-content:center;
   grid-template-columns:none;
-  align-items:stretch; align-content:stretch; gap:1.1rem; min-height:0;
+  align-items:stretch; align-content:stretch; gap:1.1rem;
+  /* `flex:1 1 auto` + `min-height:0`: el cuerpo se queda con el
+     sobrante Y se deja encoger. Sin el `min-height:0` un hijo flex no
+     baja de su contenido y el desborde sale por arriba, encima de la
+     fila de estado. */
+  flex:1 1 auto; min-height:0;
 }
 /* La escena se mide contra el ALTO del escenario además del ancho.
    `.d-stage` es `container-type:size` (kit), así que `cqh` es el alto
@@ -352,7 +435,25 @@
    el kit por default, en 1280x720 el panel terminaba 43px fuera del
    escenario, recortado y sin scroll. */
 .d-mj-escena{
-  flex:0 0 auto; width:100%; height:auto; margin-inline:auto;
+  /* Manda el ALTO y el ancho se deriva del `aspect-ratio` del kit. Así,
+     si el presupuesto de `--mj-ancho` resulta optimista, la escena se
+     achica —sin recortar el dibujo, porque el `cover` del kit sigue
+     calzando con la proporción real— en vez de desbordar hacia arriba
+     y taparle la fila de estado.
+     `max-width` sigue siendo el ancho compartido de las tres filas:
+     cuando el que limita es el ancho, nada cambia respecto de antes. */
+  /* Sigue mandando el ANCHO (`--mj-ancho`) y el alto sale del
+     `aspect-ratio` del kit — es la única forma de que el `object-fit:
+     cover` del `<img>` no recorte, porque la caja conserva la
+     proporción real del recorte (1856x723). Se probó lo contrario
+     (alto al 100% y ancho derivado) y el resultado fue una caja de
+     604x548 sobre un dibujo 2.57:1, o sea justo el recorte que
+     `coto-minijuego.css` advierte en su precondición.
+     Lo que impide el desborde ahora no es esta regla sino el
+     presupuesto corregido de `--mj-ancho` (41cqh) más el `flex:1 1
+     auto; min-height:0` del cuerpo. */
+  flex:0 0 auto; width:var(--mj-escena-ancho); height:auto; margin-inline:auto;
+  max-width:100%;
 }
 /* 4 opciones en fila, sin las pistas de conexión del mapa del kit
    (este juego no une nodos con líneas). */
@@ -370,7 +471,7 @@
    para encontrar (§7.3 punto 13), y acá ya se pisaron una vez. */
 @media (max-height:760px){
   .d-mj-play{
-    --mj-ancho: min(73.65cqw, 52cqh * 1856 / 723);
+    --mj-ancho: 73.65cqw;
     padding:.7rem 1.1rem 1rem; gap:.6rem;
   }
   .d-mj-opt{ font-size:.8rem; padding:.55rem .7rem; }
@@ -438,3 +539,30 @@
 
 /* Panel final: los dos números que el arte deja en blanco. */
 .d-mj-fin-stat b{ color:#1a1a2e; }
+
+/* ---- Botón "Cómo recorrer el curso" del índice ------------------
+   Es un `[data-place]` sobre el arte: lo posiciona el mismo
+   `_initShots` del motor, así que el botón sigue a la ilustración en
+   cualquier tamaño. `container-type:inline-size` para que la
+   tipografía escale con la caja medida sobre el arte y no con el
+   escenario — cuando `.d-shot` queda letterboxeada no son lo mismo. */
+/* `container-type:size` va en la CAJA que `_initShots` dimensiona, no
+   en el botón: ponerlo en el botón le aplica `contain:inline-size`, o
+   sea que deja de medirse por su contenido, y el borde salía más
+   angosto que el texto (se vio en el primer render). Con el contenedor
+   afuera, `cqh` es el alto real de la caja medida sobre el arte. */
+.d-indice-cta{
+  container-type:size;
+  display:flex; align-items:center; justify-content:center;
+}
+.d-indice-btn{
+  max-width:100%; padding:.55em 1.6em; cursor:pointer;
+  border:2px solid var(--cat); border-radius:var(--r-pill);
+  background:var(--surface); color:var(--cat-ink);
+  font-family:var(--font-title); font-weight:800;
+  font-size:clamp(.72rem, 26cqh, 1.05rem); line-height:1.2;
+  white-space:nowrap;
+  transition:background .15s ease, transform .15s ease;
+}
+.d-indice-btn:hover{ background:var(--cat); color:#fff; transform:translateY(-1px); }
+@media (prefers-reduced-motion:reduce){ .d-indice-btn{ transition:none; } }

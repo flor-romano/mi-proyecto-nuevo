@@ -17,6 +17,7 @@ no se editó ni una línea de `kit-base/` (CLAUDE.md §0.1).
 |---|---|
 | Diapositivas | 13 (de 31 páginas de PDF) |
 | Suite | **19 de 19 en verde** (17 del kit + 2 propios) |
+| Radio de cajas y tarjetas | **30px fijos** (pedido del cliente, tokens `--r-lg`/`--r-xl`) |
 | Máximo de puntos medido | **199** (sin los videos reales; 219 con ellos) |
 | Medalla | bronce 74 · plata 127 · oro 180 (los "desde N" del cierre los pinta `curso.js` desde `NIVELES`) |
 | Logros | **5** (tope del cliente para todos los cursos, ver K14) |
@@ -685,6 +686,50 @@ todo del kit).
   `<span class="sr-only">`, como lo escribió este curso.
 
 
+### K16 · Ayuda y Configuración se abren con el mouse encima, y no hay forma de pedir "solo clic" — PROBADO
+
+**Síntoma.** Los dos flotantes de abajo a la derecha abren su panel al
+pasar el cursor por encima, sin clic. Reportado por el cliente.
+
+**Diagnóstico contra el código real.** `coto-player-chrome.css` los
+muestra con tres condiciones en OR:
+
+```css
+.d-fab:focus-within .d-fab-pop,
+.d-fab.is-hover   .d-fab-pop,
+.d-fab.is-open    .d-fab-pop { opacity:1; pointer-events:auto; visibility:visible; … }
+```
+
+`.is-open` es el pin por clic (`initPinnedPopover`, coto-player.js
+§510). `.is-hover` la agrega `attachHoverGrace(it, 'is-hover', graceMs)`
+en la misma función, sin opción de apagarlo: `initPinnedPopover` acepta
+`graceMs` y `onOpen`, nada para decir "este grupo abre solo con clic".
+
+No es un bug a secas —abrir con hover es una decisión de producto
+razonable y está documentada como "la gracia"— pero **no se puede
+elegir**, y el kit ya pagó dos parches alrededor de ese hover: el
+`closeAll()` que tiene que sacar las dos clases (v1.9.40) y el `blur()`
+del segundo clic, que existe solo para pelear contra `:focus-within`
+(v1.9.72, §7.19 A5).
+
+**Cómo se verificó.** Con el mouse sobre el botón, `visibility` del
+`.d-fab-pop` daba `visible` sin ningún clic. Con el override del curso
+da `hidden`, y `visible` recién al clickear. Está como punto 7 de
+`tools/tests/reporte-cliente.mjs`.
+
+**Workaround del curso** (en `pulido.css`, no en el kit): se apagan
+`:focus-within` y `.is-hover` y se deja `.is-open`. Sacar
+`:focus-within` no rompe el teclado, porque Enter sobre el botón
+dispara el mismo `click`.
+
+**Propuesta.** Una opción en `initPinnedPopover`, por ejemplo
+`opts.soloClic`, que (a) no llame a `attachHoverGrace` y (b) agregue una
+clase al contenedor —`.d-fab--solo-clic`— para que el CSS del kit pueda
+excluirlo de las dos condiciones que no son el pin. Con eso el curso no
+tiene que reescribir una regla del kit para cambiar de opinión sobre un
+gesto.
+
+
 ---
 
 ## 7. Segunda vuelta — 3 puntos reportados por el cliente
@@ -1079,7 +1124,154 @@ y=365 —entra— y el cuerpo scrollea (415px de contenido en 254 de caja).
 
 ---
 
-## 12. Pendiente / próximo paso
+## 13. Quinta vuelta — 5 puntos reportados por el cliente
+
+### 13.1 · Ayuda y Configuración se abrían con el mouse encima
+
+No era un trigger mal puesto del curso: el kit muestra el panel con
+**tres** condiciones en OR (`coto-player-chrome.css`):
+
+```css
+.d-fab:focus-within .d-fab-pop,
+.d-fab.is-hover   .d-fab-pop,
+.d-fab.is-open    .d-fab-pop { … visible … }
+```
+
+`.is-hover` la pone `attachHoverGrace()` (`coto-player.js`) y `.is-open`
+es el pin por clic. Como desde este chat no se toca `kit-base/` (§0.1),
+el curso apaga en `pulido.css` las dos condiciones que no son el clic.
+Se relaya como **K16** con la propuesta de que sea una opción del kit.
+
+Sacar `:focus-within` no rompe el teclado: con Tab el foco cae en el
+`.d-fab-btn` y Enter dispara el mismo `click` que pone `.is-open`; una
+vez abierto, el panel se queda abierto mientras se navega adentro porque
+la clase sigue puesta. Verificado en el test: con el mouse encima el
+panel queda `hidden`, con un clic pasa a `visible`.
+
+### 13.2 · Pop-ups: scroll, título montado, radio y padding
+
+Los cuatro síntomas eran dos causas.
+
+**El radio.** Estaba en `cqw` —o sea en porcentaje del contenedor—, así
+que la misma tarjeta se veía casi ovalada angosta y apenas redondeada
+ancha. Ahora son **30px fijos**, y no regla por regla: se redefinen los
+dos tokens del kit que visten cajas y tarjetas (`--r-lg:22px` y
+`--r-xl:32px` → 30px), con lo que entran de una vez los modales, las
+tarjetas de logro, el cartel del mini juego y los paneles del cierre.
+Quedan afuera a propósito `--r-pill` (botones y chips, que no son
+cajas), `--r-sm`/`--r` (detalles chicos, donde 30px se comería el
+elemento) y los realces que calcan formas DIBUJADAS —`.d-ficha-ring`,
+`.d-shot-hit--tab`—, que tienen que seguir escalando con la imagen.
+
+**El scroll y el título.** El hueco que deja el aro de ícono era
+`padding-top` del cuerpo, y el cuerpo es el que scrollea: al bajar, el
+título subía y se metía debajo del aro, que es absoluto sobre la tarjeta
+y no se mueve. Ahora ese hueco es un espaciador de la TARJETA
+(`.modal-card.d-ficha::before`, fuera del área que scrollea), así que el
+texto no puede entrar ahí ni aunque scrollee. Y el padding lateral bajó
+de 12cqw a 7cqw: el texto entra en 86% del ancho en vez de 76% y la
+ficha larga dejó de necesitar scroll.
+
+Medido con "¿Cómo lo generamos?" abierta:
+
+| ventana | radio | ¿scrollea? | ¿entra? |
+|---|---|---|---|
+| 1158×792 (la del reporte) | 30px | no | sí |
+| 1440×900 | 30px | no | sí |
+| 820×1180 (iPad) | 30px | no | sí |
+| 844×390 (teléfono apaisado) | 30px | sí, y corresponde | sí |
+
+### 13.3 · El índice dejaba avanzar sin ver nada
+
+La diapositiva tenía `data-gate-popup="instrucciones"`, que **no es un
+gate**: abre el instructivo al tocar "Siguiente" y deja pasar igual. El
+gate de verdad es `data-require-popups`, el mismo que usan las 4 fichas.
+
+No se podían poner los dos: `_advance()` consulta `motor.canAdvance`
+**antes** de abrir el pop-up del gate, así que con el gate puesto el
+instructivo no llegaría a abrirse nunca y la diapositiva quedaría sin
+salida. Por eso el instructivo pasó a tener su propio botón visible,
+"Cómo recorrer el curso", sobre una zona del arte medida y vacía
+(x[1100,1760] y[920,1080] del lienzo es blanco puro) — que además es lo
+que el gate señala cuando el alumno toca "Siguiente" sin haberlo
+abierto.
+
+No paga puntos a propósito: `premiarFicha()` solo premia los 4 ids de
+las fichas de repaso, así que el máximo de 199 no se movió (el test lo
+confirma).
+
+### 13.4 · Mini juego apretado en pantallas chicas
+
+Medido en 1152×648: la ilustración se montaba **18px** sobre las
+tarjetas CONCEPTO/PUNTOS/VIDAS, que quedaban cortadas.
+
+La causa es una realimentación, y vale anotarla porque es el tipo de
+bug que vuelve: el ancho de las tres filas salía de
+`min(73.65cqw, Ncqh * 1856/723)`, y ese `Ncqh` era una constante
+afinada **antes** de que existiera la zona de devolución reservada
+(ronda 4). Al bajarla para ganar alto, pasaba esto:
+
+1. la fila de estado se quedaba sin ancho y envolvía en dos líneas
+   (61px → 123px),
+2. las opciones pasaban a dos filas,
+3. el molde de la devolución se iba de 2 a 5 renglones (169px → 285px),
+4. o sea que quedaba **menos** alto para la escena, que volvía a
+   angostarse.
+
+Con `41cqh` la ilustración terminó en 74px de los 528 del panel. La
+cuenta se mordía la cola.
+
+Dos cambios lo cortan:
+
+- **La fila de estado, las opciones y la zona de devolución se quedan
+  en el ancho del arte** (73.65cqw) y ya no siguen a la escena. Se
+  pierde la alineación de los tres bordes en pantallas bajas; es un
+  precio chico al lado de la espiral.
+- **El alto disponible lo mide `curso.js`** (`ajustarEscena()`) y lo
+  publica como `--mj-alto-escena`; el CSS lo usa como segundo tope. Se
+  mide y no se estima porque ninguno de los sumandos —fila de estado,
+  opciones, devolución, gaps, padding— es una fracción del escenario.
+  Corre al entrar a la capa de juego, en cada `render()` y desde un
+  `ResizeObserver`.
+
+Huecos entre filas después del cambio (negativo = se montan):
+
+| ventana | antes | después |
+|---|---|---|
+| 1280×720 | 0 | +15 |
+| 1152×648 | **−18** | +15 |
+| 1024×600 | **−18** | +15 |
+| 1180×820 | **−4** | +21 |
+| 960×540 | +34 | +34 |
+| 820×1180 | +172 | +172 |
+
+Y la propiedad de la ronda 4 sigue en pie: la ilustración no se mueve al
+aparecer la devolución, verificado ahora en 1440×900, 1152×648, 1024×600
+y 844×390.
+
+### 13.5 · Animación rara en "Últimos consejos"
+
+No era la animación: las 5 píldoras del arte ya traen su texto
+**dibujado**, y encima van las píldoras HTML (para que el texto sea
+vivo, narrable y seleccionable). En reposo la de HTML tapa a la
+dibujada; mientras entra con su `translate`, deja ver la de abajo — y se
+ven los dos textos corridos, que es el "doble render" del reporte.
+
+Arreglo de raíz: se borró el texto horneado de las 5 píldoras en
+`img/consejos.webp`. El relleno no es un parche inventado — la píldora
+es oro plano (239,190,1), así que se rellenó el interior con su propio
+color, detectando el cuerpo de la píldora como "lo que tiene oro a los
+cuatro lados" y con 1.2px de difuminado en el borde para no dejar
+escalón. La forma de la píldora quedó intacta.
+
+Efecto lateral bueno: el arte traía "Corregir **proble / mas** de
+exhibición" partido al medio (era un hallazgo de contenido, §5) y ahora
+el único texto que se ve es el del HTML, que está bien escrito.
+
+
+---
+
+## 14. Pendiente / próximo paso
 
 - **Videos.** Los **cuatro** `.mp4` de `video/` son placeholders de 0
   bytes con su nombre final:
@@ -1109,5 +1301,5 @@ y=365 —entra— y el cuerpo scrollea (415px de contenido en 254 de caja).
   `python3 tools/build-zip.py . ../surtido-sin-venta.zip` y solo a
   pedido explícito (§3.12).
 
-- Los **15 hallazgos de kit (K1 a K15)** se llevan en un prompt al chat
+- Los **16 hallazgos de kit (K1 a K16)** se llevan en un prompt al chat
   de `kit-base/`. Desde acá no se editó `kit-base/`.

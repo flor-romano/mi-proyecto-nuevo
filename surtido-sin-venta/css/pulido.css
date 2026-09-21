@@ -29,7 +29,10 @@
   .modal-card.d-ficha{ width:min(30rem,100%); margin-top:calc(min(30rem,100%) * .181); }
   /* Con la tarjeta más angosta el círculo asoma menos: se le devuelve
      ese alto al cuerpo en vez de dejarlo reservado de más. */
-  .modal-card.d-ficha > .modal-bd{ max-height:calc(88svh - 5.6rem); }
+  /* Medido en 844x390: con el aro asomando (87px) y el espaciador del
+     círculo (88px), al cuerpo le quedan ~200px para que la tarjeta no
+     se pase del borde de abajo. */
+  .modal-card.d-ficha > .modal-bd{ max-height:calc(88svh - 9rem); }
 }
 
 /* Los dos botones flotantes del kit (`.d-fab-stack`: Ayuda y
@@ -60,3 +63,35 @@
    degradado de la categoría; acá pasa a círculo, que es como lo pidió
    el cliente. El degradado dorado lo sigue poniendo el kit. */
 .d-brand .lg{ border-radius:50%; }
+
+/* ---- Ayuda y Configuración: se abren SOLO con clic ----------------
+   Reporte del cliente: los dos flotantes de abajo a la derecha abrían
+   su panel con el mouse encima. No es un "trigger mal puesto" del
+   curso: el kit lo abre con TRES condiciones en OR
+   (`coto-player-chrome.css`):
+
+     .d-fab:focus-within .d-fab-pop,
+     .d-fab.is-hover   .d-fab-pop,
+     .d-fab.is-open    .d-fab-pop { … visible … }
+
+   `.is-hover` la pone `attachHoverGrace()` desde `coto-player.js`, y
+   `.is-open` es el pin por clic. Como desde este chat no se toca
+   `kit-base/` (CLAUDE.md §0.1), el curso apaga las dos condiciones que
+   no son el clic y deja la tercera. Se relaya al kit como K16, con la
+   propuesta de que sea una opción y no una constante.
+
+   Sacar `:focus-within` no rompe el teclado: con Tab el foco cae en el
+   `.d-fab-btn` y Enter dispara el mismo `click` que pone `.is-open`, y
+   una vez abierto el panel se queda abierto mientras se navega adentro
+   porque la clase sigue puesta. El `blur()` que el kit hace en el
+   segundo clic (§7.19 A5) existía justamente para pelear con
+   `:focus-within`; sin él, sobra y no molesta. */
+.d-fab:focus-within .d-fab-pop,
+.d-fab.is-hover .d-fab-pop{
+  opacity:0; pointer-events:none; visibility:hidden;
+  transform:translateY(10px) scale(.97);
+}
+.d-fab.is-open .d-fab-pop{
+  opacity:1; pointer-events:auto; visibility:visible;
+  transform:translateY(0) scale(1);
+}

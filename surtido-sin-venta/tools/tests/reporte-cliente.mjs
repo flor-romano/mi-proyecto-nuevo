@@ -24,6 +24,17 @@
         del catálogo ("7/6"), ni siquiera con estado viejo guardado.
      6. Tras responder MAL también hay botón para avanzar: el alumno no
         puede quedar sin salida visible.
+
+   Quinta tanda:
+     7. Ayuda y Configuración se abren SOLO con clic, nunca con el mouse
+        encima.
+     8. La ficha de repaso entra sin scroll, con 30px de radio, y su
+        título arranca por debajo del aro de ícono.
+     9. El índice no deja avanzar hasta abrir "Cómo recorrer el curso".
+    10. En pantallas bajas ninguna fila del mini juego se monta sobre
+        otra.
+    11. Las píldoras de "Últimos consejos" no tienen texto horneado
+        debajo del HTML (era lo que se veía "duplicado" al animarse).
 */
 import { openCourse, report, requireUrl, irASlide } from './_shared.mjs';
 import { chromium } from 'playwright-core';
@@ -321,6 +332,180 @@ for (const t of TARJETAS) {
   if (!/probar otra opción o seguir/i.test(r.fb || '')) {
     fails.push('el cartel de error no avisa que se puede reintentar o seguir.');
   }
+}
+
+/* ---- 7 · Ayuda y Configuración: solo clic ----------------------
+   Se mide el efecto, no la implementación: con el mouse encima del
+   botón, el panel tiene que seguir invisible; con un clic, visible. */
+{
+  const vis = () => page.evaluate(() =>
+    getComputedStyle(document.querySelector('.d-fab--config .d-fab-pop')).visibility);
+  await page.hover('.d-fab--config .d-fab-btn');
+  await page.waitForTimeout(450);
+  if (await vis() !== 'hidden') {
+    fails.push('el panel de Configuración se abre con el mouse encima. Tiene que abrirse solo ' +
+      'con clic: el kit lo muestra también por `.is-hover` y por `:focus-within` ' +
+      '(coto-player-chrome.css), y el curso apaga esas dos condiciones en pulido.css.');
+  }
+  await page.click('.d-fab--config .d-fab-btn');
+  await page.waitForTimeout(350);
+  if (await vis() !== 'visible') {
+    fails.push('el panel de Configuración NO se abre al hacer clic: al apagar el hover se apagó ' +
+      'también la única forma de abrirlo.');
+  }
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(250);
+}
+
+/* ---- 8 · la ficha de repaso entra sin scroll -------------------
+   Tres cosas que el cliente vio juntas: scroll donde no hacía falta,
+   el título montado sobre el aro (consecuencia del scroll: el aro es
+   absoluto y no se mueve) y el radio en porcentaje. */
+{
+  await irASlide(page, 'repaso-reporte');
+  await page.waitForTimeout(300);
+  await page.evaluate(() => document.querySelector('[data-popup-trigger="rep-como"]').click());
+  await page.waitForTimeout(600);
+  const m = await page.evaluate(() => {
+    const c = document.querySelector('[data-popup="rep-como"] .modal-card.d-ficha');
+    const bd = c.querySelector('.modal-bd');
+    const tit = c.querySelector('.d-ficha-tit').getBoundingClientRect();
+    const aro = c.querySelector('.d-ficha-ic').getBoundingClientRect();
+    return {
+      radio: parseFloat(getComputedStyle(c).borderTopLeftRadius),
+      scroll: bd.scrollHeight > bd.clientHeight + 1,
+      titTop: tit.top, aroBot: aro.bottom,
+      cardBot: c.getBoundingClientRect().bottom, vh: window.innerHeight
+    };
+  });
+  if (m.scroll) {
+    fails.push('la ficha "¿Cómo lo generamos?" necesita scroll en una pantalla normal. El texto ' +
+      'entra: lo que sobraba era el padding interno.');
+  }
+  if (Math.abs(m.radio - 30) > 0.6) {
+    fails.push(`el radio de la ficha es ${m.radio.toFixed(1)}px y tiene que ser 30px fijos. Si da ` +
+      'un número grande y variable, volvió a estar en `cqw` (o sea en porcentaje del contenedor).');
+  }
+  if (m.titTop < m.aroBot) {
+    fails.push('el título de la ficha arranca por encima del borde inferior del aro de ícono: se ' +
+      'monta sobre el círculo. El hueco del aro tiene que estar FUERA del área que scrollea.');
+  }
+  if (m.cardBot > m.vh + 1) {
+    fails.push(`la ficha se sale ${Math.round(m.cardBot - m.vh)}px por abajo de la ventana.`);
+  }
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(250);
+}
+
+/* ---- 9 · el índice bloquea el avance --------------------------- */
+{
+  await irASlide(page, 'indice');
+  await page.waitForTimeout(350);
+  const antes = await page.evaluate(() =>
+    window.motor.canAdvance(document.querySelector('[data-slide="indice"]')));
+  if (antes) {
+    fails.push('el índice deja avanzar sin haber abierto "Cómo recorrer el curso". ' +
+      '`data-gate-popup` no bloquea: abre el pop-up al tocar "Siguiente" y deja pasar igual — ' +
+      'el gate de verdad es `data-require-popups`.');
+  }
+  const hayBoton = await page.evaluate(() =>
+    !!document.querySelector('[data-slide="indice"] [data-popup-trigger="instrucciones"]'));
+  if (!hayBoton) {
+    fails.push('el índice no tiene un botón visible para abrir el instructivo: con el gate puesto ' +
+      'y sin botón, la diapositiva queda sin salida (`_advance` consulta `canAdvance` ANTES de ' +
+      'abrir el pop-up de `data-gate-popup`).');
+  }
+  await page.evaluate(() =>
+    document.querySelector('[data-slide="indice"] [data-popup-trigger="instrucciones"]').click());
+  await page.waitForTimeout(500);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(400);
+  const despues = await page.evaluate(() =>
+    window.motor.canAdvance(document.querySelector('[data-slide="indice"]')));
+  if (!despues) {
+    fails.push('después de abrir y cerrar el instructivo el índice sigue bloqueado.');
+  }
+}
+
+/* ---- 10 · el mini juego no se monta en pantallas bajas ---------
+   Se mide en una ventana propia y baja (1152x648, la del reporte): las
+   cuatro filas del panel tienen que quedar una debajo de la otra, con
+   aire. El bug medía −18px entre la ilustración y la fila de estado. */
+{
+  const chico = await browser.newPage({ viewport: { width: 1152, height: 648 } });
+  await chico.goto(url);
+  await chico.waitForFunction(() => window.motor);
+  await chico.evaluate(() => {
+    const i = Array.from(document.querySelectorAll('.slide')).findIndex(
+      (e) => e.dataset.slide === 'minijuego');
+    window.motor.go(i);
+  });
+  await chico.waitForTimeout(500);
+  await chico.evaluate(() => document.querySelector('.d-mj-fin-btn').click());
+  await chico.waitForTimeout(700);
+  const h = await chico.evaluate(() => {
+    const q = (s) => document.querySelector(s).getBoundingClientRect();
+    const top = q('.d-mj-top'), esc = q('.d-mj-escena'), grid = q('.d-mj-grid'),
+          zona = q('.d-mj-zona-fb'), play = q('.d-mj-play');
+    return {
+      arriba: esc.top - top.bottom,
+      medio: grid.top - esc.bottom,
+      abajo: zona.top - grid.bottom,
+      pie: play.bottom - zona.bottom
+    };
+  });
+  await chico.close();
+  Object.keys(h).forEach((k) => {
+    if (h[k] < 0) {
+      fails.push(`en 1152x648 el mini juego se monta: el hueco "${k}" mide ${Math.round(h[k])}px. ` +
+        'El alto que le queda a la ilustración lo mide `ajustarEscena()` en curso.js — si dio ' +
+        'negativo, o no corrió o alguna fila volvió a seguir el ancho de la escena.');
+    }
+  });
+}
+
+/* ---- 11 · las píldoras de consejos no tienen texto horneado -----
+   El cliente lo vio como "texto duplicado" al animarse: la píldora HTML
+   entra con un `translate` y, mientras está en vuelo, deja ver el texto
+   que el PDF ya traía dibujado debajo. Se borró del arte, así que el
+   chequeo es sobre la IMAGEN: dentro de la píldora no puede quedar
+   nada claro sobre el amarillo. */
+{
+  const blancos = await page.evaluate(async () => {
+    const img = new Image();
+    img.src = 'img/consejos.webp';
+    await img.decode();
+    const c = document.createElement('canvas');
+    c.width = img.naturalWidth; c.height = img.naturalHeight;
+    c.getContext('2d').drawImage(img, 0, 0);
+    const cajas = Array.from(document.querySelectorAll('[data-slide="consejos"] .d-consejo'));
+    return cajas.map((el) => {
+      const l = parseFloat(el.dataset.l) / 100 * c.width;
+      const t = parseFloat(el.dataset.t) / 100 * c.height;
+      const w = parseFloat(el.dataset.w) / 100 * c.width;
+      const h = parseFloat(el.dataset.h) / 100 * c.height;
+      /* Margen PROPORCIONAL, no 12px fijos: el `[data-place]` es algo más
+         grande que la píldora dibujada, así que un margen chico dejaba
+         entrar el fondo claro de la diapositiva por los bordes y el test
+         contaba 100 píxeles "blancos" que no eran texto de nadie. Con
+         9% de ancho y 22% de alto la ventana queda bien adentro del oro
+         y el texto —centrado— sigue entrando entero. */
+      const mx = w * 0.09, my = h * 0.22;
+      const d = c.getContext('2d').getImageData(l + mx, t + my, w - mx * 2, h - my * 2).data;
+      let n = 0;
+      for (let i = 0; i < d.length; i += 4) {
+        if (d[i] > 245 && d[i + 1] > 245 && d[i + 2] > 245) n++;
+      }
+      return { txt: el.textContent.trim().slice(0, 24), n };
+    });
+  });
+  blancos.forEach((b) => {
+    if (b.n > 60) {
+      fails.push(`la píldora "${b.txt}" todavía tiene ${b.n} píxeles de texto blanco HORNEADO en ` +
+        'img/consejos.webp. Mientras la píldora HTML entra con su animación se ven los dos textos ' +
+        'a la vez, que es el "doble render" que reportó el cliente.');
+    }
+  });
 }
 
 if (errors.length) fails.push(...errors.map((e) => 'error de consola: ' + e));

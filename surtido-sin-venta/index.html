@@ -567,7 +567,20 @@
        `data-gate-popup` abre el instructivo al tocar "Siguiente" desde acá
        (spec-motor-slides.md §3): aparece cuando el alumno decide arrancar,
        no de prepo al entrar. -->
-  <section class="slide d-shot-slide d-shot-slide--bg-layered" data-slide="indice" data-slide-index="2" data-gate-popup="instrucciones">
+  <!-- `data-require-popups` en vez de `data-gate-popup` (reporte del
+       cliente: "se puede avanzar sin haber visto el contenido"). No son
+       lo mismo y la diferencia es justo la que él pedía:
+       `data-gate-popup` ABRE el instructivo cuando se toca "Siguiente"
+       y después deja pasar igual — el botón nunca se bloquea;
+       `data-require-popups` lo convierte en un gate de verdad, el mismo
+       mecanismo que ya usan las 4 fichas de repaso.
+       Los dos juntos se trabarían: `_advance()` consulta
+       `motor.canAdvance` ANTES de abrir el pop-up del gate, así que con
+       el gate puesto el instructivo no llegaría a abrirse nunca. Por
+       eso el instructivo pasa a tener su propio botón visible en la
+       diapositiva (abajo), que además es lo que el gate señala cuando
+       el alumno toca "Siguiente" sin haberlo abierto. -->
+  <section class="slide d-shot-slide d-shot-slide--bg-layered" data-slide="indice" data-slide-index="2" data-require-popups="instrucciones">
     <!-- `[data-narrate-only]` acota la LOCUCIÓN de esta diapositiva a
          estas dos líneas: el índice se enumera en pantalla (está
          horneado en la captura) pero leerlo entero en voz alta era
@@ -590,6 +603,13 @@
     </ul>
     <div class="d-shot" data-shot>
       <img class="d-shot-img" src="img/indice.webp" loading="lazy" alt="" aria-hidden="true">
+      <!-- Zona medida sobre el arte (2520x1260): x[1100,1760] y[920,1080]
+           es blanco puro, sin nada dibujado. -->
+      <div class="d-place d-indice-cta" data-place data-l="44.444" data-t="74.603" data-w="23.810" data-h="8.730">
+        <button class="d-indice-btn" type="button" data-popup-trigger="instrucciones" aria-haspopup="dialog">
+          Cómo recorrer el curso
+        </button>
+      </div>
     </div>
   </section>
 

@@ -41,6 +41,11 @@
         arriba y abajo.
     13. Los íconos de las fichas son el recorte del PDF, cuadrados y sin
         deformar — no un `<svg>` dibujado a mano acá.
+
+   Séptima tanda:
+    14. El mini juego aprueba con 3 de 5 (y no aprueba con 2).
+    15. El ícono del curso es un cuadrado de esquinas redondeadas, no un
+        círculo.
 */
 import { openCourse, report, requireUrl, irASlide } from './_shared.mjs';
 import { chromium } from 'playwright-core';
@@ -256,9 +261,9 @@ for (const t of TARJETAS) {
     fails.push(`el ícono del curso sigue siendo el placeholder de ${ico.w}x${ico.h} que escribe ` +
       '`new-course.mjs` (un WebP de 1x1 transparente): la pastilla dorada se ve vacía.');
   }
-  if (ico && ico.radio !== '50%') {
-    fails.push(`la pastilla del ícono tiene radio ${ico.radio} y tiene que ser un círculo (50%).`);
-  }
+  /* La FORMA del recuadro se chequea en el punto 15: el cliente pasó de
+     pedir círculo a pedir el cuadrado redondeado de su asset, y tener la
+     regla en dos lugares garantizaba que una de las dos quedara vieja. */
 }
 
 /* ---- 5 · el chip de logros no puede pasarse del total -----------
@@ -403,33 +408,43 @@ for (const t of TARJETAS) {
   await page.waitForTimeout(250);
 }
 
-/* ---- 9 · el índice bloquea el avance --------------------------- */
+/* ---- 9 · el índice pone el instructivo delante ------------------
+   Cambió de forma en la sexta vuelta: el cliente pidió sacar el botón
+   intermedio y que el pop-up salga solo al tocar "Siguiente". Lo que se
+   verifica es la garantía, no el mecanismo: desde el índice no se puede
+   pasar a la diapositiva siguiente sin que el instructivo se haya
+   puesto delante. */
 {
   await irASlide(page, 'indice');
   await page.waitForTimeout(350);
-  const antes = await page.evaluate(() =>
-    window.motor.canAdvance(document.querySelector('[data-slide="indice"]')));
-  if (antes) {
-    fails.push('el índice deja avanzar sin haber abierto "Cómo recorrer el curso". ' +
-      '`data-gate-popup` no bloquea: abre el pop-up al tocar "Siguiente" y deja pasar igual — ' +
-      'el gate de verdad es `data-require-popups`.');
-  }
   const hayBoton = await page.evaluate(() =>
-    !!document.querySelector('[data-slide="indice"] [data-popup-trigger="instrucciones"]'));
-  if (!hayBoton) {
-    fails.push('el índice no tiene un botón visible para abrir el instructivo: con el gate puesto ' +
-      'y sin botón, la diapositiva queda sin salida (`_advance` consulta `canAdvance` ANTES de ' +
-      'abrir el pop-up de `data-gate-popup`).');
+    !!document.querySelector('[data-slide="indice"] [data-popup-trigger]'));
+  if (hayBoton) {
+    fails.push('el índice volvió a tener un botón intermedio para abrir el instructivo. El cliente ' +
+      'pidió que el pop-up salga solo al tocar "Siguiente".');
   }
-  await page.evaluate(() =>
-    document.querySelector('[data-slide="indice"] [data-popup-trigger="instrucciones"]').click());
-  await page.waitForTimeout(500);
+  await page.click('[data-nav="next"]');
+  await page.waitForTimeout(650);
+  const tras = await page.evaluate(() => {
+    const m = document.querySelector('[data-popup="instrucciones"]');
+    return {
+      abierto: !!m && !m.hidden && getComputedStyle(m).display !== 'none',
+      slide: document.querySelector('.slide.is-active').dataset.slide
+    };
+  });
+  if (tras.slide !== 'indice') {
+    fails.push(`tocar "Siguiente" en el índice llevó directo a "${tras.slide}" sin mostrar el ` +
+      'instructivo: se puede avanzar sin ver el contenido.');
+  }
+  if (!tras.abierto) {
+    fails.push('tocar "Siguiente" en el índice no abrió el instructivo. Con `data-gate-popup` el ' +
+      'motor lo abre EN VEZ de navegar y completa el avance al cerrarlo (`_pendingNav`).');
+  }
   await page.keyboard.press('Escape');
-  await page.waitForTimeout(400);
-  const despues = await page.evaluate(() =>
-    window.motor.canAdvance(document.querySelector('[data-slide="indice"]')));
-  if (!despues) {
-    fails.push('después de abrir y cerrar el instructivo el índice sigue bloqueado.');
+  await page.waitForTimeout(800);
+  const despues = await page.evaluate(() => document.querySelector('.slide.is-active').dataset.slide);
+  if (despues === 'indice') {
+    fails.push('al cerrar el instructivo el curso no avanzó: el gate del kit dejó el avance colgado.');
   }
 }
 
@@ -606,6 +621,79 @@ for (const t of TARJETAS) {
         fails.push(`[${id}] el ícono está en object-fit:${m.fit}; con algo distinto de "contain" ` +
           'se deforma si el aro deja de ser cuadrado.');
       }
+    }
+  }
+}
+
+/* ---- 14 · el mini juego aprueba con 3 de 5 ---------------------
+   No lo cubre `_auto()`: sus tres modos son "todas bien", "todas mal" y
+   "todas bien tras errar", y acá hace falta acertar EXACTAMENTE 3 y
+   fallar 2. Se usa `_claves()`, que expone la respuesta correcta de
+   cada pregunta solo para esto. */
+{
+  for (const [aciertos, esperado] of [[3, 'ok'], [2, 'retry']]) {
+    await irASlide(page, 'minijuego');
+    await page.waitForTimeout(300);
+    const r = await page.evaluate(async (n) => {
+      const raiz = document.querySelector('[data-slide="minijuego"]');
+      const claves = window.__CURSO__.mj._claves();
+      /* Partida LIMPIA, venga de donde venga: los puntos 6 y 10 de este
+         mismo archivo ya jugaron, así que al entrar el juego puede
+         estar en la intro, a MITAD de una partida o en una pantalla
+         final. Sin reiniciar de verdad, las respuestas quedaban
+         corridas una pregunta y el test medía cualquier cosa. */
+      window.__CURSO__.mj._reiniciar();
+      await new Promise((r) => setTimeout(r, 350));
+      for (let q = 0; q < claves.length; q++) {
+        const opts = Array.from(raiz.querySelectorAll('.d-mj-opt'));
+        if (!opts.length) break;
+        const idx = q < n ? claves[q] : (claves[q] + 1) % opts.length;
+        opts[idx].click();
+        await new Promise((r) => setTimeout(r, 220));
+        const next = raiz.querySelector('.d-mj-next');
+        if (next) { next.click(); await new Promise((r) => setTimeout(r, 260)); }
+        const fin = raiz.querySelector('[data-panel="mj-fin-ok"]:not([hidden])') ||
+                    raiz.querySelector('[data-panel="mj-fin-retry"]:not([hidden])');
+        if (fin) break;
+      }
+      await new Promise((r) => setTimeout(r, 350));
+      return {
+        ok: !raiz.querySelector('[data-panel="mj-fin-ok"]').hidden,
+        retry: !raiz.querySelector('[data-panel="mj-fin-retry"]').hidden,
+        umbral: window.__CURSO__.mj._aprobacion
+      };
+    }, aciertos);
+    const dio = r.ok ? 'ok' : r.retry ? 'retry' : 'ninguna';
+    if (dio !== esperado) {
+      fails.push(`con ${aciertos} de 5 el mini juego terminó en la pantalla "${dio}" y se esperaba ` +
+        `"${esperado}" (umbral declarado: ${r.umbral} aciertos).`);
+    }
+  }
+}
+
+/* ---- 15 · el ícono del curso no es un círculo ------------------
+   El asset del cliente es un cuadrado de esquinas redondeadas con arcos
+   de ~9.6% del lado. Un `border-radius:50%` le recorta las esquinas. */
+{
+  const m = await page.evaluate(() => {
+    const lg = document.querySelector('.d-brand .lg');
+    if (!lg) return null;
+    const r = lg.getBoundingClientRect();
+    /* `borderTopLeftRadius` computado devuelve el valor TAL CUAL se
+       escribió: "9.6%" si es porcentaje, "8px" si es absoluto. Hay que
+       normalizar antes de comparar, o un 9.6% se lee como 9.6px. */
+    const crudo = getComputedStyle(lg).borderTopLeftRadius;
+    const lado = Math.min(r.width, r.height);
+    const pct = crudo.endsWith('%') ? parseFloat(crudo) : (parseFloat(crudo) / lado) * 100;
+    return { pct, crudo, lado };
+  });
+  if (!m) fails.push('no hay `.d-brand .lg` en la barra superior.');
+  else {
+    const pct = m.pct;
+    if (pct > 25) {
+      fails.push(`el recuadro del ícono tiene un radio del ${pct.toFixed(1)}% del lado (${m.crudo}): a partir de ` +
+        '~25% deja de leerse como cuadrado redondeado y a 50% es un círculo, que le recorta las ' +
+        'esquinas al asset del cliente.');
     }
   }
 }

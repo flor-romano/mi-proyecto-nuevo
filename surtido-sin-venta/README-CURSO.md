@@ -19,7 +19,7 @@ no se editó ni una línea de `kit-base/` (CLAUDE.md §0.1).
 | Suite | **19 de 19 en verde** (17 del kit + 2 propios) |
 | Radio de cajas y tarjetas | **30px fijos** (pedido del cliente, tokens `--r-lg`/`--r-xl`) |
 | Máximo de puntos medido | **199** (sin los videos reales; 219 con ellos) |
-| Medalla | bronce 74 · plata 127 · oro 180 (los "desde N" del cierre los pinta `curso.js` desde `NIVELES`) |
+| Medalla | bronce 74 · plata 124 · oro 169 (los "desde N" del cierre los pinta `curso.js` desde `NIVELES`) |
 | Logros | **5** (tope del cliente para todos los cursos, ver K14) |
 | Videos | **4 placeholders de 0 bytes** con el nombre final (portada, unidad 1 y los 2 del cuerpo) — el cliente los reemplaza sin tocar código |
 | Baseline visual | grabada (`tools/visual-baseline/`, 13 capturas) |
@@ -730,6 +730,45 @@ tiene que reescribir una regla del kit para cambiar de opinión sobre un
 gesto.
 
 
+### K17 · El kit dice "el máximo posible del curso" para cualquier puntaje por encima del último nivel — PROBADO
+
+**Síntoma.** El cliente mandó una captura del cierre con **189 puntos**
+sobre un máximo de **199**, y debajo de la medalla decía *"189 puntos ·
+el máximo posible del curso"*. No era el máximo.
+
+**Diagnóstico contra el código real.** `pintarMedalla()`
+(`coto-cierre.js` §361-363) busca el nivel inmediatamente superior al
+puntaje y, si no hay ninguno, escribe ese texto:
+
+```js
+var sig = null;
+for (var i = orden.length - 1; i >= 0; i--) if (orden[i].desde > puntos) { sig = orden[i]; break; }
+if (!sig) sub.textContent = puntos + ' puntos · el máximo posible del curso';
+```
+
+O sea: "no queda medalla más arriba" se está traduciendo como "sacaste
+el máximo". Son cosas distintas y la diferencia es todo el tramo entre
+el último umbral y el máximo real — en este curso, 30 puntos.
+
+Es un error de producto, no cosmético: le dice al alumno que ya no
+tiene nada más que ganar cuando sí lo tiene, y a quien revisa el curso
+le tapa un dato real.
+
+**Cómo se verificó.** Se leyó el `[data-medalla-sub]` con un puntaje por
+encima del umbral de oro y por debajo del máximo: dice "el máximo
+posible del curso".
+
+**Workaround del curso.** `corregirSubMedalla()` en `curso.js` reescribe
+ese texto cuando el puntaje es menor que `MAX_SIN_VIDEOS`: *"N puntos ·
+ya tenés la medalla más alta (el máximo del curso es M)"*.
+
+**Propuesta.** Que `pintarMedalla` acepte el máximo del curso como dato
+—el curso ya lo tiene calculado— y distinga los dos casos: "ya tenés la
+medalla más alta" cuando no hay nivel superior, y "el máximo posible del
+curso" solo cuando `puntos === máximo`. Sin ese dato el kit no puede
+saber la diferencia, así que no alcanza con cambiar el texto.
+
+
 ---
 
 ## 7. Segunda vuelta — 3 puntos reportados por el cliente
@@ -1341,7 +1380,119 @@ Los cuatro pesan entre 5 y 26 KB (`check-assets` en verde).
 
 ---
 
-## 16. Pendiente / próximo paso
+## 17. Séptima vuelta — 5 puntos reportados por el cliente
+
+### 17.1 · Sacar el botón del índice, que el pop-up salga solo
+
+Vuelve a `data-gate-popup`, que es el mecanismo del kit: al tocar
+"Siguiente" el motor **abre el instructivo en vez de navegar**, y
+completa el avance recién cuando ese pop-up se cierra (`_pendingNav`,
+motor-slides.js). Nadie pasa del índice sin que el instructivo se le
+haya puesto delante, y no hay ningún clic intermedio.
+
+Esto reemplaza lo de §13.3, donde el mismo pedido se había resuelto con
+`data-require-popups` + un botón visible. Los dos mecanismos no se
+pueden combinar: `_advance()` consulta `motor.canAdvance` **antes** de
+abrir el pop-up del gate, así que con el gate puesto el instructivo no
+llegaría a abrirse nunca.
+
+La diferencia práctica: el botón "Siguiente" ya no se ve bloqueado —
+lo que se interpone es el pop-up. El test verifica la garantía y no el
+mecanismo: desde el índice, "Siguiente" abre el instructivo y solo
+después de cerrarlo se avanza.
+
+### 17.2 · El mini juego aprueba con 3 de 5
+
+Antes aprobaba quien acertara la **última** pregunta. Eso venía de otro
+pedido (desde que se puede saltear, llegar al final no prueba nada),
+pero dejaba afuera a quien acertaba 4 y fallaba justo la quinta.
+
+Ahora aprueba con `aciertos >= 3` en **esa** partida. Se cuenta sobre el
+contador de la corrida y no sobre `estado.mjOk`, que persiste entre
+partidas: usar el persistido haría que un segundo intento arrancara con
+crédito del primero. Quedarse sin vidas tampoco reprueba por sí solo: si
+ya llegó a 3, aprueba igual.
+
+No toca los puntos del curso —cada acierto los paga por separado— ni el
+logro `preciso`, que sigue pidiendo 5 de 5 sin un solo error.
+
+Verificado con un recorrido que acierta exactamente 3 y falla 2: llega a
+"¡Terminaste con éxito!". Con 2 aciertos, a "Estuviste cerca…".
+
+### 17.3 · Los logros no bloquean la medalla (y qué sí la bloqueaba)
+
+**Los logros nunca entraron en la cuenta.** `medallaDe()`
+(`coto-cierre.js` §336) compara puntos contra umbrales y nada más; el
+catálogo de logros no aparece. La captura del propio cliente lo muestra:
+189 puntos, **4/5 logros**, medalla de oro.
+
+Lo que sí bloqueaba era el **aire entre el último umbral y el máximo**, y
+ahí había dos defectos reales:
+
+| umbral | antes | ahora | por qué |
+|---|---|---|---|
+| bronce | 74 | 74 | el piso que el gate garantiza (recorrido "pésimo" medido) |
+| plata | 127 | **124** | 127 era **inalcanzable**: el recorrido "insistente" —explorar todo el curso y acertar las 5 tropezando una vez en cada una— paga 124 |
+| oro | 180 | **169** | 180 deja 19 puntos de aire sobre el máximo de 199, y cada tropiezo en el juego cuesta 15: con **dos** errores el oro quedaba fuera de alcance aunque el alumno hubiera hecho todo |
+
+Los tres salen de recorridos medidos con `_auto()`, no de repartir el
+máximo en tercios:
+
+```
+recorrido            juego                       puntaje
+------------------------------------------------------------
+pésimo               0 de 5, se queda sin vidas       74   → bronce
+insistente           5 de 5, cada una tras un error  124   → plata
+perfecto             5 de 5 a la primera             199
+oro = todo el contenido (74) + 3×25 + 2×10 =        169
+```
+
+`puntaje-curso.mjs` ahora verifica las dos cosas que fallaban: que la
+plata sea alcanzable por el recorrido insistente, y que entre el oro y
+el máximo quepan al menos dos tropiezos.
+
+**Aparte, un bug de texto que se vio en la misma captura.** El cierre
+decía *"189 puntos · el máximo posible del curso"* con un máximo de 199.
+Es del kit: escribe esa frase cada vez que no hay un nivel más arriba,
+para cualquier puntaje. Se corrige en el curso (`corregirSubMedalla()`)
+y se relaya como **K17**.
+
+### 17.4 · El resumen seguía con espacio de sobra
+
+Medido en 1880×920: la grilla ocupaba **309px de los 727** del panel.
+
+Tres cambios, ninguno de contenido inventado:
+
+- **dos columnas más** — "Para el día a día" (los 5 consejos de la
+  diapositiva 12) y "Cuándo pedir ayuda" (las situaciones del reporte
+  que el curso ya explica): son 8;
+- **`grid-auto-rows:1fr` + `align-content:stretch`**, para que las filas
+  se repartan el alto en vez de apilarse arriba;
+- **un escalón de tipografía**: 13.4px sobre un panel de 1300px de ancho
+  se leía como una nota al pie.
+
+Después: **681px de 760**, con 22 de sobra. Mismas tarjetas, misma barra
+de categoría, mismo orden.
+
+### 17.5 · El ícono del curso vuelve a ser un cuadrado redondeado
+
+El círculo lo había puesto este curso en una vuelta anterior, a pedido.
+Ahora el cliente mandó el asset con su forma real y el círculo le
+recortaba las esquinas.
+
+El radio no se eligió a ojo: se midió sobre el asset que mandó —1000×1000
+con arcos de ~96px— y da **9.6% del lado**. Se escribe en porcentaje, así
+que sigue siendo el mismo recuadro cuando el kit achica la caja por
+debajo de 640px. El degradado dorado lo sigue poniendo el kit
+(`--cat-grad`).
+
+La regla vivía en dos tests a la vez (uno pedía círculo, otro cuadrado);
+quedó una sola, en el punto 15 de `reporte-cliente.mjs`.
+
+
+---
+
+## 18. Pendiente / próximo paso
 
 - **Videos.** Los **cuatro** `.mp4` de `video/` son placeholders de 0
   bytes con su nombre final:
@@ -1371,5 +1522,5 @@ Los cuatro pesan entre 5 y 26 KB (`check-assets` en verde).
   `python3 tools/build-zip.py . ../surtido-sin-venta.zip` y solo a
   pedido explícito (§3.12).
 
-- Los **16 hallazgos de kit (K1 a K16)** se llevan en un prompt al chat
+- Los **17 hallazgos de kit (K1 a K17)** se llevan en un prompt al chat
   de `kit-base/`. Desde acá no se editó `kit-base/`.

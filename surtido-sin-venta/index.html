@@ -567,20 +567,20 @@
        `data-gate-popup` abre el instructivo al tocar "Siguiente" desde acá
        (spec-motor-slides.md §3): aparece cuando el alumno decide arrancar,
        no de prepo al entrar. -->
-  <!-- `data-require-popups` en vez de `data-gate-popup` (reporte del
-       cliente: "se puede avanzar sin haber visto el contenido"). No son
-       lo mismo y la diferencia es justo la que él pedía:
-       `data-gate-popup` ABRE el instructivo cuando se toca "Siguiente"
-       y después deja pasar igual — el botón nunca se bloquea;
-       `data-require-popups` lo convierte en un gate de verdad, el mismo
-       mecanismo que ya usan las 4 fichas de repaso.
-       Los dos juntos se trabarían: `_advance()` consulta
+  <!-- `data-gate-popup` (kit): al tocar "Siguiente" el motor abre el
+       instructivo EN VEZ de navegar, y completa el avance recién cuando
+       ese pop-up se cierra (`_pendingNav`, motor-slides.js). O sea que
+       nadie pasa de acá sin que el instructivo se le haya puesto
+       delante — que es lo que el cliente pidió — y sin ningún botón
+       intermedio.
+       En la vuelta anterior esto era `data-require-popups` + un botón
+       visible: bloqueaba el avance de verdad, pero obligaba a un clic
+       extra. El cliente pidió explícitamente sacar el botón y que el
+       pop-up salga solo, así que vuelve a este mecanismo.
+       Los dos juntos NO se pueden: `_advance()` consulta
        `motor.canAdvance` ANTES de abrir el pop-up del gate, así que con
-       el gate puesto el instructivo no llegaría a abrirse nunca. Por
-       eso el instructivo pasa a tener su propio botón visible en la
-       diapositiva (abajo), que además es lo que el gate señala cuando
-       el alumno toca "Siguiente" sin haberlo abierto. -->
-  <section class="slide d-shot-slide d-shot-slide--bg-layered" data-slide="indice" data-slide-index="2" data-require-popups="instrucciones">
+       el gate puesto el instructivo no llegaría a abrirse nunca. -->
+  <section class="slide d-shot-slide d-shot-slide--bg-layered" data-slide="indice" data-slide-index="2" data-gate-popup="instrucciones">
     <!-- `[data-narrate-only]` acota la LOCUCIÓN de esta diapositiva a
          estas dos líneas: el índice se enumera en pantalla (está
          horneado en la captura) pero leerlo entero en voz alta era
@@ -603,13 +603,6 @@
     </ul>
     <div class="d-shot" data-shot>
       <img class="d-shot-img" src="img/indice.webp" loading="lazy" alt="" aria-hidden="true">
-      <!-- Zona medida sobre el arte (2520x1260): x[1100,1760] y[920,1080]
-           es blanco puro, sin nada dibujado. -->
-      <div class="d-place d-indice-cta" data-place data-l="44.444" data-t="74.603" data-w="23.810" data-h="8.730">
-        <button class="d-indice-btn" type="button" data-popup-trigger="instrucciones" aria-haspopup="dialog">
-          Cómo recorrer el curso
-        </button>
-      </div>
     </div>
   </section>
 
@@ -972,6 +965,29 @@
                 <li>Si corresponde, agregar clases y proveedores.</li>
                 <li>Definir el mínimo de stock y los días sin venta a consultar.</li>
                 <li>Hacer clic en la lupa y leer la pestaña “resumido”.</li>
+              </ul>
+            </div>
+            <!-- Dos columnas más (el cliente volvió a pedir que el panel no
+                 quede tan vacío). Como las otras seis, no traen contenido
+                 nuevo: son los "Últimos consejos" de la diapositiva 12 y las
+                 dos situaciones del reporte que el curso ya explica. -->
+            <div class="d-cierre-recap-col">
+              <h4>Para el día a día</h4>
+              <ul>
+                <li>Generar el reporte <b>cada semana</b>.</li>
+                <li>Revisar los productos sin ventas.</li>
+                <li>Detectar el falso stock.</li>
+                <li>Corregir problemas de exhibición.</li>
+                <li>Tomar las acciones correctivas.</li>
+              </ul>
+            </div>
+            <div class="d-cierre-recap-col">
+              <h4>Cuándo pedir ayuda</h4>
+              <ul>
+                <li>Si el producto <b>no está apto</b>: decomiso, traspaso o devolución al proveedor.</li>
+                <li>Si <b>no se encuentra</b>: ajustar el stock.</li>
+                <li>Si <b>no se vende</b> aunque esté bien exhibido: analizar por qué.</li>
+                <li>Si conviene sacarlo: evaluar si sigue en el surtido.</li>
               </ul>
             </div>
           </div>

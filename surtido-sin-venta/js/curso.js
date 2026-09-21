@@ -140,13 +140,43 @@
      Con los videos cargados pasa a 219; los umbrales siguen valiendo.
      Piso garantizado por el gate = 42 + 32 = 74 (terminar el mini juego
      no paga por sí solo), así que el bronce arranca ahí: quien termina
-     el curso nunca se queda sin medalla (§6.10.6). */
+     el curso nunca se queda sin medalla (§6.10.6).
+
+     LOS TRES UMBRALES SALEN DE RECORRIDOS MEDIDOS, no de repartir el
+     máximo en tercios (§7.3 punto 19). Medido con `_auto()` sobre el
+     curso entero, con todo el contenido explorado:
+
+       recorrido            juego                       puntaje
+       ------------------------------------------------------------
+       pésimo               0 de 5, se queda sin vidas       74
+       insistente           5 de 5, cada una tras un error  124
+       perfecto             5 de 5 a la primera             199
+
+     · bronce = 74  — el piso que el gate garantiza. Quien termina el
+       curso tiene medalla, siempre.
+     · plata = 124 — el recorrido insistente, EXACTO. Antes estaba en
+       127 y era un umbral imposible de una forma que no se veía: quien
+       exploraba todo el curso y terminaba el juego acertando las cinco
+       —pero tropezando en cada una— se quedaba 3 puntos abajo de plata.
+       Un umbral que ningún recorrido real alcanza es peor que uno alto:
+       no se lee como "me faltó", se lee como "está roto".
+     · oro = 169 — todo el contenido (74) + los 5 conceptos acertados
+       permitiendo hasta dos con un error previo (3×25 + 2×10 = 95).
+       Antes estaba en 180, que deja 19 puntos de aire sobre el máximo:
+       DOS tropiezos en el mini juego (15 puntos cada uno) y el oro se
+       volvía inalcanzable por más que el alumno hubiera hecho todo.
+       Eso es lo que el cliente reportó como "no se puede llegar a oro".
+
+     Aclaración sobre lo que el cliente supuso: los LOGROS nunca
+     bloquearon la medalla. `medallaDe()` (coto-cierre.js §336) compara
+     puntos contra umbrales y nada más; el catálogo de logros no entra
+     en la cuenta. Lo que bloqueaba era el aire entre 180 y 199. */
   var MAX_SIN_VIDEOS = 199;
   var PISO_GATE = 74;
   var NIVELES = [
     { id: 'bronce', desde: PISO_GATE, nombre: 'bronce', icono: '🥉' },
-    { id: 'plata', desde: 127, nombre: 'plata', icono: '🥈' },
-    { id: 'oro', desde: 180, nombre: 'oro', icono: '🥇' }
+    { id: 'plata', desde: 124, nombre: 'plata', icono: '🥈' },
+    { id: 'oro', desde: 169, nombre: 'oro', icono: '🥇' }
   ];
 
   /* Reglas del mini juego, en sus propios puntos (los de la tarjeta
@@ -154,6 +184,12 @@
      1000 de arranque, 2350 con 5 de 5 → +270 por acierto; y 1150 con
      1 acierto y 3 vidas perdidas → −40 por error. */
   var MJ_INICIAL = 1000, MJ_ACIERTO = 270, MJ_ERROR = 40, MJ_VIDAS = 3;
+  /* Cuántos de los 5 conceptos hay que acertar para APROBAR el juego
+     (pedido del cliente). Es solo el umbral de la pantalla final —
+     "¡Terminaste con éxito!" contra "Estuviste cerca…"—: no toca los
+     puntos del curso, que los paga cada acierto por separado, ni el
+     logro `preciso`, que sigue pidiendo 5 de 5 sin un solo error. */
+  var MJ_APROBACION = 3;
 
   /* ---------- 4 · Catálogo de logros ----------
      Ninguno depende de un video: con los .mp4 en placeholder serían
@@ -472,6 +508,7 @@
         setText('d-cert-points', String(Logros.puntos()));
         setText('d-cert-badges', String(Logros.obtenidos()));
         pintarMedalla(Logros.puntos(), NIVELES);
+        corregirSubMedalla(Logros.puntos());
         if (window.XAPI) XAPI.completed(COURSE_SLUG, COURSE_NAME);
         if (window.SCORM) SCORM.markCompleted();
         persistir();
@@ -532,6 +569,24 @@
     };
 
     if (window.SCORM) SCORM.commit();
+  }
+
+  /* El kit escribe debajo de la medalla "N puntos · el máximo posible
+     del curso" cada vez que no hay un nivel más arriba (coto-cierre.js
+     §363), o sea para CUALQUIER puntaje por encima del oro. El cliente
+     lo vio con 189 sobre un máximo de 199: la pantalla le decía que
+     había sacado el máximo y no era cierto.
+     Acá se corrige sin tocar el kit y sin inventar: si el puntaje es
+     menor que el máximo real del curso, se dice lo que sí es verdad
+     —que ya tiene la medalla más alta— y se aclara cuál era el techo.
+     Se relaya como K17. */
+  function corregirSubMedalla(puntos) {
+    var sub = document.querySelector('[data-medalla-sub]');
+    if (!sub || puntos >= MAX_SIN_VIDEOS) return;
+    var tope = NIVELES.reduce(function (a, n) { return n.desde > a.desde ? n : a; }, NIVELES[0]);
+    if (puntos < tope.desde) return;         // el kit ya dice "te faltan N para…"
+    sub.textContent = puntos + ' puntos · ya tenés la medalla más alta (el máximo del curso es ' +
+      MAX_SIN_VIDEOS + ')';
   }
 
   function setText(id, txt) {
@@ -786,7 +841,9 @@
            narran JUNTOS, en una sola emisión: narrar el "por qué" y
            enseguida pisarlo con la pantalla final dejaría al alumno sin
            la explicación justo cuando más la necesita. */
-        if (vidas <= 0) terminar(false, q.mal);
+        /* Quedarse sin vidas tampoco reprueba por sí solo: si ya llegó a
+           los 3 aciertos, el juego está aprobado igual. */
+        if (vidas <= 0) terminar(aprobo(), q.mal);
         else narrar(q.mal);
       }
     }
@@ -829,7 +886,7 @@
       b.addEventListener('click', function () {
         b.remove();
         if (!ultima) { i++; render(); }
-        else terminar(acertoUltima());
+        else terminar(aprobo());
       });
       zonaFb.appendChild(b);
       /* El foco se mueve solo si la pregunta quedó cerrada. Con un error
@@ -837,9 +894,15 @@
          empuja a saltear justo cuando conviene reintentar. */
       if (acerto) b.focus();
     }
-    /* Terminar "bien" es haber acertado la ÚLTIMA pregunta, no haber
-       llegado al final: ahora al final se puede llegar salteando. */
-    function acertoUltima() { return !!estado.mjOk[MJ[MJ.length - 1].id]; }
+    /* Aprobar es acertar al menos `MJ_APROBACION` de los 5 conceptos
+       (pedido del cliente: con 3 de 5 ya aprueba).
+       Antes era "haber acertado la ÚLTIMA pregunta", que venía de otro
+       pedido —desde que se puede saltear, llegar al final no prueba
+       nada— pero dejaba afuera a quien acertaba 4 y fallaba la última.
+       Se cuenta sobre `aciertos`, que es lo acertado EN ESTA vuelta:
+       `estado.mjOk` persiste entre partidas y usarlo haría que un
+       segundo intento arranque con crédito del primero. */
+    function aprobo() { return aciertos >= MJ_APROBACION; }
 
     function terminar(gano, preludio) {
       estado.mjFin = true;
@@ -976,6 +1039,20 @@
                           la acierta, reintentando cuantas veces haga
                           falta — es el alumno de §7.14, el que "se
                           equivocó bastante y llegó igual al máximo". */
+      /* Para los tests: qué opción es la correcta en cada pregunta. Lo
+         necesita el chequeo del umbral de aprobación (3 de 5), que
+         tiene que acertar exactamente 3 y fallar 2 — algo que `_auto()`
+         no cubre porque sus tres modos son "todas bien", "todas mal" y
+         "todas bien tras errar". Es solo lectura y no toca el estado. */
+      _claves: function () { return MJ.map(function (q) { return q.ok; }); },
+      _aprobacion: MJ_APROBACION,
+      /* Arranca una partida limpia desde donde sea que esté el juego
+         (intro, a mitad, o en una pantalla final). Lo necesita el test
+         del umbral, que corre después de otros que ya jugaron: sin un
+         reinicio explícito arrancaba a mitad de una partida ajena y las
+         respuestas quedaban corridas una pregunta. Es el mismo
+         `reiniciar()` que usan "Reintentar" y "Volver a jugar". */
+      _reiniciar: function () { reiniciar(); },
       _auto: function (modo) {
         modo = modo || 'perfecto';
         function finAbierto() {

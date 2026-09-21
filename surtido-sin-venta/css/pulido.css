@@ -59,10 +59,16 @@
    algo lo pisara.
    El ícono es ahora la zorra/carrito que el propio PDF dibuja en la
    página 2 ("Introducción"), recortada de ahí con alfa real.
-   `.d-brand .lg` del kit es una pastilla de esquinas redondeadas con el
-   degradado de la categoría; acá pasa a círculo, que es como lo pidió
-   el cliente. El degradado dorado lo sigue poniendo el kit. */
-.d-brand .lg{ border-radius:50%; }
+   La FORMA del recuadro vuelve a ser un cuadrado de esquinas
+   redondeadas (el cliente mandó el asset con esa forma y el círculo,
+   que se había puesto en una vuelta anterior, le recortaba las
+   esquinas). El radio no se eligió a ojo: se midió sobre el asset que
+   mandó —1000x1000 con arcos de ~96px— y da **9.6% del lado**, así que
+   se escribe en porcentaje y sigue siendo el mismo recuadro cuando el
+   kit achica la caja por debajo de 640px. El degradado dorado lo sigue
+   poniendo el kit (`--cat-grad`), así que la forma cambia sin tocar el
+   color. */
+.d-brand .lg{ border-radius:9.6%; }
 
 /* ---- Ayuda y Configuración: se abren SOLO con clic ----------------
    Reporte del cliente: los dos flotantes de abajo a la derecha abrían

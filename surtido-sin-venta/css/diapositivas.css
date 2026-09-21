@@ -547,29 +547,31 @@
 /* Panel final: los dos números que el arte deja en blanco. */
 .d-mj-fin-stat b{ color:#1a1a2e; }
 
-/* ---- Botón "Cómo recorrer el curso" del índice ------------------
-   Es un `[data-place]` sobre el arte: lo posiciona el mismo
-   `_initShots` del motor, así que el botón sigue a la ilustración en
-   cualquier tamaño. `container-type:inline-size` para que la
-   tipografía escale con la caja medida sobre el arte y no con el
-   escenario — cuando `.d-shot` queda letterboxeada no son lo mismo. */
-/* `container-type:size` va en la CAJA que `_initShots` dimensiona, no
-   en el botón: ponerlo en el botón le aplica `contain:inline-size`, o
-   sea que deja de medirse por su contenido, y el borde salía más
-   angosto que el texto (se vio en el primer render). Con el contenedor
-   afuera, `cqh` es el alto real de la caja medida sobre el arte. */
-.d-indice-cta{
-  container-type:size;
-  display:flex; align-items:center; justify-content:center;
+
+/* ---- Resumen del cierre: que use el alto del panel ---------------
+   Reportado dos veces por el cliente ("sobra bastante espacio"). La
+   grilla del kit es `auto-fit minmax(260px,1fr)` con alto automático:
+   medido en 1880x920, ocupaba 309px de los 727 del panel y dejaba 361
+   en blanco.
+
+   Tres cambios, ninguno de contenido inventado:
+   · dos columnas más (los "Últimos consejos" de la diapositiva 12 y las
+     situaciones del reporte que el curso ya explica) — son 8;
+   · `grid-auto-rows:1fr` + `align-content:stretch`, para que las filas
+     se repartan el alto disponible en vez de apilarse arriba;
+   · un escalón de tipografía, porque a 13.4px sobre un panel de 1300px
+     de ancho el resumen se leía como una nota al pie.
+   El formato es el mismo: mismas tarjetas, misma barra de categoría a
+   la izquierda, mismo orden. */
+.d-cierre-recap{ display:flex; flex-direction:column; }
+.d-cierre-recap-grid{
+  flex:1 1 auto; min-height:0;
+  grid-auto-rows:1fr; align-content:stretch;
+  column-gap:2.2rem; row-gap:1.4rem;
 }
-.d-indice-btn{
-  max-width:100%; padding:.55em 1.6em; cursor:pointer;
-  border:2px solid var(--cat); border-radius:var(--r-pill);
-  background:var(--surface); color:var(--cat-ink);
-  font-family:var(--font-title); font-weight:800;
-  font-size:clamp(.72rem, 26cqh, 1.05rem); line-height:1.2;
-  white-space:nowrap;
-  transition:background .15s ease, transform .15s ease;
+.d-cierre-recap-col h4{ font-size:1rem; }
+.d-cierre-recap-col li{ font-size:.92rem; line-height:1.4; margin:.34rem 0; }
+@media (max-width:900px){
+  .d-cierre-recap-grid{ grid-auto-rows:auto; align-content:start; }
+  .d-cierre-recap-col li{ font-size:.86rem; }
 }
-.d-indice-btn:hover{ background:var(--cat); color:#fff; transform:translateY(-1px); }
-@media (prefers-reduced-motion:reduce){ .d-indice-btn{ transition:none; } }

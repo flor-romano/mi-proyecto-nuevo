@@ -149,4 +149,54 @@ async function recorrido(page, { conceptos, fichas, juego }) {
   await browser.close();
 }
 
+/* ---- 4 · los tres umbrales son alcanzables por un recorrido real ----
+   §7.3 punto 19 dice que la tabla es una intención y el contador es el
+   hecho. Esto cierra el círculo por el otro lado: cada umbral tiene que
+   corresponder a un recorrido que ALGUIEN pueda hacer.
+
+   El bug que motivó este chequeo: la plata estaba en 127 y el recorrido
+   "insistente" —explorar todo el curso y acertar las 5 preguntas,
+   tropezando una vez en cada una— paga 124. Tres puntos abajo. Nadie
+   que jugara así llegaba a plata, y no había forma de notarlo leyendo
+   la tabla.
+
+   Y el oro estaba en 180 sobre un máximo de 199: dos tropiezos en el
+   mini juego (15 puntos cada uno) lo volvían inalcanzable aunque el
+   alumno hubiera hecho todo el curso. Eso fue lo que el cliente
+   reportó. */
+{
+  const { browser, page, errors } = await openCourse(url);
+  const niveles = await page.evaluate(() => window.__CURSO__.niveles);
+  const max = await page.evaluate(() => window.__CURSO__.maxSinVideos);
+  const insistente = await recorrido(page, { conceptos: true, fichas: true, juego: 'insistente' });
+  const plata = niveles.find((n) => n.id === 'plata').desde;
+  const oro = niveles.find((n) => n.id === 'oro').desde;
+  console.log(`  · recorrido insistente (todo el contenido, 5/5 tras errar): ${insistente} · plata: ${plata} · oro: ${oro} · máximo: ${max}`);
+  if (plata > insistente) {
+    fails.push(`la plata arranca en ${plata} y el recorrido "insistente" —que explora TODO el ` +
+      `curso y acierta las 5 preguntas— paga ${insistente}: es un umbral que ningún recorrido ` +
+      'real alcanza. No se lee como "me faltó poco", se lee como que está roto.');
+  }
+  const aire = max - oro;
+  const costeTropiezo = await page.evaluate(() => {
+    const p = window.__CURSO__.pts; return p.mjBien - p.mjBienTrasError;
+  });
+  if (aire < costeTropiezo * 2) {
+    fails.push(`entre el oro (${oro}) y el máximo (${max}) hay ${aire} puntos, y cada tropiezo en ` +
+      `el mini juego cuesta ${costeTropiezo}: con dos errores el oro queda fuera de alcance para ` +
+      'alguien que hizo todo el curso. Ese fue el reclamo del cliente.');
+  }
+  /* Y la medalla no puede depender de los logros: se pide la medalla
+     para un puntaje dado SIN haber obtenido ninguno. */
+  const medalla = await page.evaluate((n) => {
+    const orden = n.slice().sort((a, b) => b.desde - a.desde);
+    return orden.find((x) => x.desde <= n.find((y) => y.id === 'oro').desde)?.id;
+  }, niveles);
+  if (medalla !== 'oro') {
+    fails.push(`con exactamente el puntaje del umbral de oro la medalla calculada da "${medalla}".`);
+  }
+  if (errors.length) fails.push(...errors.map((e) => 'error de consola: ' + e));
+  await browser.close();
+}
+
 report('puntaje-curso', fails);

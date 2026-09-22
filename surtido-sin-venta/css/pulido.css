@@ -102,81 +102,91 @@
   transform:translateY(0) scale(1);
 }
 
-/* ---- El video llena el marco dibujado, sin franjas ---------------
-   Reporte del cliente: al reproducir quedaba aire arriba y abajo entre
-   el borde del marco y la imagen.
+/* ---- Un video de fondo NUNCA se recorta --------------------------
+   El kit le pone `object-fit:cover` al video de fondo
+   (`coto-media.css` §21). Con el lienzo en 2:1 exacto y los .mp4 a
+   2520x1260 las dos cosas dan lo mismo — no hay nada que recortar. La
+   diferencia aparece el día que un archivo llegue con otra proporción:
+   `cover` lo recorta EN SILENCIO y `contain` lo deja entero con
+   franjas, que se ven y se corrigen.
 
-   Medido: la pantalla que el diseñador dibujó va de x[842,1686] a
-   y[504,993] del lienzo 2520x1260 — 845x490, o sea **1.7245:1** — y el
-   hitbox calza exactamente ahí (verificado con verify-hitboxes). El
-   video real es 16:9 = 1.7778:1. Con el `object-fit:contain` que el kit
-   le pone a esta variante, un video más ancho que su caja entra entero
-   y deja franjas arriba y abajo: 15px de los 490 del arte, que es
-   exactamente lo que se ve en la captura.
+   Después de esta vuelta —que existe justamente porque había un
+   recorte silencioso— la elección es obvia. El pedido del cliente fue
+   "que encajen exactos, sin recorte ni reescalado": `contain` es la
+   única de las dos que lo GARANTIZA, no la que lo cumple de casualidad
+   mientras los archivos vengan bien. */
+.d-shot-slide--bg-video .d-shot-video{ object-fit:contain; }
 
-   `cover` lo llena. Lo que se recorta es el ANCHO, no el alto —la caja
-   es proporcionalmente más alta que 16:9—, y son 1.5% por lado: los
-   subtítulos quemados del video van centrados, así que no los toca.
+/* ---- (histórico) El video llenaba el marco dibujado --------------
+   Acá vivía el `object-fit:cover` que hacía que el video chico llenara
+   el marco que el diseñador dibujó en la captura (845x490 = 1.7245:1),
+   sin las franjas de 15px que dejaba el `contain` del kit. Sexta
+   vuelta, punto 1.
 
-   La especificidad NO es capricho: el kit avisa (coto-media.js, §
-   "Trampa de especificidad") que el `<video>` de esta variante está
-   bajo `[data-inline-video].is-poster .d-shot-hit-video` —tres
-   selectores—, así que un override más liviano le gana al `<img>` de
-   la carátula pero NO al `<video>`, y el resultado es un encuadre en
-   pausa y otro al reproducir: el marco "salta" justo al arrancar.
-   Por eso acá se repite el prefijo entero en las dos reglas. */
-[data-inline-video].is-poster .d-shot-hit-video,
-[data-inline-video].is-poster .d-shot-hit-poster-img{
-  object-fit:cover;
-}
+   Se borra en la undécima: ese patrón ya no existe en el curso. Las dos
+   diapositivas de video pasaron a video de FONDO a 2520x1260 porque es
+   la resolución en la que el cliente va a entregar los .mp4, y un marco
+   de 1.7245:1 recortaba 13.5% por costado de un archivo 2:1. La
+   historia queda en README-CURSO.md §24.2 por si alguna vez vuelve el
+   reproductor dibujado. */
 
-/* ---- Hasta dónde se puede llenar la pantalla sin comer contenido --
-   Dos reclamos del cliente que tiran para lados opuestos:
-     · "en iPad los videos de portada se ven recortados" (octava vuelta);
-     · "hay márgenes arriba y abajo" (novena).
 
-   Son la misma decisión vista de los dos lados: con un arte de
-   proporción fija (2:1) y una ventana que no la tiene, o se llena la
-   pantalla y se recorta a los costados, o se respeta el arte y quedan
-   franjas. La pregunta correcta no es cuál de las dos, sino HASTA
-   CUÁNTO se puede recortar sin tocar contenido.
+/* ---- El lienzo es SIEMPRE el artboard del PDF, sin recortar -------
+   Pedido explícito del cliente (undécima vuelta): "que el arte se
+   aplique tal cual está en el PDF original, sin desfasajes de escala ni
+   proporción".
 
-   Y eso se midió, sobre las 22 capturas del curso: se recortó cada una
-   por los costados y se miró el resultado.
+   Las medidas, remedidas de cero:
+     · artboard del PDF (MediaBox de las 13 páginas): 2520 x 1260 pt,
+       o sea 2:1 exacto;
+     · las 30 capturas de diapositiva: 2520 x 1260 px, 1:1 con el
+       artboard — no hay ningún reescalado en los assets;
+     · el recorte de la escena del mini juego: 1856 x 723, declarado
+       igual en `--mj-escena-ratio`;
+     · el marco de video del PDF: 845 x 490, y el hitbox mide
+       33.532% x 38.889% de 2520x1260 = 845.0 x 490.0 exacto.
 
-     recorte por lado   proporción de escenario   resultado
-     ---------------------------------------------------------------
-     5.75%              1.77                      todo entero
-     7.85%              1.686                     todo entero
-     12.5%              1.5                       ROTO: en "Últimos
-                                                  consejos" se cortan
-                                                  las píldoras de los
-                                                  dos costados; el
-                                                  índice y la unidad
-                                                  pierden el anillo
+   O sea que el desfasaje no estaba en los archivos: estaba acá. El kit
+   hace que el lienzo LLENE el escenario entre 1.5 y 2.2 de proporción
+   (`coto-shot-stage.css`), y como la imagen es 2:1 con
+   `object-fit:cover`, eso RECORTA el arte. Medido, con el escenario
+   real (ancho / (alto − header − footer)):
 
-   Con 8% por lado como presupuesto (el margen de diseño de este PDF),
-   el lienzo puede llenar la pantalla mientras la proporción del
-   escenario sea **1.68 o mayor** — que cubre un iPad apaisado (1.686),
-   cualquier notebook 16:9 y el monitor del reporte (1.774). Por debajo
-   de 1.68 vuelve el lienzo fijo, porque ahí el recorte ya se come las
-   píldoras.
+     ventana        escenario   proporción   alto del arte que se veía
+     ------------------------------------------------------------------
+     1366 x 768     1366 x 648  2.11         94.9%  (se comía 5.1%)
+     1600 x 900     1600 x 780  2.05         97.5%
+     1920 x 1080    1920 x 950  2.02         99.0%
 
-   La vuelta anterior esto estaba resuelto con el lienzo fijo en TODO el
-   rango, siguiendo al pie de la letra la advertencia del kit para los
-   cursos con margen viejo. Era correcto pero conservador de más: la
-   advertencia asume el peor caso del rango (1.5) y acá se midió el
-   caso real de cada proporción. Lo que sigue valiendo del hallazgo K18
-   es que el kit no da forma de elegir el umbral — hoy es 1.5 fijo.
+   1366x768 es la resolución de notebook más usada del mundo: ahí el
+   alumno estaba viendo el 94.9% del dibujo del diseñador. Eso es
+   exactamente "desfasaje de proporción", y es lo que se saca.
 
-   ⚠️ PARA CUANDO LLEGUEN LOS VIDEOS: portada y unidad 1 son
-   `--bg-video` y entran en esta misma regla, así que el .mp4 se recorta
-   igual que la captura. Hay que pedirle al editor que **no ponga nada
-   importante en el 8% de cada costado** — mismo margen que respeta el
-   diseño. Si algún video viene con texto pegado al borde, la solución
-   es sacar `.d-shot-slide--bg-video` de este bloque: esas dos
-   diapositivas vuelven al 2:1 fijo y el resto sigue llenando. */
-@container (min-aspect-ratio: 1.5) and (max-aspect-ratio: 1.679) {
+   Desde acá el lienzo conserva SIEMPRE 2:1, en todo el rango. La
+   contrapartida, medida, son franjas laterales chicas:
+
+     ventana        franja por costado
+     --------------------------------
+     1920 x 1080    10 px
+     1600 x 900     20 px
+     1366 x 768     35 px
+     iPad apaisado   0 px  (el escenario ya da 2:1 justo)
+
+   Y son franjas que ya no se leen como un bloque ajeno: desde la
+   décima vuelta continúan el arte (§23.3, `.d-stage::before`).
+
+   Esto REEMPLAZA el umbral de 1.68 de la novena vuelta. Aquel número
+   salía de medir cuánto se podía recortar sin comerse una píldora — la
+   pregunta correcta mientras el objetivo era llenar la pantalla. El
+   cliente cambió el objetivo: no recortar nada. Con eso, el umbral
+   sobra.
+
+   El selector repite el del kit tal cual (misma especificidad) y
+   `pulido.css` carga último, así que gana por orden. El rango es el
+   mismo 1.5–2.2 del kit a propósito: por debajo de 1.5 y por encima de
+   2.2 el kit YA deja el lienzo fijo, y por debajo de 1 muestra el aviso
+   de "girá el dispositivo" — nada de eso se toca. */
+@container (min-aspect-ratio: 1.5) and (max-aspect-ratio: 2.2) {
   .d-shot-slide--bg-layered > .d-shot,
   .d-shot-slide--bg-video > .d-shot,
   .slide-cierre .d-cierre-shot .d-shot{
@@ -372,3 +382,54 @@ html{
   border-image-repeat:stretch;
   pointer-events:none;
 }
+
+/* ---- La diapositiva entra en fundido y nada más -------------------
+   Reporte del cliente (undécima vuelta): "al iniciar cada diapositiva
+   el contenido aparece y se agranda un poquito de golpe, como un
+   rebote; tiene que aparecer directo en su tamaño y posición final".
+
+   Medido antes de tocar nada, para no apagar la animación equivocada:
+   se grabó la transición cuadro a cuadro (`Page.screencast`, 74
+   cuadros) y el ancho del dibujo NO cambia en ningún cuadro — o sea
+   que el lienzo no escala. Lo que se mueve es lo que va ENCIMA del
+   arte, y son dos cosas distintas que el alumno ve como una sola:
+
+   1) La colocación de los overlays. Se resuelve en `curso.js`
+      (`precolocarOverlays`): antes 25 overlays de 6 diapositivas
+      llegaban a la diapositiva sin ninguna medida y saltaban a su caja
+      real recién al entrar.
+
+   2) Esto: `_initHitStagger()` y `_initPlaceStagger()` (motor-slides.js)
+      le ponen `.d-stagger-in` a cada `[data-hit]` y `[data-place]` en
+      cada `slidechange`, con un retardo creciente (45ms y 90ms por
+      elemento). `.d-stagger-in` es `translateY(8px)` + fundido. En
+      "Últimos consejos", con 5 paneles, el último arranca a los 360ms
+      —después de que la diapositiva ya terminó su propio fundido de
+      300ms— así que los carteles siguen entrando de a uno durante
+      ~750ms. Medido: cada uno llega a su sitio subiendo 8px.
+
+   Se apaga por CSS y no pidiendo que el kit no ponga la clase: la clase
+   la agrega JS del kit en cada cambio de diapositiva, así que sacarla
+   desde acá sería pelearse con él en cada evento. `animation:none`
+   sobre la misma clase, con `pulido.css` cargando último, la deja
+   inerte de una vez. El `animationDelay` inline que escribe el motor
+   queda sin efecto.
+
+   No se pierde accesibilidad ni comportamiento: es exactamente lo que
+   ya veía un alumno con `prefers-reduced-motion`, que el kit respeta
+   con un `*{animation:none!important}` global. La diapositiva sigue
+   entrando con el fundido de `.slide.anim-r/.anim-l` (300ms), que es
+   lo que evita el "aparecen de golpe" que pidió otro cliente y que no
+   mueve ni escala nada. */
+.d-stagger-in{ animation:none; }
+
+/* Misma decisión para el pop-up: el `@keyframes pop` del kit
+   (`coto-base.css`) entra con `translateY(14px) scale(.98)` — es el
+   único `scale` de entrada que queda en el curso, y es literal lo que
+   el cliente describió ("se agranda un poquito"). En este curso los
+   pop-ups son constantes (las 4 fichas, el glosario, el índice — que
+   además se abre SOLO al entrar a su diapositiva, o sea que ahí el
+   efecto sí es "al iniciar la diapositiva"). Queda el fundido.
+   Volver a encenderlo es sacar estas dos líneas. */
+.modal-card{ animation:d-pulido-fade .2s ease; }
+@keyframes d-pulido-fade{ from{ opacity:0; } to{ opacity:1; } }

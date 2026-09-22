@@ -1005,6 +1005,102 @@ si** el alumno todavía no eligió. La (b) es la que deja el código del
 curso en una línea.
 
 
+### K24 · `initBgVideos()` no tiene `onFirstPlay` y `initInlineCircleVideos()` sí — PROBADO
+
+**Síntoma.** Un curso que mueve una diapositiva del patrón 3 (video
+chico dentro del arte) al patrón 1 (video de fondo) pierde los puntos y
+el logro por verlo, sin ningún error.
+
+**Diagnóstico contra el código real.** Los dos patrones viven en el
+mismo archivo y resuelven el mismo problema de negocio —"¿el alumno vio
+este video?"— con contratos distintos. `initInlineCircleVideos(opts)`
+toma `seen` / `markSeen` / `onFirstPlay`; `initBgVideos(opts)` toma
+`bgVideoAutoMudo` y nada más. Mover una diapositiva de un patrón al
+otro obliga a reescribir a mano el enganche de puntaje, que es
+justamente la parte que ningún test del kit mira.
+
+**Cómo se verificó.** Pasó acá: las dos diapositivas de video del
+cuerpo cambiaron de patrón (§24.2) y hubo que escribir el listener de
+`playing` en `curso.js`. Punto 12 del test del curso cubre el resto del
+contrato de esas diapositivas, pero el puntaje quedó del lado del curso.
+
+**Propuesta.** Que `initBgVideos()` acepte el mismo trío
+`seen`/`markSeen`/`onFirstPlay`. Y que el ejemplo use `playing` y no
+`play`: `play` se dispara también cuando el navegador lo intenta y
+rechaza, así que un curso que escuche `play` paga un video que el
+alumno nunca vio.
+
+
+### K25 · Los overlays de una diapositiva no visitada llegan SIN medidas — PROBADO
+
+**Síntoma.** Reportado por el cliente como *"al iniciar cada
+diapositiva el contenido aparece y se agranda un poquito de golpe, como
+un rebote"*.
+
+**Diagnóstico contra el código real.** `_initShots()` posiciona cada
+`[data-hit]` / `[data-place]` escribiendo `left/top/width/height` en px
+contra la caja renderizada de la imagen. Una diapositiva que todavía no
+se visitó está en `display:none`: mide 0×0, `place()` se va sin escribir
+nada, y el overlay queda en su tamaño de contenido hasta que el alumno
+entra. El kit **ya sabe que esto pasa** —tiene un "ancla provisional"
+que los manda a (0,0) para que al menos no caigan fuera del lienzo
+(v1.9.72, §7.18 K2)— pero el ancla trata el síntoma de estar en un
+lugar absurdo, no el de llegar sin medidas.
+
+Y hay una segunda mitad que las agrava: la captura suele ser
+`loading="lazy"` dentro de ese `display:none`, así que el navegador ni
+la pide. Sin imagen cargada no hay `naturalWidth`, y sin eso `place()`
+no puede calcular nada **ni siquiera al entrar**, hasta que la imagen
+termine de bajar.
+
+**Cómo se verificó.** Medido al arrancar el curso: 25 overlays en 6
+diapositivas, ninguno con `left/top/width/height`. Medido al entrar a
+"Últimos consejos": un panel pasa de 26×5 en (20,56) a 310×74 en
+(645,158). Y se grabó la transición cuadro a cuadro para descartar que
+fuera una animación: el ancho del dibujo no cambia en ninguno de los 74
+cuadros. Puntos 29 y 30 de `tools/tests/reporte-cliente.mjs`.
+
+**Propuesta.** Que `_initShots()` coloque TODOS los `[data-shot]` desde
+el arranque, no solo los que miden: cuando un shot mide 0×0 puede tomar
+la caja de cualquier otro shot visible del mismo tipo (en un curso de
+captura íntegra son todos el mismo lienzo). Y que sondee el tamaño
+natural con un `Image()` suelto cuando el `<img>` todavía no cargó —
+además de dar la medida, deja el archivo en caché y la captura tampoco
+aparece de golpe. Es lo que terminó haciendo este curso a mano
+(`precolocarOverlays` en `curso.js`).
+
+**Aparte, y de producto:** `_initHitStagger()`/`_initPlaceStagger()`
+escalonan la entrada de cada overlay con `.d-stagger-in`
+(`translateY(8px)`) a 45ms y 90ms por elemento. Con 5 paneles el último
+arranca a los 360ms, después de que la diapositiva ya terminó su
+fundido de 300ms. Es la misma discusión que el Ken Burns (§E1): un
+cliente lo pidió, otro lo objeta. Convendría la misma solución — una
+variable para apagarlo sin pelearse con el JS que agrega la clase en
+cada `slidechange`.
+
+
+### K26 · `video-fondo.mjs` no prevé el "contenedor vacío" — PROBADO
+
+**Síntoma.** El test exige `poster` en todo `.d-shot-slide--bg-video`.
+Un curso donde la diapositiva ES el video —contenedor vacío a la espera
+del archivo— no puede ponerlo, y la única salida es tocar un test del
+kit.
+
+**Diagnóstico contra el código real.** El chequeo es correcto para el
+caso que preveía: arte + video, donde el `poster` es ese arte y cubre
+el hueco mientras el `.mp4` no está. Pero el kit soporta los dos usos
+del patrón 1 y el test solo contempla uno.
+
+**Cómo se verificó.** Pasó acá (§24.2): el cliente pidió las dos
+diapositivas de video vacías, "sin contenido de placeholder", y el test
+las marcó en rojo.
+
+**Propuesta.** Que el test honre un opt-out explícito en el marcado
+(acá se usó `data-sin-poster`) y que lo aplique solo a ese chequeo. Es
+la única divergencia del curso respecto de un test del kit y está
+marcada como tal en el archivo.
+
+
 ---
 
 ## 7. Segunda vuelta — 3 puntos reportados por el cliente
@@ -2207,40 +2303,288 @@ elección previa → 0.85x; táctil con `1.2` guardado y recarga → 1.2x
 
 ---
 
+## 24. Undécima vuelta — resoluciones contra el PDF, y el rebote de entrada
+
+### 24.1 · Las medidas, remedidas de cero
+
+El pedido fue explícito: *"volvé a medir todo desde cero: las
+dimensiones reales del PDF de Illustrator y las del kit base, para
+asegurarte de que el arte se esté aplicando tal cual está en el PDF
+original, sin desfasajes de escala ni proporción"*. Así que la primera
+mitad de esta vuelta es medición, no cambios.
+
+**Lo que se midió, y con qué.**
+
+| qué | medida | cómo |
+|---|---|---|
+| Artboard del PDF | **2520 × 1260 pt** (2:1 exacto) | `MediaBox` de las 13 páginas |
+| Las 30 capturas de diapositiva | **2520 × 1260 px** | tamaño real de cada `.webp` |
+| Recorte de la escena del mini juego | 1856 × 723 | asset, y `--mj-escena-ratio: 1856/723` lo declara igual |
+| Marco de video del PDF | 845 × 490 | asset, y el hitbox medía 33.532% × 38.889% de 2520×1260 = **845.0 × 490.0** |
+
+O sea: **los archivos estaban bien**. El arte está 1:1 con el artboard,
+sin un solo reescalado, y los dos recortes derivados están declarados
+con su proporción exacta.
+
+**Dónde estaba el desfasaje.** En el CSS del kit. `coto-shot-stage.css`
+hace que el lienzo LLENE el escenario cuando su proporción cae entre
+1.5 y 2.2; como la imagen es 2:1 con `object-fit:cover`, eso recorta.
+Medido, con el escenario real (ancho / (alto − header − footer)):
+
+| ventana | escenario | proporción | alto del arte visible |
+|---|---|---|---|
+| 1366 × 768 | 1366 × 648 | 2.11 | **94.9%** (se comía 5.1%) |
+| 1600 × 900 | 1600 × 780 | 2.05 | 97.5% |
+| 1920 × 1080 | 1920 × 950 | 2.02 | 99.0% |
+
+1366×768 es la resolución de notebook más usada del mundo: ahí el
+alumno veía el 94.9% del dibujo. Eso es exactamente "desfasaje de
+proporción".
+
+**Qué se hizo.** El lienzo conserva **2:1 en todo el rango**. La regla
+de `pulido.css` que en la novena vuelta restauraba el lienzo fijo sólo
+entre 1.5 y 1.679 ahora cubre el rango entero del kit (1.5–2.2). Por
+debajo de 1.5 y por encima de 2.2 el kit ya dejaba el lienzo fijo, así
+que no se tocó nada más.
+
+**Lo que cuesta, medido:** franjas laterales chicas.
+
+| ventana | franja por costado |
+|---|---|
+| 1920 × 1080 | 10 px |
+| 1600 × 900 | 20 px |
+| 1366 × 768 | 35 px |
+| iPad apaisado | 0 px (el escenario ya da 2:1 justo) |
+
+Y son franjas que desde la décima vuelta continúan el arte (§23.3), no
+un bloque de color.
+
+**Esto reemplaza el umbral de 1.68 de la novena vuelta.** Aquel número
+salía de medir cuánto se podía recortar sin comerse una píldora — la
+pregunta correcta mientras el objetivo era llenar la pantalla. El
+cliente cambió el objetivo a "no recortar nada", y con eso el umbral
+sobra. Queda anotado porque el razonamiento sigue siendo válido si
+alguna vez se vuelve atrás.
+
+**Cómo se verificó.** Punto 17 del test, reescrito: seis ventanas, y en
+cada una se calcula el porcentaje del arte visible con la misma cuenta
+que hace el navegador (proporción del lienzo contra proporción natural
+de la imagen, según el `object-fit` real). Da 100% en las seis. Además
+se topea la franja contra el lienzo 2:1 más grande que entra en ese
+escenario — medido en vivo, no con un alto de chrome escrito a mano
+(se intentó con 120px fijos y falló solo en 1920×1080, donde el chrome
+ya mide 130 por el escalado de la novena vuelta).
+
+
+### 24.2 · Las diapositivas de video: contenedor vacío a 2520 × 1260
+
+**Lo que pidió.** *"Las diapositivas de video deben quedar vacías (sin
+contenido de placeholder ni medidas incorrectas) pero con el contenedor
+ya configurado en la resolución correcta: 2520 × 1260… Cuando
+reemplacemos esos archivos, tienen que encajar exactos en esa
+resolución sin recorte ni reescalado."*
+
+**Qué había.** Las dos diapositivas de video del cuerpo eran la captura
+completa del PDF —con el reproductor **dibujado** adentro— más un
+`<video>` chico encajado en ese dibujo. La caja de ese marco mide
+**845 × 490** en el artboard, o sea **1.7245:1**. Un `.mp4` de 2520×1260
+metido ahí, con el `object-fit:cover` que le puso la sexta vuelta, se
+recortaba **~13.5% de ancho por costado**. Ese era el "no encaja
+exacto", y es una medida que hasta esta vuelta era correcta: el archivo
+que se esperaba era un clip 16:9 para ese marco, no el artboard entero.
+
+**Qué se hizo.** Las dos pasan al patrón 1 de `coto-media.js` (video de
+fondo), igual que la portada: el `.d-shot` es 2:1 exacto — o sea
+2520×1260 — en todas las pantallas (§24.1), así que el archivo entra
+1:1. Sin `<img>`, sin `poster` y sin el reproductor viejo: el
+contenedor queda vacío. Se borraron del paquete los cuatro assets que
+ya no se usan (`video-reporte.webp`, `video-acciones.webp` y los dos
+`poster-video-*.webp`, 170 KB); siguen en el historial de git si alguna
+vez vuelve el reproductor dibujado.
+
+**`contain`, no `cover`.** El kit le pone `cover` al video de fondo.
+Con el lienzo 2:1 y un archivo 2520×1260 las dos dan lo mismo. La
+diferencia aparece el día que un archivo llegue con otra proporción:
+`cover` lo recorta **en silencio** y `contain` lo deja entero con
+franjas, que se ven y se corrigen. Después de una vuelta que existe
+justamente por un recorte silencioso, la elección es obvia — y es la
+única de las dos que *garantiza* el "sin recorte" que se pidió, en vez
+de cumplirlo de casualidad mientras los archivos vengan bien.
+
+**Qué hubo que recablear.** Los puntos por ver un video los pagaba
+`initInlineCircleVideos` con su `onFirstPlay`, que ya no interviene.
+Ahora los paga `curso.js` escuchando `playing` en cada video de fondo
+con `data-video-src`. `playing` y no `play`: `play` se dispara también
+cuando el navegador lo intenta y lo rechaza, y pagaría un video que el
+alumno nunca vio. Las claves de `estado.videos` son las mismas rutas de
+siempre, así que un alumno con progreso guardado no pierde ni cobra dos
+veces.
+
+**Dos cosas que hay que decir, no esconder.**
+
+1. **Hasta que lleguen los `.mp4`, esas dos diapositivas están en
+   blanco.** Es lo que se pidió ("sin contenido de placeholder"), pero
+   conviene saberlo antes de mostrarle el curso a alguien. El gate
+   (`data-require-seen`) sigue eximiéndose solo mientras el archivo sea
+   un placeholder, así que el curso no queda trabado.
+2. **El título y el texto de introducción de esas dos diapositivas
+   estaban horneados en la captura del PDF**, así que ahora no están en
+   pantalla: los tiene que traer el video. Siguen en el DOM como
+   `sr-only` para el lector de pantalla y para el índice.
+
+**Excepción declarada en un test del kit.** `video-fondo.mjs` exige
+`poster` en todo video de fondo — con razón para el caso que preveía
+(arte + video, donde el poster cubre el hueco). El patrón "contenedor
+vacío" no lo preveía. Se agregó `data-sin-poster` en el marcado y el
+test lo honra **solo** para ese chequeo; los otros cinco (carpeta,
+nombre, `playsinline`, botón oculto, autoplay) siguen corriendo. Es la
+única divergencia del curso respecto de un test del kit, está marcada
+como tal en el archivo, y va relayada como **K26**.
+
+**Cómo se verificó.** Punto 12 del test, reescrito de punta a punta:
+contenedor 2:1 exacto, `object-fit` que no recorta, cero `<img>`, cero
+`poster`, cero reproductor viejo, y que no se hayan perdido ni la ruta
+del `.mp4` ni el gate.
+
+
+### 24.3 · El "rebote" al entrar a cada diapositiva
+
+**Lo que reportó.** *"Al iniciar cada diapositiva, el contenido aparece
+y se agranda un poquito de golpe, como un rebote, en vez de aparecer de
+forma prolija y estable. Pasa en todas las diapositivas."*
+
+**Lo primero fue descartar lo obvio.** El kit tiene un Ken Burns (un
+zoom lento de 1 a 1.06 sobre `.d-shot`) que sería el sospechoso
+natural — pero está **apagado por default** desde v1.9.74 y este curso
+no lo enciende. Se verificó leyendo el `animationName` computado: `none`.
+
+**Después se midió el render, cuadro a cuadro.** Se grabó la transición
+con `Page.screencast` (74 cuadros) y se siguió el ancho de la remera
+roja del personaje: **294–295 px en todos los cuadros**. O sea que el
+lienzo no escala. La animación de entrada del kit (`d-slide-in`, 300ms)
+es opacidad pura.
+
+**Lo que sí se movía** eran las dos capas que van ENCIMA del arte, y
+son dos cosas distintas que el alumno ve como una sola:
+
+1. **Los overlays llegaban sin medidas.** `_initShots()` posiciona cada
+   `[data-hit]` / `[data-place]` escribiendo `left/top/width/height` en
+   px, calculados contra la caja renderizada de la imagen. Una
+   diapositiva no visitada está en `display:none`: mide 0×0, y
+   `place()` se va sin escribir nada (el kit lo contempla con un "ancla
+   provisional" en 0,0). Medido al arrancar: **25 overlays repartidos
+   en 6 diapositivas, ninguno con medidas**. Cada uno quedaba en su
+   tamaño de contenido —chico, en una esquina— y saltaba a su caja real
+   recién al entrar. Medido en "Últimos consejos": un panel pasaba de
+   **26×5 en (20,56)** a **310×74 en (645,158)**. Eso es literal
+   "aparece y se agranda de golpe".
+
+   Y hay una segunda mitad: las capturas son `loading="lazy"` dentro de
+   un `display:none`, así que el navegador **ni las pedía**. Sin imagen
+   cargada no hay `naturalWidth`, y sin eso `place()` no puede calcular
+   nada ni siquiera al entrar.
+
+2. **`.d-stagger-in`.** `_initHitStagger()` y `_initPlaceStagger()`
+   (motor-slides.js) se la agregan a cada `[data-hit]` y `[data-place]`
+   en cada `slidechange`, con retardo creciente (45ms y 90ms por
+   elemento). Es `translateY(8px)` + fundido. En "Últimos consejos",
+   con 5 paneles, el último arranca a los **360ms** — después de que la
+   diapositiva terminó su propio fundido de 300ms — así que los
+   carteles siguen entrando de a uno durante ~750ms.
+
+**Qué se hizo.**
+
+- `precolocarOverlays()` en `curso.js`: coloca **todos** los overlays al
+  arrancar, sin esperar a entrar. Todos los `.d-shot` del curso son el
+  mismo lienzo 2:1, así que la caja del que está visible sirve para
+  calcular la de los que no; es la misma cuenta que `place()`, con los
+  mismos `data-l/t/w/h`, no una aproximación. Cuando el alumno entra,
+  el kit vuelve a correr `place()` y escribe los mismos números.
+- Una **sonda de tamaños**: un `Image()` suelto por captura
+  desconocida. No toca el DOM ni bloquea el pintado, y arregla las dos
+  mitades — da la medida natural para colocar ahora, y deja el archivo
+  en caché para que la captura tampoco aparezca de golpe al entrar. No
+  se sacó `loading="lazy"` del marcado a propósito: eso cargaría las 30
+  capturas antes de pintar nada.
+- `.d-stagger-in{ animation:none }` en `pulido.css`. Se apaga por CSS y
+  no pidiendo que el kit no ponga la clase, porque la clase la agrega
+  su JS en cada cambio de diapositiva. No se pierde nada: es
+  exactamente lo que ya veía un alumno con `prefers-reduced-motion`.
+- Y el `@keyframes pop` del pop-up (`translateY(14px) scale(.98)`) pasa
+  a fundido puro. Es el **único `scale` de entrada que quedaba en el
+  curso** y es literal lo que el cliente describió; los pop-ups acá son
+  constantes (las 4 fichas, el glosario, y el índice, que se abre solo
+  al entrar a su diapositiva). Volver a encenderlo son dos líneas.
+
+**Resultado, medido igual que el problema:** de las 13 diapositivas, 11
+entran sin que **ningún** elemento cambie de tamaño ni de posición. Las
+otras dos son el mini juego y el cierre, y lo que se mueve ahí son los
+papelitos del confeti — se verificó elemento por elemento.
+
+**Cómo se verificó.** Dos puntos nuevos del test. El **29** mide el
+síntoma: entra a cada diapositiva y compara la caja de cada elemento
+entre el primer cuadro y el último, 900ms después. El **30** mide la
+causa, que es lo que se puede romper sin querer tocando CSS:
+`.d-stagger-in` inerte y el pop-up sin `pop`. Los dos se probaron al
+revés — desactivando cada arreglo y viendo el test ponerse rojo con el
+mismo número que había antes.
+
+
+---
+
 ## 22. Pendiente / próximo paso
 
-- **Videos.** Los **cuatro** `.mp4` de `video/` son placeholders de 0
-  bytes con su nombre final:
+- **Videos — especificación para el editor.** Los **cuatro** `.mp4` de
+  `video/` son placeholders de 0 bytes con su nombre final:
   `portada.mp4`, `unidad-1.mp4`, `como-hacemos-el-reporte.mp4` y
-  `que-hacemos-con-los-productos.mp4`.
-  · Los dos del cuerpo: `initVideoGate` los sondea y **exime el gate
-    mientras no se puedan reproducir**, así que el curso nunca queda
-    trabado; el día que se suban, el gate vuelve a valer sin tocar
-    código.
-  · Los dos de fondo (portada y unidad): mientras no estén se ve el
-    `poster`, que es la misma captura de siempre. Y ojo con esto, que es
-    del kit y no del curso: una `.d-shot-slide--bg-video` **no se
-    narra** (el audio lo pone el video), así que esas dos diapositivas
-    están mudas hasta que lleguen los archivos.
-  Proporción a pedirle al editor: **2:1** (mismo criterio que el PDF),
-  y **sin nada importante en el 8% de cada costado** — a partir de
-  la novena vuelta el lienzo llena la pantalla en el rango habitual
-  y ese margen es el que se recorta (§21.4).
-  Al subir los dos del cuerpo el máximo pasa de 199 a 219 y conviene
-  volver a correr `npm test` — `puntaje-curso.mjs` lo va a decir solo.
+  `que-hacemos-con-los-productos.mp4`. Se reemplazan tal cual, sin
+  tocar código.
+
+  **Resolución: 2520 × 1260** (2:1 — el artboard del PDF). Desde la
+  undécima vuelta los cuatro son video de fondo y el lienzo conserva
+  esa proporción en TODAS las pantallas, así que el archivo entra 1:1,
+  sin recorte y sin reescalado no uniforme (§24.1, §24.2). Ya no hace
+  falta el margen de seguridad del 8% por costado que pedía la novena
+  vuelta: no se recorta nada.
+
+  Un archivo que venga con otra proporción **no se recorta en
+  silencio**: el curso usa `object-fit:contain`, así que se va a ver
+  con franjas — visible y corregible (§24.2).
+
+  · **Gate:** `initVideoGate` sondea los dos del cuerpo y **exime el
+    gate mientras no se puedan reproducir**, así que el curso nunca
+    queda trabado; el día que se suban, el gate vuelve a valer solo.
+  · **Locución:** una `.d-shot-slide--bg-video` **no se narra** (el
+    audio lo pone el video). Eso ya valía para portada y unidad, y
+    desde la undécima vuelta vale también para las dos del cuerpo: las
+    cuatro están mudas hasta que lleguen los archivos.
+  · **Las dos del cuerpo están en blanco** hasta que se suban. Es lo
+    que se pidió (contenedor vacío, sin placeholder), pero conviene
+    saberlo antes de mostrar el curso. Y el título y el texto de
+    introducción que estaban horneados en la captura ahora los tiene
+    que traer el video.
+  · Si se quiere que no queden en blanco mientras tanto, alcanza con un
+    fotograma de cada video como `poster` — una línea por diapositiva,
+    y se saca el `data-sin-poster`.
+  · Al subir los dos del cuerpo el máximo pasa de 199 a 219 y conviene
+    volver a correr `npm test` — `puntaje-curso.mjs` lo va a decir solo.
 
 - **El zip de entrega** se arma con
   `python3 tools/build-zip.py . ../surtido-sin-venta.zip` y solo a
   pedido explícito (§3.12).
 
-- **Franjas del lienzo.** Donde la ventana es más ancha que 2.2:1 el
-  lienzo vuelve al 2:1 fijo y quedan franjas laterales, que desde la
-  décima vuelta continúan el arte estirando su columna de borde
-  (§23.3). Es lo correcto para líneas que llegan horizontales al borde
+- **Franjas del lienzo.** Desde la undécima vuelta el lienzo conserva
+  2:1 en TODAS las pantallas para no recortar el arte (§24.1), así que
+  donde la ventana no es 2:1 quedan franjas — chicas (10px a 1920×1080,
+  35px a 1366×768) y continuando el arte con la columna de borde
+  estirada (§23.3). Es lo correcto para líneas que llegan horizontales al borde
   —que es lo que tiene este arte—, y no inventa contenido: si una
   captura futura trajera algo con mucho detalle pegado al costado, la
   franja lo va a repetir como un rayado horizontal. Se mira en el
   render, como el resto.
 
-- Los **23 hallazgos de kit (K1 a K23)** se llevan en un prompt al chat
-  de `kit-base/`. Desde acá no se editó `kit-base/`.
+- Los **26 hallazgos de kit (K1 a K26)** se llevan en un prompt al chat
+  de `kit-base/`. Desde acá no se editó `kit-base/`. La única
+  divergencia respecto del kit es el opt-out `data-sin-poster` en la
+  copia del curso de `tools/tests/video-fondo.mjs`, marcada en el
+  archivo y relayada como K26.

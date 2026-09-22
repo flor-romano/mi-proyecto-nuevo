@@ -80,6 +80,13 @@
     28. En un dispositivo táctil la locución arranca a 0.85x, en
         escritorio a 1x, y una velocidad ya elegida por el alumno manda
         sobre las dos.
+
+   Undécima tanda (los puntos 12 y 17 también se reescribieron: ver
+   ahí por qué cambiaron de signo):
+    29. Al entrar a una diapositiva NADA cambia de tamaño ni de
+        posición — ni los overlays, que antes llegaban sin medidas y
+        saltaban a su caja al entrar.
+    30. Ninguna animación de entrada mueve ni escala nada.
 */
 import { openCourse, report, requireUrl, irASlide } from './_shared.mjs';
 import { chromium } from 'playwright-core';
@@ -564,45 +571,71 @@ for (const t of TARJETAS) {
   });
 }
 
-/* ---- 12 · el video llena el marco dibujado --------------------
-   La pantalla que dibujó el diseñador mide 845x490 del lienzo
-   (x[842,1686] y[504,993]), o sea 1.7245:1, y el video real es 16:9.
-   Con el `object-fit:contain` que el kit le pone a esta variante,
-   quedaban 15px de franja arriba y abajo. Se chequean las dos cosas
-   que tienen que valer juntas: que el hitbox siga calzando con el
-   marco, y que el video Y la carátula estén los dos en `cover` — si
-   uno solo lo está, el encuadre cambia al arrancar y el marco "salta"
-   (la trampa de especificidad que documenta coto-media.js). */
+/* ---- 12 · la diapositiva de video es un contenedor vacío 2:1 ----
+   Reemplaza al chequeo original de la sexta vuelta ("el video llena el
+   marco dibujado, sin franjas"), que medía un patrón que este curso ya
+   no usa. Queda la historia porque explica el número:
+
+   El arte del PDF dibujaba el reproductor adentro de la captura, y el
+   video chico iba encajado ahí. Esa pantalla mide 845x490 del lienzo
+   (x[842,1686] y[504,993]) — 1.7245:1. El cliente definió en la
+   undécima vuelta que los .mp4 los entrega a **2520x1260** (el artboard
+   entero, 2:1) y que estas diapositivas van vacías: un archivo 2:1
+   metido en una caja de 1.7245:1 se recortaba ~13.5% de ancho por
+   costado. Ese era el "no encaja exacto".
+
+   Lo que se mide ahora es el contrato nuevo, entero:
+     · el contenedor es 2:1 EXACTO (= 2520x1260), así que el archivo
+       entra 1:1;
+     · el `object-fit` no puede recortar;
+     · la diapositiva está vacía de verdad: ni `<img>`, ni `poster`, ni
+       el reproductor viejo;
+     · y no se perdió el gate ni el nombre/carpeta del .mp4, que es lo
+       único que el cliente va a tocar. */
 {
-  const RATIO = 845 / 490;
-  for (const slide of ['video-reporte', 'video-acciones']) {
+  for (const [slide, mp4] of [
+    ['video-reporte', 'video/como-hacemos-el-reporte.mp4'],
+    ['video-acciones', 'video/que-hacemos-con-los-productos.mp4']
+  ]) {
     await irASlide(page, slide);
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(350);
     const m = await page.evaluate(() => {
-      const w = document.querySelector('.slide.is-active [data-inline-video]');
-      if (!w) return null;
-      const v = w.querySelector('.d-shot-hit-video');
-      const im = w.querySelector('.d-shot-hit-poster-img');
-      const r = w.getBoundingClientRect();
+      const s = document.querySelector('.slide.is-active');
+      const shot = s.querySelector('[data-shot]');
+      const v = s.querySelector('video.d-shot-video');
+      const r = shot.getBoundingClientRect();
+      const src = v && (v.getAttribute('src') ||
+        (v.querySelector('source') && v.querySelector('source').getAttribute('src')) || '');
       return {
-        video: v ? getComputedStyle(v).objectFit : null,
-        poster: im ? getComputedStyle(im).objectFit : null,
-        ratio: r.width / r.height
+        ratio: r.width / r.height,
+        hayVideo: !!v,
+        fit: v ? getComputedStyle(v).objectFit : null,
+        poster: v ? v.getAttribute('poster') : null,
+        imgs: s.querySelectorAll('img').length,
+        viejoPatron: !!s.querySelector('[data-inline-video]'),
+        src,
+        gate: s.getAttribute('data-require-seen') || ''
       };
     });
-    if (!m) { fails.push(`[${slide}] no hay ningún [data-inline-video].`); continue; }
-    if (m.video !== 'cover') {
-      fails.push(`[${slide}] el <video> está en object-fit:${m.video}. Con "contain" un video 16:9 ` +
-        'entra entero en un marco de 1.7245:1 y deja franjas arriba y abajo — el reporte del cliente.');
+    if (!m.hayVideo) { fails.push(`[${slide}] no hay <video class="d-shot-video">.`); continue; }
+    if (!cerca(m.ratio, 2, 0.005)) {
+      fails.push(`[${slide}] el contenedor es ${m.ratio.toFixed(4)}:1 y tiene que ser 2:1 exacto ` +
+        '(2520x1260, el artboard del PDF). Si no, el .mp4 que suba el cliente no entra 1:1.');
     }
-    if (m.poster !== 'cover') {
-      fails.push(`[${slide}] la carátula está en object-fit:${m.poster} y el video en ` +
-        `${m.video}: el encuadre cambia al arrancar y el marco salta.`);
+    if (m.fit === 'cover') {
+      fails.push(`[${slide}] el video está en object-fit:cover: un archivo que no venga 2:1 se ` +
+        'recorta EN SILENCIO. El pedido fue "sin recorte", y eso solo lo garantiza `contain`.');
     }
-    if (!cerca(m.ratio, RATIO, 0.01)) {
-      fails.push(`[${slide}] la caja del video es ${m.ratio.toFixed(4)}:1 y la pantalla dibujada es ` +
-        `${RATIO.toFixed(4)}:1. Con "cover" eso ya no deja franjas, pero recorta de más: revisar ` +
-        'las coordenadas del hitbox contra el arte.');
+    if (m.imgs || m.poster || m.viejoPatron) {
+      fails.push(`[${slide}] la diapositiva no está vacía (imgs:${m.imgs} poster:${m.poster} ` +
+        `reproductor viejo:${m.viejoPatron}). El cliente pidió el contenedor vacío hasta subir el .mp4.`);
+    }
+    if (m.src !== mp4) {
+      fails.push(`[${slide}] el video apunta a "${m.src}" y tiene que apuntar a "${mp4}": es el ` +
+        'nombre y la carpeta que el cliente va a reemplazar a mano.');
+    }
+    if (m.gate !== mp4) {
+      fails.push(`[${slide}] se perdió el gate: data-require-seen="${m.gate}" en vez de "${mp4}".`);
     }
   }
 }
@@ -780,28 +813,38 @@ for (const t of TARJETAS) {
   }
 }
 
-/* ---- 17 · hasta dónde se llena la pantalla ---------------------
-   Dos reclamos opuestos del cliente —"en iPad los videos se ven
-   recortados" y "hay márgenes arriba y abajo"— se resuelven con un
-   único número: cuánto se puede recortar por costado sin tocar
-   contenido. Se midió sobre las capturas recortándolas y mirándolas:
-   a 5.75% y a 7.85% por lado queda todo entero; a 12.5% se cortan las
-   píldoras de "Últimos consejos" y los anillos del índice y la unidad.
-   De ahí sale el umbral de 1.68 de proporción de escenario.
+/* ---- 17 · el arte se ve entero, sin recortar, en toda pantalla --
+   Este chequeo cambió de signo en la undécima vuelta y conviene que se
+   entienda por qué, porque la versión anterior medía lo contrario.
 
-   Se verifica de los DOS lados, porque un umbral solo se sostiene si
-   falla cuando tiene que fallar:
-     · por encima de 1.68 el lienzo llena la pantalla (sin franjas);
-     · por debajo, vuelve el lienzo fijo 2:1 (con franjas), porque ahí
-       el recorte ya se comería contenido. */
+   Antes: el kit llena el escenario entre 1.5 y 2.2 de proporción, y
+   como la imagen es 2:1 con `object-fit:cover`, eso recorta. La
+   pregunta de la novena vuelta era "¿cuánto se puede recortar sin
+   comerse una píldora?" y la respuesta, medida recortando las capturas
+   y mirándolas, fue ~8% por lado (a 12.5% se cortan las píldoras de
+   "Últimos consejos" y los anillos del índice y la unidad). De ahí
+   salía un umbral de 1.68.
+
+   Ahora: el cliente pidió que el arte se aplique **tal cual el PDF,
+   sin desfasajes de escala ni proporción**. Con eso el presupuesto de
+   recorte pasa a ser CERO y el umbral sobra. Lo que hay que medir es
+   que el lienzo conserve 2:1 en todo el rango — o sea que el alumno
+   vea el 100% del dibujo — y que las franjas que eso deja no se
+   disparen.
+
+   Se mide el recorte de verdad, no la proporción del lienzo: un lienzo
+   2:1 con la imagen en `cover` no recorta NADA porque la imagen
+   también es 2:1, y eso es justo lo que hay que demostrar. */
 {
   const CASOS = [
-    ['monitor del reporte', 1912, 1200, 'llena'],
-    ['iPad apaisado', 1180, 820, 'llena'],
-    ['escritorio', 1440, 900, 'llena'],
-    ['tablet angosta', 1024, 768, 'franjas']
+    ['monitor del reporte', 1912, 1200],
+    ['1366x768 (la notebook más usada)', 1366, 768],
+    ['iPad apaisado', 1180, 820],
+    ['escritorio', 1440, 900],
+    ['1920x1080', 1920, 1080],
+    ['tablet angosta', 1024, 768]
   ];
-  for (const [nom, w, h, esperado] of CASOS) {
+  for (const [nom, w, h] of CASOS) {
     const tab = await browser.newPage({ viewport: { width: w, height: h } });
     await tab.goto(url);
     await tab.waitForFunction(() => window.motor);
@@ -809,27 +852,54 @@ for (const t of TARJETAS) {
     const m = await tab.evaluate(() => {
       const st = document.querySelector('.d-stage').getBoundingClientRect();
       const sh = document.querySelector('.slide.is-active .d-shot').getBoundingClientRect();
-      return { razon: st.width / st.height, franja: st.height - sh.height, ratioLienzo: sh.width / sh.height };
+      const im = document.querySelector('.slide.is-active .d-shot-img, .slide.is-active video.d-shot-video');
+      const nat = im ? [im.naturalWidth || im.videoWidth || 0, im.naturalHeight || im.videoHeight || 0] : [0, 0];
+      return {
+        stW: st.width, stH: st.height,
+        razon: st.width / st.height,
+        ratioLienzo: sh.width / sh.height,
+        franjaX: (st.width - sh.width) / 2,
+        franjaY: (st.height - sh.height) / 2,
+        nat, fit: im ? getComputedStyle(im).objectFit : ''
+      };
     });
     await tab.close();
-    const llena = m.franja < 2;
-    const recorte = ((2 - m.razon) / 4) * 100;
-    if (esperado === 'llena' && !llena) {
-      fails.push(`[${nom} ${w}x${h}] quedan ${Math.round(m.franja)}px de franja. A esa proporción ` +
-        `(${m.razon.toFixed(3)}) llenar cuesta ${recorte.toFixed(1)}% de recorte por lado, que está ` +
-        'dentro del margen del diseño: no corresponde dejar franja.');
+    if (!cerca(m.ratioLienzo, 2, 0.005)) {
+      fails.push(`[${nom} ${w}x${h}] el lienzo quedó en ${m.ratioLienzo.toFixed(4)}:1 y tiene que ` +
+        'ser 2:1 exacto — la proporción del artboard del PDF (2520x1260). Cualquier otra cosa ' +
+        'recorta el arte del diseñador.');
+      continue;
     }
-    if (esperado === 'franjas' && llena) {
-      fails.push(`[${nom} ${w}x${h}] el lienzo llena la pantalla, pero a esa proporción ` +
-        `(${m.razon.toFixed(3)}) eso cuesta ${recorte.toFixed(1)}% de recorte por lado — medido, ahí ` +
-        'ya se cortan las píldoras de "Últimos consejos". Tiene que volver al lienzo fijo 2:1.');
+    /* Con lienzo 2:1 e imagen 2:1, `cover` no recorta nada: el % visible
+       de cada eje es 100. Se calcula igual que lo haría el navegador,
+       para que el test siga valiendo si alguna captura dejara de ser 2:1. */
+    if (m.nat[0] && m.nat[1]) {
+      const arte = m.nat[0] / m.nat[1];
+      const visible = m.fit === 'cover'
+        ? (m.ratioLienzo > arte ? (arte / m.ratioLienzo) : (m.ratioLienzo / arte)) * 100
+        : 100;
+      if (visible < 99.5) {
+        fails.push(`[${nom} ${w}x${h}] se ve el ${visible.toFixed(1)}% del arte: se está recortando ` +
+          `${(100 - visible).toFixed(1)}%. El pedido del cliente es el 100%.`);
+      }
     }
-    if (!llena && !cerca(m.ratioLienzo, 2, 0.02)) {
-      fails.push(`[${nom} ${w}x${h}] hay franja pero el lienzo no quedó en 2:1 sino en ` +
-        `${m.ratioLienzo.toFixed(3)}: está recortando Y dejando franja a la vez.`);
+    /* Las franjas son el precio de no recortar. Que existan está bien;
+       que se descontrolen, no — eso querría decir que el lienzo dejó de
+       crecer con la ventana (el reclamo de la novena vuelta). */
+    const mayor = Math.max(m.franjaX, m.franjaY);
+    const techo = (m.razon > 2 ? (m.stW - m.stH * 2) / 2 : (m.stH - m.stW / 2) / 2) + 2;
+    if (mayor > techo) {
+      fails.push(`[${nom} ${w}x${h}] la franja llegó a ${Math.round(mayor)}px y el lienzo 2:1 más ` +
+        `grande que entra en un escenario de ${Math.round(m.stW)}x${Math.round(m.stH)} deja ` +
+        `${Math.round(techo - 2)}px. Si sobra más, el lienzo no está creciendo con la ventana.`);
     }
   }
 }
+/* El techo de franja se calcula con el escenario MEDIDO, no con el
+   viewport menos un alto de chrome escrito a mano: desde la novena
+   vuelta el chrome está en `rem` y crece en pantallas grandes, así que
+   ese número no es constante (se intentó con 120px fijos y el test
+   falló solo en 1920x1080, que es donde el chrome ya mide 130). */
 
 /* ---- 18 · el foco no queda en un campo de texto con el dedo -----
    `Motor.showPopup()` enfoca el primer elemento enfocable del pop-up
@@ -1294,6 +1364,98 @@ for (const t of TARJETAS) {
   if (Math.abs(rRaton - 1) > 0.001) {
     fails.push(`en escritorio la locución arranca en ${rRaton}x: el ajuste es para el dedo (puntero ` +
       'grueso), no para todo el mundo.');
+  }
+}
+
+/* ---- 29 · al entrar a una diapositiva no se mueve nada ---------
+   Reporte del cliente (undécima vuelta): "al iniciar cada diapositiva
+   el contenido aparece y se agranda un poquito de golpe, como un
+   rebote; tiene que aparecer directo en su tamaño y posición final".
+
+   Se mide lo que el cliente describe y no la causa: se entra a cada
+   diapositiva y se compara la caja de CADA elemento en el primer
+   cuadro contra la del último, 900ms después. Si algo cambió de tamaño
+   o de lugar en el medio, eso es el salto.
+
+   Quedan afuera el mini juego y el cierre: los dos tienen confeti
+   (`.cf`, más los papelitos del juego), que por definición se mueve y
+   no tiene nada que ver con la entrada. Se verificó mirando QUÉ se
+   movía en esos dos: los 14 y 126 elementos que cambian son todos
+   papelitos. */
+{
+  const SALTA_CONFETI = new Set(['minijuego', 'cierre']);
+  const ids = await page.evaluate(() =>
+    Array.from(document.querySelectorAll('.slide')).map((e) => e.dataset.slide));
+  for (const id of ids) {
+    if (SALTA_CONFETI.has(id)) continue;
+    const movidos = await page.evaluate(async (id) => {
+      const i = Array.from(document.querySelectorAll('.slide')).findIndex((e) => e.dataset.slide === id);
+      const t0 = performance.now();
+      window.motor.go(i);
+      const foto = () => {
+        const s = document.querySelector(`[data-slide="${id}"]`);
+        const m = new Map();
+        for (const el of [s, ...s.querySelectorAll('*')]) {
+          const r = el.getBoundingClientRect();
+          if (r.width) m.set(el, [r.width, r.height, r.x, r.y]);
+        }
+        return m;
+      };
+      let primera = null; let ultima = null;
+      await new Promise((res) => {
+        function loop() {
+          const t = performance.now() - t0;
+          const m = foto();
+          if (!primera) primera = m;
+          ultima = m;
+          if (t < 900) requestAnimationFrame(loop); else res();
+        }
+        requestAnimationFrame(loop);
+      });
+      const out = [];
+      for (const [el, v] of ultima) {
+        const f = primera.get(el);
+        const nom = (el.tagName + '.' + (el.className || '').toString().split(' ')[0]).slice(0, 36);
+        if (!f) { out.push(nom + ' (aparece después)'); continue; }
+        const d = Math.max(...[0, 1, 2, 3].map((j) => Math.abs(f[j] - v[j])));
+        if (d > 1.5) out.push(`${nom} ${JSON.stringify(f.map(Math.round))}→${JSON.stringify(v.map(Math.round))}`);
+      }
+      return out;
+    }, id);
+    if (movidos.length) {
+      fails.push(`[${id}] ${movidos.length} elemento(s) se acomodan DESPUÉS de que la diapositiva ` +
+        `aparece: ${movidos.slice(0, 3).join(' · ')}. Es el "rebote" del cliente. Las dos causas ` +
+        'conocidas son los overlays sin colocar (los coloca `precolocarOverlays` en curso.js) y ' +
+        '`.d-stagger-in`, que el kit le agrega a cada [data-hit]/[data-place] en cada slidechange.');
+    }
+    await page.waitForTimeout(120);
+  }
+}
+
+/* ---- 30 · ninguna entrada mueve ni escala ---------------------
+   El punto 29 mide el síntoma; este mide la causa, que es la que se
+   puede romper sin querer al tocar CSS. `.d-stagger-in` y el
+   `@keyframes pop` del pop-up son las dos únicas animaciones de
+   entrada del curso que tenían `translate`/`scale`. */
+{
+  const m = await page.evaluate(() => {
+    const sonda = document.createElement('div');
+    sonda.className = 'd-stagger-in';
+    sonda.style.cssText = 'position:absolute;left:-9999px;width:10px;height:10px';
+    document.body.appendChild(sonda);
+    const stagger = getComputedStyle(sonda).animationName;
+    sonda.remove();
+    const card = document.querySelector('.modal-card');
+    return { stagger, card: card ? getComputedStyle(card).animationName : null };
+  });
+  if (m.stagger !== 'none') {
+    fails.push(`\`.d-stagger-in\` volvió a animar (${m.stagger}). Son translateY(8px) por cada ` +
+      '[data-hit]/[data-place], escalonados 45 y 90ms: en "Últimos consejos" el último panel ' +
+      'arranca a los 360ms, después de que la diapositiva ya terminó su propio fundido.');
+  }
+  if (m.card && /(^|,)\s*pop\s*($|,)/.test(m.card)) {
+    fails.push(`el pop-up volvió a entrar con \`${m.card}\`, que es translateY(14px) + scale(.98) — ` +
+      'el único `scale` de entrada del curso, y literal lo que el cliente describió.');
   }
 }
 

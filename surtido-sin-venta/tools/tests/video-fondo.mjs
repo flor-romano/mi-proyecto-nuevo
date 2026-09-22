@@ -68,6 +68,7 @@ for (const s of slides) {
     return {
       src,
       poster: vid.getAttribute('poster') || '',
+      sinPoster: sl.hasAttribute('data-sin-poster'),
       playsinline: vid.hasAttribute('playsinline'),
       hayTap: !!tap,
       tapOculto: tap ? tap.hidden : null
@@ -80,7 +81,24 @@ for (const s of slides) {
       'video/<nombre>.mp4 — si alguien la cambia, el archivo final que suba el cliente no lo ' +
       'levanta nadie y no da ningún error.');
   }
-  if (!v.poster) {
+  /* ⚠️ DIVERGENCIA LOCAL DE "Surtido sin venta" respecto del test del
+     kit, marcada acá para que no se confunda con el original.
+
+     El kit exige `poster` en TODO video de fondo, y tiene razón en el
+     caso para el que se escribió: una diapositiva que es arte + video,
+     donde el poster es ese arte y cubre el hueco mientras el .mp4 no
+     está. Este curso tiene además otro caso, por pedido explícito del
+     cliente (undécima vuelta, §24.2): las dos diapositivas de video
+     son un CONTENEDOR VACÍO a la espera del archivo, "sin contenido de
+     placeholder". Ahí un `poster` es exactamente lo que se pidió sacar.
+
+     La excepción se declara en el marcado con `data-sin-poster`, se
+     aplica SOLO a este chequeo (los otros cinco —carpeta, nombre,
+     playsinline, botón oculto, autoplay— siguen corriendo igual) y
+     está relayada al kit como K26: el patrón "contenedor vacío" es
+     legítimo y el kit debería preverlo en vez de obligar a tocar su
+     test. */
+  if (!v.poster && !v.sinPoster) {
     fails.push(`"${s.id}": el <video> no tiene \`poster\`. Mientras el archivo no está —o mientras ` +
       'carga— la diapositiva es un rectángulo negro.');
   }

@@ -516,21 +516,34 @@
       setTimeout(reintentar, 1500);
     })();
 
-    /* ---- Videos del cuerpo: carátula + el play REAL del kit ----
-       Variante (c) de `initInlineCircleVideos` (coto-media.js): el
-       `poster` es el recorte del reproductor que dibujó el diseñador
-       CON el círculo de play borrado, y encima va el
-       `.d-shot-hit-play` del kit — que sí tiene foco, hover y nombre
-       accesible, a diferencia de un play horneado (§6.29). */
-    initInlineCircleVideos({
-      seen: function (src) { return !!estado.videos[src]; },
-      markSeen: function (src) { estado.videos[src] = true; },
-      onFirstPlay: function (src, title) {
-        Logros.award(PTS.video, 'Video: ' + title);
-        persistir();
-        motor._syncNav();
+    /* ---- Puntos por ver los videos del cuerpo ---------------------
+       Desde la undécima vuelta los dos videos del cuerpo son video de
+       FONDO (patrón 1), no el reproductor chico encajado en el marco
+       dibujado (patrón 3) — el cliente los va a entregar a 2520x1260 y
+       ese es el tamaño del lienzo, no el del marco. `initBgVideos()`
+       no tiene `onFirstPlay` (lo tiene `initInlineCircleVideos`, que
+       ya no se usa acá), así que los puntos se pagan desde este lado.
+
+       `playing` y no `play`: `play` se dispara también cuando el
+       navegador lo intenta y rechaza, y pagaría un video que el alumno
+       nunca vio. `estado.videos[src]` conserva las mismas claves que
+       antes (la ruta del .mp4), así que un alumno que ya había visto un
+       video con la versión anterior sigue teniéndolo marcado y no se le
+       paga dos veces. Relayado como K24. */
+    Array.prototype.forEach.call(
+      document.querySelectorAll('.d-shot-slide--bg-video video.d-shot-video[data-video-src]'),
+      function (v) {
+        var src = v.getAttribute('data-video-src');
+        var titulo = v.getAttribute('data-video-title') || src;
+        v.addEventListener('playing', function () {
+          if (estado.videos[src]) return;
+          estado.videos[src] = true;
+          Logros.award(PTS.video, 'Video: ' + titulo);
+          persistir();
+          motor._syncNav();
+        });
       }
-    });
+    );
 
     /* ---- Los 7 conceptos ----
        ⚠️ Un grupo de N variantes dispara `onChange` N−1 veces, no N: la
@@ -733,9 +746,17 @@
       var s = motor.current();
       var medio = s && s.querySelector('.d-shot-img, video.d-shot-video');
       var url = medio && (medio.getAttribute('src') || medio.getAttribute('poster'));
-      /* Un `<video>` sin `poster` no sirve de fondo: se cae al poster o,
-         si no hay, se deja la franja como estaba. */
-      if (!url || !/\.(webp|png|jpe?g)$/i.test(url)) return;
+      /* Un `<video>` sin `poster` no tiene arte que continuar — es el
+         caso de las dos diapositivas de video, que desde la undécima
+         vuelta son un contenedor VACÍO a la espera del .mp4. Ahí la
+         franja se apaga y queda el fondo del escenario, en vez de
+         arrastrar el arte de la diapositiva anterior (que es lo que
+         pasaba si acá se hacía `return` a secas). */
+      if (!url || !/\.(webp|png|jpe?g)$/i.test(url)) {
+        elStage.style.removeProperty('--franja');
+        medirFranja();
+        return;
+      }
       /* URL ABSOLUTA, y no es un detalle: una `url()` relativa dentro de
          una custom property se resuelve contra la HOJA DE ESTILOS donde
          se usa la variable, no contra el documento. Con `img/x.webp` el
@@ -763,13 +784,122 @@
       elStage.style.setProperty('--franja-y', y + 'px');
     }
     pintarFranja();
+
+    /* ---- Que nada se acomode DESPUÉS de aparecer -------------------
+       Reporte del cliente: "al iniciar cada diapositiva el contenido
+       aparece y se agranda un poquito de golpe, como un rebote".
+
+       Medido, y no es una animación: no hay ni un `scale` en todo el
+       curso al cambiar de diapositiva (se grabó la transición cuadro a
+       cuadro con `Page.screencast` y el ancho del dibujo se mantiene
+       constante en los 74 cuadros). Lo que salta es la COLOCACIÓN de
+       los overlays.
+
+       `_initShots()` (motor-slides.js) posiciona cada `[data-hit]` /
+       `[data-place]` escribiendo `left/top/width/height` en px,
+       calculados contra la caja renderizada de la imagen. Una
+       diapositiva que todavía no se visitó está en `display:none`, así
+       que mide 0x0 y `place()` se va sin escribir nada — el kit incluso
+       lo contempla con un "ancla provisional" en (0,0). Medido al
+       arrancar: 25 overlays repartidos en 6 diapositivas SIN ninguna
+       medida. Cada uno de esos queda en su tamaño de contenido (chico,
+       en una esquina) y recién al entrar salta a su caja real. El
+       salto pasa mientras la diapositiva está entrando en fundido: en
+       una máquina rápida cae en los primeros 35ms y no se ve, pero en
+       cuanto la colocación llega un poco más tarde —una máquina
+       lenta, un LMS dentro de un iframe— se ve como el "rebote".
+
+       Acá se colocan TODOS los overlays al arrancar, sin esperar a
+       entrar: todos los `.d-shot` de este curso son el mismo lienzo
+       2:1, así que la caja del que está visible sirve para calcular la
+       de los que no. Es la misma cuenta que `place()`, con los mismos
+       `data-l/t/w/h` — no una aproximación. Cuando el alumno entra, el
+       kit vuelve a correr `place()` y escribe exactamente los mismos
+       números: no hay nada que se mueva. Relayado como K25. */
+    var naturales = {};          // src → [ancho, alto] naturales
+    function srcDe(media) {
+      /* `conceptos` intercambia la fuente con `data-shot-swap-srcs`;
+         todas las variantes son del mismo tamaño, así que alcanza la
+         primera (que además es la que el `src` ya trae). */
+      return media.getAttribute('src') || media.getAttribute('poster') || '';
+    }
+    function precolocarOverlays() {
+      var shots = document.querySelectorAll('[data-shot]');
+      /* Caja de referencia: el primer lienzo que mida de verdad. */
+      var refW = 0, refH = 0;
+      Array.prototype.forEach.call(shots, function (sh) {
+        if (refW) return;
+        var m = sh.querySelector('.d-shot-img, video.d-shot-video');
+        if (m && m.clientWidth && m.clientHeight) { refW = m.clientWidth; refH = m.clientHeight; }
+      });
+      if (!refW) return;
+      Array.prototype.forEach.call(shots, function (sh) {
+        var media = sh.querySelector('.d-shot-img') || sh.querySelector('video.d-shot-video');
+        if (!media) return;
+        var hits = sh.querySelectorAll('[data-hit][data-l], [data-place][data-l]');
+        if (!hits.length) return;
+        if (media.clientWidth && media.clientHeight) return;   // visible: lo gobierna el kit
+        var natW = media.naturalWidth || media.videoWidth || 0;
+        var natH = media.naturalHeight || media.videoHeight || 0;
+        if (!natW || !natH) {
+          /* La captura de una diapositiva no visitada casi nunca tiene
+             medidas acá: es `loading="lazy"` dentro de un
+             `display:none`, o sea que el navegador ni la pidió. El
+             tamaño se saca de la sonda de abajo, que la carga suelta
+             (y de paso deja el archivo en caché, así tampoco aparece
+             la imagen de golpe al entrar). */
+          var m = naturales[srcDe(media)];
+          if (!m) return;
+          natW = m[0]; natH = m[1];
+        }
+        var cs = getComputedStyle(media);
+        var fit = cs.objectFit;
+        var escala = fit === 'contain' ? Math.min(refW / natW, refH / natH)
+                   : fit === 'cover'   ? Math.max(refW / natW, refH / natH)
+                   : refW / natW;
+        var dispW = natW * escala, dispH = natH * escala;
+        var pos = cs.objectPosition.split(' ');
+        var px = parseFloat(pos[0]) || 0;
+        var py = parseFloat(pos[1] !== undefined ? pos[1] : pos[0]) || 0;
+        var ox = (refW - dispW) * (px / 100);
+        var oy = (refH - dispH) * (py / 100);
+        Array.prototype.forEach.call(hits, function (h) {
+          h.style.left = (ox + parseFloat(h.getAttribute('data-l')) / 100 * dispW) + 'px';
+          h.style.top = (oy + parseFloat(h.getAttribute('data-t')) / 100 * dispH) + 'px';
+          h.style.width = (parseFloat(h.getAttribute('data-w')) / 100 * dispW) + 'px';
+          h.style.height = (parseFloat(h.getAttribute('data-h')) / 100 * dispH) + 'px';
+        });
+      });
+    }
+    /* precolocar OFF */
+    /* Sonda de tamaños: un `Image()` suelto por cada captura que
+       todavía no se conoce. No toca el DOM ni bloquea el pintado, y
+       sirve para las dos mitades del salto — da la medida para colocar
+       los overlays ahora, y deja el archivo en caché para que la
+       captura tampoco aparezca de golpe al entrar a la diapositiva.
+       No se saca `loading="lazy"` del marcado a propósito: eso cargaría
+       las 30 capturas antes de pintar nada. */
+    Array.prototype.forEach.call(document.querySelectorAll('[data-shot]'), function (sh) {
+      if (!sh.querySelector('[data-hit][data-l], [data-place][data-l]')) return;
+      var media = sh.querySelector('.d-shot-img');
+      if (!media || media.naturalWidth) return;
+      var src = srcDe(media);
+      if (!src || naturales[src]) return;
+      var sonda = new Image();
+      sonda.addEventListener('load', function () {
+        naturales[src] = [sonda.naturalWidth, sonda.naturalHeight];
+      });
+      sonda.src = src;
+    });
+
     /* Al redimensionar cambia la proporción del escenario y con ella el
-       grosor de la franja; sin esto la franja queda del tamaño que
-       tenía al entrar y aparece de nuevo el borde recto. */
+       grosor de la franja y la caja de los overlays todavía no
+       visitados; sin esto los dos quedan con la medida que tenían al
+       entrar. */
     if (window.ResizeObserver) {
-      new ResizeObserver(function () { medirFranja(); }).observe(elStage);
+      new ResizeObserver(function () { medirFranja(); precolocarOverlays(); }).observe(elStage);
     } else {
-      window.addEventListener('resize', medirFranja);
+      window.addEventListener('resize', function () { medirFranja(); precolocarOverlays(); });
     }
 
     /* Techo de "hasta dónde llegó" para la barra arrastrable: se

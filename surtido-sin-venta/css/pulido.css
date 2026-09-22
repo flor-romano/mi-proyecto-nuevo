@@ -282,3 +282,93 @@ html{
 @media (min-width:1700px){
   .d-app{ grid-template-rows:3.5rem 1fr 4rem; }
 }
+
+/* ---- Fichas en pantallas no tan altas: que entren sin scroll ------
+   Reporte del cliente, con foto de un iPad: la ficha más larga ("¿Cómo
+   mejorar la venta?") scrollea. Medido en 1180x820: el cuerpo necesita
+   610px y tiene 578.
+
+   La tipografía de la ficha está en `cqw` —proporción de la propia
+   tarjeta, que es lo que la hace idéntica al PDF a cualquier tamaño—,
+   así que ensancharla NO ayuda: el texto crece con ella y sigue
+   ocupando los mismos renglones. Lo que hay que ceder en una pantalla
+   baja es la proporción, no el ancho: se le pone un techo en `rem` a la
+   tipografía del cuerpo y se achican los aires internos. El círculo, el
+   subrayado y el título siguen proporcionales, que es lo que se lee
+   como "la ficha del PDF".
+
+   El corte está en 860px de ALTO de ventana y no en 900: una pantalla
+   de 900px reales deja ~800 de viewport (barra del navegador incluida),
+   así que entra igual; y una ventana de 900 limpios —donde la ficha ya
+   entraba— se queda con la proporción completa.
+   No pisa el bloque de `max-height:620px` de más arriba (teléfono
+   acostado), que además angosta la tarjeta. */
+@media (max-height:860px) and (min-height:621px){
+  .modal-card.d-ficha p,
+  .d-ficha-lista{ font-size:min(3.53cqw, 1.02rem); }
+  .modal-card.d-ficha > .modal-bd{ padding:0 6cqw 6cqw; }
+  .d-ficha-lista li{ margin:1.5cqw 0; }
+  .d-ficha-sub li{ margin:.2cqw 0; }
+  .modal-card.d-ficha .alert-inline{ margin-top:3cqw; }
+}
+
+/* ---- Las franjas del lienzo dejan de ser un bloque de color -------
+   Reporte del cliente, con captura del curso dentro del LMS: "una línea
+   decorativa curva se ve interrumpida por un bloque blanco en el medio
+   del recorrido".
+
+   Reproducido: en ese LMS el escenario queda en 1276x520 — proporción
+   **2.45**, más ancha que el techo de 2.2 del kit—, así que el lienzo
+   vuelve al 2:1 fijo (1040x520) y quedan 118px de franja a cada lado.
+   La curva del arte llega hasta el borde del lienzo y ahí se corta: lo
+   que el cliente ve como "bloque" es la franja, pintada con el celeste
+   de fondo del escenario.
+
+   Llenar tampoco es opción a esa proporción: habría que recortar 9.2%
+   arriba y abajo, y eso —medido, recortando las capturas y mirándolas—
+   se come la píldora "GESCOM" de "Algunos conceptos importantes" y el
+   botón "Continuar" del mini juego. O sea que la franja es inevitable;
+   lo que sí se puede es que no corte nada.
+
+   Primer intento (queda anotado porque parecía suficiente y no lo era):
+   la misma captura `cover` + `blur(34px)`. Sacaba el bloque ajeno —la
+   franja tomaba el color del arte de al lado, sin constantes a mano—
+   pero ampliando la captura la curva SEGUÍA muriendo en la costura: el
+   desenfoque la disuelve. El cliente no pidió que la franja combinara,
+   pidió que la línea se viera continua.
+
+   Lo que sí lo resuelve es `border-image` con un corte de 1px:
+     · `border-image-slice: 1 fill` toma la COLUMNA DE BORDE de la
+       imagen (1px de ancho, alto completo) y la estira para llenar la
+       franja. Una línea horizontal del arte que llega al borde del
+       lienzo sigue, a su misma altura exacta, hasta el borde de la
+       ventana. No hay escalado vertical de por medio: la franja lateral
+       ocupa el alto completo del elemento, que es el mismo alto del
+       lienzo (cuando la franja es lateral, lienzo y escenario miden lo
+       mismo de alto).
+     · `fill` dibuja además el centro de la imagen en el hueco interno,
+       que coincide exactamente con el lienzo — es lo que garantiza que
+       no aparezca un salto de color en la costura.
+     · el grosor lo pone `curso.js` en `--franja-x`/`--franja-y`
+       MIDIENDO `[data-shot]` contra `.d-stage` en cada cambio de
+       diapositiva y en cada `resize`. En CSS no se puede: depende de la
+       proporción de la ventana del LMS. Sin franja valen 0, el borde
+       mide 0 y no se dibuja nada.
+
+   `--franja` la escribe también `curso.js` por diapositiva, así que la
+   franja siempre es la de la imagen que está al lado (blanca en la
+   portada, dorada en la unidad, gris en las de video) sin una sola
+   constante de color escrita a mano.
+
+   `z-index:0` para que quede DEBAJO de las diapositivas (que son
+   `position:absolute` y pintan después). */
+.d-stage::before{
+  content:"";
+  position:absolute; inset:0; z-index:0;
+  border-style:solid; border-color:transparent;
+  border-width:var(--franja-y, 0px) var(--franja-x, 0px);
+  border-image-source:var(--franja, none);
+  border-image-slice:1 fill;
+  border-image-repeat:stretch;
+  pointer-events:none;
+}

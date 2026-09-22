@@ -307,6 +307,31 @@
   function boot() {
     if (window.SCORM) SCORM.init();
 
+    /* ---- Locución más despacio en pantallas táctiles ---------------
+       Pedido del cliente: en iPad la voz recomendada suena muy rápida.
+       Se baja a 0.85x, que es un MULTIPLICADOR sobre el ritmo que el
+       narrador ya calcula por voz (1.15x en las neurales, 1.0x en las
+       del sistema), no un valor absoluto: así no pisa ese ajuste fino.
+
+       Se aplica a todo puntero grueso —tablet y teléfono— y no solo a
+       iPad: la voz que suena atropellada es la del sistema en iOS y
+       Android, y no hay forma honesta de distinguir un iPad de un
+       teléfono por CSS. Si en teléfono resultara de más, es cambiar el
+       0.85 de esta línea.
+
+       SOLO si el alumno nunca tocó el control: se lee la clave del
+       narrador directamente porque el kit no expone un "¿ya eligió?".
+       Sin ese chequeo, cada recarga le pisaría al alumno la velocidad
+       que eligió a mano. Relayado como K22. */
+    (function velocidadPorDefectoEnTactil() {
+      if (!window.Narrador || !Narrador.setRateFactor) return;
+      var esDedo = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+      if (!esDedo) return;
+      var yaEligio = false;
+      try { yaEligio = window.localStorage.getItem('coto-diapos-rate') !== null; } catch (e) {}
+      if (!yaEligio) Narrador.setRateFactor(0.85);
+    })();
+
     /* Tracking mínimo del LMS — las dos líneas que exige
        `scorm-tracking.mjs`. Se registran ANTES de `new Motor()` porque
        el constructor emite su primer `slidechange` adentro. */
@@ -438,6 +463,58 @@
        final: hasta que el cliente los suba se ve el `poster`, que es la
        misma captura de antes. */
     initBgVideos();
+
+    /* ---- Que la portada arranque SOLA la primera vez ---------------
+       Reporte del cliente: el video de portada queda en la imagen fija
+       al entrar, y recién se reproduce si avanza una diapositiva y
+       vuelve.
+
+       `initBgVideos()` sí intenta reproducir la diapositiva activa en
+       el arranque (coto-media.js: `var cur = motor.current(); if (cur)
+       sync(...)`), así que el cable está. El problema es CUÁNDO: en ese
+       instante el `<video>` acaba de nacer y todavía está resolviendo su
+       fuente, así que `play()` rechaza con `AbortError` ("interrupted by
+       a new load request"). Y el manejo del kit solo considera
+       recuperable el `NotAllowedError` (el de "falta un gesto"):
+       cualquier otro error esconde el botón de gesto y no vuelve a
+       intentar nunca. Al reentrar el archivo ya está en caché, `play()`
+       resuelve, y por eso "anda si vuelvo".
+
+       Acá se reintenta cuando el video avisa que ya tiene datos, y un
+       par de veces más por las dudas. Siempre MUDO: el autoplay con
+       sonido lo bloquea el navegador sin gesto previo, y el botón
+       "Reproducir el video con sonido" del kit sigue estando para
+       quien quiera el audio. Relayado como K22. */
+    (function insistirConElVideoDeFondo() {
+      var slide = motor.current();
+      if (!slide || !slide.classList.contains('d-shot-slide--bg-video')) return;
+      var v = slide.querySelector('video.d-shot-video');
+      if (!v) return;
+      var intentos = 0;
+      function reintentar() {
+        if (intentos++ > 4) return;
+        if (motor.current() !== slide) return;       // ya se fue de la portada
+        if (!v.paused || v.error) return;            // anda, o la fuente no sirve
+        v.muted = true;
+        var p = v.play();
+        if (p && p.then) p.then(function () {
+          /* Anda, pero MUDO — si no se ofrece el audio, el alumno se
+             queda sin forma de pedirlo: el kit escondió su botón de
+             gesto al dar el `AbortError` por perdido. `data-modo` en
+             "sonido" es el contrato del propio kit (`coto-media.js`
+             engancha el clic y lo único que hace es sacar el mute, sin
+             reiniciar el video). */
+          var tap = v.closest('.d-shot');
+          tap = tap && tap.querySelector('.d-shot-video-tap');
+          if (tap && v.muted) { tap.hidden = false; tap.setAttribute('data-modo', 'sonido'); }
+        }).catch(function () {});
+      }
+      ['loadeddata', 'canplay', 'canplaythrough'].forEach(function (ev) {
+        v.addEventListener(ev, reintentar);
+      });
+      setTimeout(reintentar, 400);
+      setTimeout(reintentar, 1500);
+    })();
 
     /* ---- Videos del cuerpo: carátula + el play REAL del kit ----
        Variante (c) de `initInlineCircleVideos` (coto-media.js): el
@@ -613,6 +690,7 @@
       estado.vistas[e.detail.id] = true;
       if (refrescarIndice) refrescarIndice();
       if (refrescarGlosario) refrescarGlosario();
+      pintarFranja();
       if (e.detail.id === 'cierre') Cierre.unlockCierre();
       if (e.detail.id === 'minijuego') MJ_UI.alEntrar();
       /* "Algunos conceptos importantes" vuelve SIEMPRE a su estado
@@ -626,6 +704,73 @@
       if (e.detail.id === 'conceptos' && swaps.conceptos) swaps.conceptos.go(0, true);
       persistir();
     });
+
+    /* ---- Franjas del lienzo: continuación del arte, no un bloque ----
+       Cuando el escenario es más ancho que 2.2:1 (pasa en el visor de
+       algunos LMS: 1276x640 da 2.45) el lienzo vuelve al 2:1 fijo y
+       quedan franjas a los costados. Pintadas con el fondo del
+       escenario se leen como un bloque ajeno que CORTA las líneas
+       decorativas del arte — es el punto 3 del cliente.
+
+       Lo que se le pasa al CSS son dos cosas, y las dos medidas contra
+       el render, nunca supuestas:
+         · `--franja`  = la captura de la diapositiva activa, en URL
+                         ABSOLUTA (ver abajo).
+         · `--franja-x`/`--franja-y` = el ancho/alto REAL de la franja,
+                         o sea la mitad de lo que le sobra al escenario
+                         respecto del lienzo.
+
+       Con eso `pulido.css` estira la columna de borde de la imagen
+       hacia afuera (`border-image`), así que una línea horizontal del
+       arte sigue exactamente a su misma altura hasta el borde de la
+       ventana. La primera versión de esto era la misma imagen
+       `cover` + `blur(34px)`: sacaba el bloque ajeno pero la línea
+       igual moría en la costura (se vio ampliando la captura), que es
+       justo lo que el cliente pidió que no pasara. */
+    var elStage = document.querySelector('.d-stage');
+    function pintarFranja() {
+      if (!elStage) return;
+      var s = motor.current();
+      var medio = s && s.querySelector('.d-shot-img, video.d-shot-video');
+      var url = medio && (medio.getAttribute('src') || medio.getAttribute('poster'));
+      /* Un `<video>` sin `poster` no sirve de fondo: se cae al poster o,
+         si no hay, se deja la franja como estaba. */
+      if (!url || !/\.(webp|png|jpe?g)$/i.test(url)) return;
+      /* URL ABSOLUTA, y no es un detalle: una `url()` relativa dentro de
+         una custom property se resuelve contra la HOJA DE ESTILOS donde
+         se usa la variable, no contra el documento. Con `img/x.webp` el
+         navegador pedía `css/img/x.webp` y la franja quedaba vacía
+         (pasó, se vio midiendo el `background-image` computado). */
+      var abs = url;
+      try { abs = new URL(url, document.baseURI).href; } catch (e) {}
+      elStage.style.setProperty('--franja', 'url("' + abs + '")');
+      medirFranja();
+    }
+    /* El grosor de la franja NO se puede escribir en CSS: depende de la
+       proporción de la ventana del LMS. Se mide: lienzo (`[data-shot]`)
+       contra escenario. Sin franja da 0 y la regla no dibuja nada. */
+    function medirFranja() {
+      if (!elStage) return;
+      var s = motor.current();
+      var lienzo = s && s.querySelector('[data-shot]');
+      if (!lienzo) return;
+      var a = lienzo.getBoundingClientRect();
+      var b = elStage.getBoundingClientRect();
+      if (!a.width || !b.width) return;
+      var x = Math.max(0, Math.round((b.width - a.width) / 2));
+      var y = Math.max(0, Math.round((b.height - a.height) / 2));
+      elStage.style.setProperty('--franja-x', x + 'px');
+      elStage.style.setProperty('--franja-y', y + 'px');
+    }
+    pintarFranja();
+    /* Al redimensionar cambia la proporción del escenario y con ella el
+       grosor de la franja; sin esto la franja queda del tamaño que
+       tenía al entrar y aparece de nuevo el borde recto. */
+    if (window.ResizeObserver) {
+      new ResizeObserver(function () { medirFranja(); }).observe(elStage);
+    } else {
+      window.addEventListener('resize', medirFranja);
+    }
 
     /* Techo de "hasta dónde llegó" para la barra arrastrable: se
        calcula desde el estado YA RESTAURADO, no desde `motor.index` en

@@ -924,6 +924,87 @@ más— y las filas del `.d-app` en `rem` en vez de px; y (b) que
 carga.
 
 
+### K22 · `initBgVideos()` da por perdido cualquier error que no sea `NotAllowedError` — PROBADO
+
+**Síntoma.** El video de fondo de la portada queda en la imagen fija al
+entrar al curso, y **recién arranca si el alumno avanza una diapositiva
+y vuelve**. Reportado por el cliente, con el curso en su visor.
+
+**Diagnóstico contra el código real.** El cable está: `initBgVideos()`
+termina con `var cur = global.motor.current(); if (cur) sync(...)`
+(`coto-media.js`), así que la diapositiva activa del arranque sí recibe
+su `attempt()`. El problema es CUÁNDO: en ese instante el `<video>`
+acaba de nacer y todavía está resolviendo su fuente, así que ese
+`play()` rechaza con `AbortError` ("interrupted by a new load
+request") — no con `NotAllowedError`.
+
+Y el `catch` de `attempt()` trata un solo error como recuperable:
+
+```js
+var recuperable = err && err.name === 'NotAllowedError';
+if (!recuperable || !videoUsable(v)) { if (tap) tap.hidden = true; return; }
+```
+
+Cualquier otro error **esconde el botón de gesto y no vuelve a intentar
+nunca**. Al reentrar, el archivo ya está en caché, `play()` resuelve, y
+por eso "anda si vuelvo". El reintento mudo de K10 (v1.9.72) resolvió
+el caso del autoplay bloqueado, que es el otro; este quedó afuera.
+
+Ojo con la consecuencia secundaria, que es la que hace que el arreglo
+del curso no alcance con reintentar: como el kit ya escondió el
+`.d-shot-video-tap`, si el reintento sale mudo el alumno se queda sin
+forma de pedir el audio. Hay que volver a mostrarlo con
+`data-modo="sonido"` (el contrato que el propio kit ya engancha: ese
+clic solo saca el mute, sin reiniciar el video).
+
+**Cómo se verificó.** Punto 23 de `tools/tests/reporte-cliente.mjs`: se
+simula el rechazo del primer `play()` con `AbortError` y un medio sano
+(los `.mp4` del paquete son placeholders de 0 bytes, así que un
+`<video>` real termina en `error` y no prueba nada). Sin el reintento
+del curso: 1 intento y el video pausado. Con él: reintenta y arranca.
+La primera versión del test simulaba `NotAllowedError` y **pasaba
+igual con el arreglo desactivado** — porque ESE el kit ya lo maneja;
+quedó anotado en el comentario del test para que no vuelva a escribirse
+así.
+
+**Propuesta.** Reintentar también ante `AbortError` (y, en general,
+cuando el medio todavía no tiene datos), enganchando `loadeddata` /
+`canplay` una vez y volviendo a pasar por `attempt()` — no por un
+`play()` crudo, para no perder el `currentTime`, el volumen y el manejo
+del botón de gesto que `attempt()` ya hace.
+
+
+### K23 · No hay forma de saber si el alumno eligió velocidad de locución — PROBADO
+
+**Síntoma.** El cliente pidió que en iPad la locución arranque a 0.85x.
+El cambio tiene que ser un DEFAULT: si el alumno ya movió el control de
+velocidad, manda su elección.
+
+**Diagnóstico contra el código real.** `narrador.js` expone
+`setRateFactor()` y `getRateFactor()`, y persiste la elección en
+`localStorage` bajo `coto-diapos-rate`. Pero `getRateFactor()` devuelve
+un número siempre: `1` tanto si el alumno eligió 1x como si nunca tocó
+nada. No hay ninguna API que distinga "valor por defecto" de "valor
+elegido", así que el curso no tiene forma de poner un default sin
+arriesgarse a pisar una preferencia guardada.
+
+Desde el curso se resuelve leyendo la clave del `localStorage` a mano
+(`window.localStorage.getItem('coto-diapos-rate') !== null`), que es
+exactamente el tipo de acoplamiento a un detalle interno del kit que
+§0.1 pide evitar: si el kit renombra la clave, el curso se rompe en
+silencio.
+
+**Cómo se verificó.** Punto 28 de `tools/tests/reporte-cliente.mjs`:
+táctil sin elección previa → 0.85x; táctil con `1.2` guardado y
+recarga → 1.2x; escritorio → 1x.
+
+**Propuesta.** Dos opciones, cualquiera sirve: (a) un
+`Narrador.hasUserRate()` que diga si la preferencia está guardada, o
+(b) un `Narrador.setDefaultRateFactor(f)` que aplique el valor **solo
+si** el alumno todavía no eligió. La (b) es la que deja el código del
+curso en una línea.
+
+
 ---
 
 ## 7. Segunda vuelta — 3 puntos reportados por el cliente
@@ -1170,7 +1251,13 @@ se reconstruye igual a cualquier tamaño sin una sola media query de
 tipografía. Se recuperaron además las negritas del PDF en "¿Cómo lo
 generamos?" y la sub-lista con guiones de "¿Qué acciones tomar?".
 
-### 10.5 · Bloque blanco sobre las líneas circulares — NO REPRODUCIDO
+### 10.5 · Bloque blanco sobre las líneas circulares — NO REPRODUCIDO ACÁ, RESUELTO EN §23.3
+
+> **Cerrado en la décima vuelta.** El cliente mandó la captura del LMS
+> y ahí se reprodujo: no era un z-index ni un panel blanco, era la
+> **franja lateral del lienzo** a una proporción de 2.45:1. Ver §23.3.
+> Lo que sigue es lo que se midió en esta vuelta, y se deja porque
+> explica por qué buscarlo en el z-index no podía dar con nada.
 
 Es el único punto de esta vuelta que quedó **sin resolver, y sin
 inventar un arreglo**. Lo que se hizo para buscarlo:
@@ -1196,6 +1283,12 @@ las páginas 15, 18, 22, 23, 28 y 29: el render coincide con el arte).
 Para cerrarlo hace falta **una captura de la pantalla exacta**, o el
 nombre de la diapositiva. Si el bloque es del PDF y lo que se quiere es
 cambiar el arte, es un pedido para el diseñador (§5) y no un z-index.
+
+La captura llegó en la décima vuelta y la respuesta fue una tercera:
+**ni el HTML del curso ni el arte del PDF** — el fondo del escenario,
+visible solo cuando la ventana del LMS es más ancha de 2.2:1. Las tres
+mediciones de acá arriba miraban el lienzo, que era justamente donde no
+estaba (§23.3).
 
 ### 10.6 · Mini juego — rejugar y estabilidad del dibujo
 
@@ -1898,6 +1991,222 @@ al 2:1 fijo, sin tocar el resto.
 
 ---
 
+## 23. Décima vuelta — 6 puntos reportados por el cliente
+
+### 23.1 · El video de portada no arrancaba solo
+
+**Lo que reportó.** *"El video de portada no se reproduce
+automáticamente al iniciar el curso. Solo empieza a reproducirse si
+avanzo a la siguiente diapositiva y vuelvo atrás."*
+
+**Qué era.** Un hallazgo del kit, **K22** — el detalle completo está
+ahí arriba. En dos líneas: `initBgVideos()` sí intenta reproducir la
+diapositiva activa en el arranque, pero en ese instante el `<video>`
+todavía está resolviendo su fuente y `play()` rechaza con `AbortError`;
+el `catch` del kit solo considera recuperable el `NotAllowedError`, así
+que esconde el botón de gesto y no vuelve a intentar. Al reentrar el
+archivo ya está en caché y anda — de ahí el "si vuelvo, funciona".
+
+**Qué se hizo acá.** Un reintento local en `js/curso.js`
+(`insistirConElVideoDeFondo`), enganchado a `loadeddata`, `canplay` y
+`canplaythrough` más dos timeouts de red (400ms y 1500ms), con tope de
+5 intentos y tres cortes: si el alumno ya se fue de la portada, si el
+video ya está andando, o si la fuente está rota (`v.error`) no se
+insiste. Reintenta **mudo**, que es lo único que los navegadores
+permiten sin gesto previo, y si eso sale bien **vuelve a mostrar el
+`.d-shot-video-tap` con `data-modo="sonido"`** — sin eso el alumno
+queda con el video andando y sin forma de pedir el audio, porque el kit
+ya había escondido el botón.
+
+**Cómo se verificó.** Punto 23 del test. Y quedó anotado en el test el
+camino equivocado: la primera versión simulaba `NotAllowedError` y
+pasaba **con el arreglo desactivado**, porque ese error el kit ya lo
+maneja. El que había que simular es el que el kit da por perdido.
+
+
+### 23.2 · La locución leía "A", "B", "C"
+
+**Lo que reportó.** *"La locución de objetivos de aprendizaje no debe
+leer las letras A, B, C. Las letras se mantienen visibles en pantalla
+como están — solo cambia lo que se dice."*
+
+**Qué era.** Las tres letras están **horneadas en la captura** (son un
+recurso gráfico del diseñador). El texto accesible de la diapositiva
+las repetía en tres `<p class="sr-only">A. … / B. … / C. …`, y
+`Narrador.textOf()` lee ese texto tal cual.
+
+**Qué se hizo.** Los tres párrafos pasan a ser una `<ol class="sr-only">`
+con un `<li>` por objetivo. La lista sigue siendo el único acceso que
+tiene un lector de pantalla al contenido —que en pantalla está dentro
+de la imagen— y la numeración ahora la pone el marcado, no el texto: el
+lector la anuncia como lista y el narrador no la pronuncia.
+
+**Cómo se verificó.** Punto 24 del test, contra `Narrador.textOf()`:
+no aparece ninguna letra suelta y siguen estando las tres frases
+("Detectar productos…", "Identificar problemas…", "Tomar acciones…").
+Dicho completo: *"Introducción. … Objetivos de aprendizaje. Detectar
+productos… Identificar problemas… Tomar acciones…"*.
+
+
+### 23.3 · La línea decorativa cortada por un bloque blanco
+
+**Lo que reportó.** *"Línea decorativa curva interrumpida por un bloque
+blanco… La línea debe verse continua, pasando por detrás de los
+elementos sin cortes."* Es el mismo punto que venía abierto desde la
+cuarta vuelta (§10.5), esta vez con captura del LMS.
+
+**Reproducido, por fin.** En ese visor el escenario queda en
+**1276×520**, o sea proporción **2.45** — más ancha que el techo de 2.2
+del kit, así que el lienzo vuelve al 2:1 fijo (1040×520) y sobran
+**118px de franja a cada lado**. El arte llega hasta el borde del
+lienzo y ahí se corta: lo que el cliente ve como "bloque" es la franja,
+pintada con el fondo del escenario. No es un z-index, que es lo que se
+había buscado en §10.5 sin encontrar nada.
+
+**Por qué la franja no se puede eliminar.** Llenar la pantalla a esa
+proporción cuesta un recorte de **9.2% arriba y abajo**. Medido
+—recortando las capturas y mirándolas— eso se come la píldora "GESCOM"
+de "Algunos conceptos importantes" y el botón "Continuar" del mini
+juego. Así que la franja se queda; lo que se puede es que no corte
+nada.
+
+**Primer intento, que no alcanzó y queda anotado.** La misma captura de
+la diapositiva como fondo del escenario, `cover` + `blur(34px)`.
+Sacaba el bloque ajeno (la franja tomaba el color del arte de al lado,
+sin constantes de color a mano) y **la línea seguía muriendo en la
+costura**: el desenfoque la disuelve. Se vio ampliando la captura, no
+en los números — las mediciones de color de la franja daban bien.
+
+**Lo que sí lo resuelve.** `border-image` con un corte de 1px sobre
+`.d-stage::before`:
+
+```css
+.d-stage::before{
+  content:""; position:absolute; inset:0; z-index:0;
+  border-style:solid; border-color:transparent;
+  border-width:var(--franja-y, 0px) var(--franja-x, 0px);
+  border-image-source:var(--franja, none);
+  border-image-slice:1 fill;
+  border-image-repeat:stretch;
+  pointer-events:none;
+}
+```
+
+`border-image-slice: 1 fill` toma la **columna de borde** de la imagen
+(1px de ancho, alto completo) y la estira para llenar la franja, así
+que una línea horizontal que llega al borde del lienzo sigue **a su
+misma altura exacta** hasta el borde de la ventana. `fill` dibuja
+además el centro en el hueco interno —que coincide con el lienzo—, que
+es lo que evita un salto de color justo en la costura.
+
+El grosor no se puede escribir en CSS (depende de la proporción de la
+ventana del LMS): lo mide `curso.js` contra el render, `[data-shot]`
+contra `.d-stage`, y lo publica en `--franja-x`/`--franja-y` en cada
+cambio de diapositiva y en cada `resize` (`ResizeObserver`). Sin franja
+valen 0, el borde mide 0 y no se dibuja nada.
+
+**Un detalle que costó una vuelta.** La primera versión pasaba
+`url("img/portada.webp")` a la custom property y la franja quedaba
+vacía. Una `url()` relativa dentro de una custom property se resuelve
+contra **la hoja de estilos donde se usa la variable**, no contra el
+documento: el navegador estaba pidiendo `css/img/portada.webp`. Se vio
+midiendo el `background-image` computado. Ahora `curso.js` la
+normaliza con `new URL(url, document.baseURI).href`.
+
+**Cómo se verificó.** Punto 25 del test, y es un test de píxeles porque
+ningún chequeo de CSS distinguía las dos versiones: se recorre la
+columna de borde del lienzo y, en cada fila donde hay tinta de verdad,
+se le pide a la franja la misma tinta (±1 fila, por el antialias). Con
+el estirado: 0 filas cortadas. Con el desenfoque: 8 de 8, más el
+chequeo de que la línea llega al borde de la ventana. Las 13
+diapositivas se miraron a 1276×640 en una hoja de contactos.
+
+
+### 23.4 · "Los 7 conceptos" listaba 8
+
+**Lo que reportó.** *"'Los 7 conceptos' en el resumen en realidad lista
+8… unificar PLU y EAN en un solo ítem."*
+
+**Qué era.** Exactamente eso. En "Algunos conceptos importantes" la
+píldora es **una sola** ("PLU/EAN"), y el resumen los había separado en
+dos `<li>`.
+
+**Qué se hizo.** Un solo ítem —*"PLU/EAN: los dos códigos del producto.
+El PLU es el interno de Coto y no está en el envase; el EAN es el de
+barras del envase, que pone el fabricante"*— y "Rotación" sube a la
+primera columna para que las dos queden parejas (4 y 3).
+
+**Cómo se verificó.** Punto 26 del test, contando los `<li>` de las
+columnas **cuyo encabezado dice "Los 7 conceptos"** — no de toda la
+grilla, que tiene otras seis columnas de `li` (pasos, consejos,
+acciones). La primera versión contaba la grilla entera y daba 30.
+
+
+### 23.5 · Pop-ups grandes y con scroll en iPad
+
+**Lo que reportó.** *"Popups en iPad: grandes y con scroll innecesario…
+el popup debe mostrar todo el contenido sin scrollear, con un tamaño
+acotado."*
+
+**Qué era.** El caso nuevo es el iPad **acostado**: ventana ancha pero
+**baja**. A 1180×820 quedan ~578px de alto útil para la tarjeta y la
+ficha más larga ("¿Cómo mejorar la venta?") pedía **610**. Los topes
+que se habían puesto en la octava vuelta (§19.5) eran de ANCHO, y acá
+el que falta es alto.
+
+**Qué se hizo.** Un escalón en `css/pulido.css` para
+`@media (max-height:860px) and (min-height:621px)`: tipografía de la
+ficha topeada en `min(3.53cqw, 1.02rem)`, padding del cuerpo a
+`0 6cqw 6cqw` y márgenes de lista más chicos. El corte está en 860 y no
+en 900 a propósito: una pantalla de 900px reales deja ~800 de viewport
+con la barra del navegador, así que entra igual; y una ventana de 900
+limpios —donde la ficha ya entraba— se queda con la proporción
+completa. No pisa el escalón de `max-height:620px` (teléfono
+acostado), que además angosta la tarjeta.
+
+**Cómo se verificó.** Punto 27 del test: las **cuatro** fichas en tres
+ventanas (1180×820 acostado, 820×1180 parado, 1024×1366 iPad Pro),
+midiendo `scrollHeight - clientHeight` del cuerpo y cuánto se sale la
+tarjeta por abajo. Sin el escalón: "rep-mejorar" pide 32px de scroll en
+el acostado.
+
+
+### 23.6 · Velocidad de locución por defecto en iPad
+
+**Lo que reportó.** *"Velocidad de locución por defecto en iPad muy
+rápida. Ajustar a 0.85x… Confirmar si este ajuste debe aplicarse solo
+en iPad o también revisar cómo se siente en mobile en general."*
+
+**Qué se hizo.** En `boot()`, primera cosa después de `SCORM.init()`:
+si el puntero es grueso (`matchMedia('(pointer: coarse)')` — o sea
+cualquier dispositivo táctil, no solo iPad) y el alumno **todavía no
+eligió velocidad**, se arranca en 0.85x. En escritorio no cambia nada.
+
+Sobre la pregunta del cliente: se aplica a **todo lo táctil**, iPad y
+teléfono. El motivo es que no hay ninguna diferencia entre un iPad y un
+teléfono que justifique tratarlos distinto acá —la locución es la misma
+voz del sistema a la misma velocidad—, y discriminar iPad haría falta
+mirar el `userAgent`, que en iPadOS miente (se declara Mac desde
+iPadOS 13). El puntero grueso es la condición honesta.
+
+Lo importante es que es un **default**, no una imposición: si el alumno
+movió el control de velocidad, manda su elección, incluso al reabrir el
+curso en otra sesión.
+
+**Lo que esto costó en acoplamiento, y por qué va como K23.** El kit no
+tiene ninguna API que diga *"¿el alumno eligió velocidad?"*:
+`getRateFactor()` devuelve `1` tanto si eligió 1x como si nunca tocó
+nada. Desde acá hay que leer la clave interna del `localStorage`
+(`coto-diapos-rate`) a mano — exactamente el tipo de acoplamiento que
+§0.1 pide evitar. Relayado como **K23** con dos propuestas concretas.
+
+**Cómo se verificó.** Punto 28 del test, tres casos: táctil sin
+elección previa → 0.85x; táctil con `1.2` guardado y recarga → 1.2x
+(el default no pisa la elección); escritorio → 1x.
+
+
+---
+
 ## 22. Pendiente / próximo paso
 
 - **Videos.** Los **cuatro** `.mp4` de `video/` son placeholders de 0
@@ -1920,16 +2229,18 @@ al 2:1 fijo, sin tocar el resto.
   Al subir los dos del cuerpo el máximo pasa de 199 a 219 y conviene
   volver a correr `npm test` — `puntaje-curso.mjs` lo va a decir solo.
 
-- **Punto 5 de la cuarta vuelta ("bloque blanco sobre las líneas
-  circulares") sigue abierto.** No se reprodujo, y está documentado en
-  §10.5 qué se midió para buscarlo. Hace falta una captura de la
-  pantalla exacta o el nombre de la diapositiva. Si el bloque resulta
-  ser del arte del PDF, es un pedido para el diseñador (§5), no un
-  z-index.
-
 - **El zip de entrega** se arma con
   `python3 tools/build-zip.py . ../surtido-sin-venta.zip` y solo a
   pedido explícito (§3.12).
 
-- Los **21 hallazgos de kit (K1 a K21)** se llevan en un prompt al chat
+- **Franjas del lienzo.** Donde la ventana es más ancha que 2.2:1 el
+  lienzo vuelve al 2:1 fijo y quedan franjas laterales, que desde la
+  décima vuelta continúan el arte estirando su columna de borde
+  (§23.3). Es lo correcto para líneas que llegan horizontales al borde
+  —que es lo que tiene este arte—, y no inventa contenido: si una
+  captura futura trajera algo con mucho detalle pegado al costado, la
+  franja lo va a repetir como un rayado horizontal. Se mira en el
+  render, como el resto.
+
+- Los **23 hallazgos de kit (K1 a K23)** se llevan en un prompt al chat
   de `kit-base/`. Desde acá no se editó `kit-base/`.

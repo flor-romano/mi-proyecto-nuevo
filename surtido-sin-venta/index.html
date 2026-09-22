@@ -555,9 +555,16 @@
     <h2 class="sr-only" data-slide-title>Introducción</h2>
     <p class="sr-only">El control de surtido sin venta nos permite ver qué productos no se están vendiendo. Esto nos ayuda a detectar si falta mercadería, si está mal ubicada o si hay algún problema con el stock. En este curso vamos a ver cómo armar el reporte, cómo leerlo y qué hacer en cada caso.</p>
     <p class="sr-only">Objetivos de aprendizaje.</p>
-    <p class="sr-only">A. Detectar productos que no se vendieron en un período de tiempo.</p>
-    <p class="sr-only">B. Identificar problemas de stock, de exhibición en el salón y de faltantes a la venta.</p>
-    <p class="sr-only">C. Tomar acciones para mejorar la venta de esos productos.</p>
+    <!-- Las letras A, B y C se ven en pantalla (están dibujadas en la
+         captura) pero NO se dicen: leerlas en voz alta interrumpe la
+         frase sin aportar nada, porque el alumno ya ve el círculo con
+         la letra. Pedido explícito del cliente. Acá solo cambia el
+         texto que se narra; el orden lo sigue dando la lista. -->
+    <ol class="sr-only">
+      <li>Detectar productos que no se vendieron en un período de tiempo.</li>
+      <li>Identificar problemas de stock, de exhibición en el salón y de faltantes a la venta.</li>
+      <li>Tomar acciones para mejorar la venta de esos productos.</li>
+    </ol>
     <div class="d-shot" data-shot>
       <img class="d-shot-img" src="img/introduccion.webp" loading="lazy" alt="" aria-hidden="true">
     </div>
@@ -943,16 +950,18 @@
             <div class="d-cierre-recap-col">
               <h4>Los 7 conceptos</h4>
               <ul>
-                <li><b>PLU:</b> el código interno que Coto le da al producto; no está en el envase.</li>
-                <li><b>EAN:</b> el código de barras del envase, que pone el fabricante.</li>
+                <!-- PLU y EAN van en UN solo ítem: en "Algunos conceptos
+                     importantes" son una sola píldora ("PLU/EAN"), así que
+                     separarlos acá hacía que "Los 7 conceptos" listara 8. -->
+                <li><b>PLU/EAN:</b> los dos códigos del producto. El PLU es el interno de Coto y no está en el envase; el EAN es el de barras del envase, que pone el fabricante.</li>
                 <li><b>Stock:</b> las unidades que hay, en góndola más depósito.</li>
                 <li><b>Falso stock:</b> el sistema dice más unidades de las que hay al contarlas.</li>
+                <li><b>Rotación:</b> qué tan rápido se vende. A alta, B media, C baja.</li>
               </ul>
             </div>
             <div class="d-cierre-recap-col">
               <h4>Los 7 conceptos (cont.)</h4>
               <ul>
-                <li><b>Rotación:</b> qué tan rápido se vende. A alta, B media, C baja.</li>
                 <li><b>Exhibición:</b> cómo se presenta en el salón: ubicación, frente visible y precio.</li>
                 <li><b>Surtido:</b> todos los productos disponibles para vender en la sucursal.</li>
                 <li><b>GESCOM:</b> el sistema interno donde se consultan reportes y stock.</li>

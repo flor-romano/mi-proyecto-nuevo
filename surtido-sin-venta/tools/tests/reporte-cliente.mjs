@@ -64,9 +64,26 @@
    Novena tanda:
     22. En una pantalla grande la interfaz escala (y los botones con
         etiqueta no se aplastan al hacerlo).
+
+   Décima tanda:
+    23. El video de fondo de la portada INSISTE si el navegador le
+        bloquea el primer play (era eso lo que hacía que arrancara solo
+        al ir y volver de diapositiva).
+    24. La locución de los objetivos no dice "A", "B" ni "C" — las
+        letras siguen en pantalla, que es donde el diseñador las puso.
+    25. Donde el lienzo deja franja, la franja CONTINÚA el arte: la
+        línea decorativa llega al borde de la ventana con el mismo
+        color, sin costura (medido sobre los píxeles de la captura).
+    26. "Los 7 conceptos" del resumen son 7.
+    27. Las fichas de repaso entran sin scroll también en un iPad
+        acostado (es el alto de ventana que las rompía).
+    28. En un dispositivo táctil la locución arranca a 0.85x, en
+        escritorio a 1x, y una velocidad ya elegida por el alumno manda
+        sobre las dos.
 */
 import { openCourse, report, requireUrl, irASlide } from './_shared.mjs';
 import { chromium } from 'playwright-core';
+import { PNG } from 'pngjs';
 
 const url = requireUrl();
 const { browser, page, errors } = await openCourse(url);
@@ -977,6 +994,306 @@ for (const t of TARJETAS) {
         `dentro de un escenario de ${Math.round(m.escenario.w)}x${Math.round(m.escenario.h)}: le ` +
         'sobra lugar en los dos ejes, o sea que no está escalando con la ventana.');
     }
+  }
+}
+
+/* ---- 23 · la portada insiste con su video ----------------------
+   El cliente: "el video de portada no arranca; sí arranca si avanzo a
+   la siguiente y vuelvo". Eso es exactamente la firma de un `play()`
+   rechazado UNA vez: al entrar por primera vez el navegador todavía no
+   contó ninguna interacción del alumno y bloquea el autoplay; al
+   volver, ya hubo clic en "Siguiente" y el mismo `play()` pasa.
+
+   Se prueba simulando ESE navegador y no el real, a propósito: los
+   cuatro `.mp4` del paquete son marcadores de 0 bytes hasta que el
+   cliente entregue los videos, así que un `<video>` real acá termina en
+   `error` y no hay nada que reproducir. Lo que se simula es únicamente
+   el rechazo del primer `play()` y un medio sano; todo lo demás es el
+   código del curso.
+
+   El error simulado es `AbortError` y NO `NotAllowedError`, y la
+   diferencia es todo el test: el `NotAllowedError` (el de "falta un
+   gesto") el kit YA lo maneja —reintenta mudo, `coto-media.js`— así que
+   simulando ese, el test pasa aunque se saque el arreglo del curso
+   (pasó: se escribió primero así y no detectaba nada). El que el kit da
+   por perdido es cualquier OTRO error, y el del arranque es
+   `AbortError` ("interrupted by a new load request"): el `<video>`
+   todavía está resolviendo su fuente cuando `initBgVideos()` le pide
+   play. Si se saca el reintento del curso, esto queda en 1 intento y el
+   video no arranca. */
+{
+  const v = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  await v.addInitScript(() => {
+    window.__plays = 0;
+    let pausado = true;
+    Object.defineProperty(HTMLMediaElement.prototype, 'error', { get: () => null, configurable: true });
+    Object.defineProperty(HTMLMediaElement.prototype, 'paused', { get: () => pausado, configurable: true });
+    HTMLMediaElement.prototype.play = function () {
+      window.__plays++;
+      if (window.__plays === 1) {
+        const e = new Error('interrupted by a new load request');
+        e.name = 'AbortError';
+        return Promise.reject(e);
+      }
+      pausado = false;
+      return Promise.resolve();
+    };
+  });
+  await v.goto(url);
+  await v.waitForFunction(() => window.motor);
+  await v.waitForTimeout(2200);
+  const r = await v.evaluate(() => ({
+    intentos: window.__plays,
+    andando: !document.querySelector('[data-slide="portada"] video.d-shot-video').paused
+  }));
+  await v.close();
+  if (r.intentos < 2) {
+    fails.push(`el video de la portada intentó reproducirse ${r.intentos} vez/veces y se rindió al ` +
+      'primer rechazo. El kit solo reintenta ante `NotAllowedError`; con cualquier otro error ' +
+      'esconde el botón de gesto y no vuelve a intentar, así que el video recién arranca cuando el ' +
+      'alumno avanza y vuelve — que es exactamente lo que reportó el cliente.');
+  }
+  if (!r.andando) {
+    fails.push('tras el reintento el video de la portada sigue pausado: el reintento corre pero no ' +
+      'llega a poner el video a andar.');
+  }
+}
+
+/* ---- 24 · los objetivos no se locutan "A, B, C" ---------------- */
+{
+  await irASlide(page, 'introduccion');
+  await page.waitForTimeout(300);
+  const dicho = await page.evaluate(() => {
+    const s = document.querySelector('[data-slide="introduccion"]');
+    return (window.Narrador.textOf(s) || '').trim();
+  });
+  if (/\b(A|B|C)\s*[.·]/.test(dicho)) {
+    fails.push(`la locución de la introducción dice "${dicho.slice(0, 90)}…": todavía enumera las ` +
+      'letras. Las letras son un recurso GRÁFICO del diseñador (están horneadas en la captura); ' +
+      'leerlas en voz alta no agrega nada y corta la frase.');
+  }
+  for (const frase of ['Detectar productos', 'Identificar problemas', 'Tomar acciones']) {
+    if (!dicho.includes(frase)) {
+      fails.push(`la locución de la introducción ya no dice "${frase}": sacar las letras no puede ` +
+        'llevarse puesto el texto del objetivo.');
+    }
+  }
+}
+
+/* ---- 25 · la franja continúa el arte --------------------------
+   Reporte del cliente, con captura del LMS: "una línea decorativa
+   curva se ve interrumpida por un bloque blanco". En 1276x640 el
+   escenario queda en 2.45:1, más ancho que el techo de 2.2 del kit, así
+   que el lienzo vuelve al 2:1 fijo y sobran 118px por costado.
+
+   No alcanza con mirar el CSS: la primera versión de este arreglo
+   (misma imagen, `cover` + `blur`) pasaba cualquier chequeo de "la
+   franja tiene el color del arte" y la línea IGUAL moría en la costura.
+   Así que se mide sobre los píxeles: se busca en la columna de adentro
+   del lienzo la fila con más tinta y se compara ESE color con el de la
+   mitad de la franja. Si la línea sigue, son el mismo color. */
+{
+  const f = await browser.newPage({ viewport: { width: 1276, height: 640 } });
+  await f.goto(url);
+  await f.waitForFunction(() => window.motor);
+  await f.waitForTimeout(800);
+  const geo = await f.evaluate(() => {
+    const st = document.querySelector('.d-stage').getBoundingClientRect();
+    const sh = document.querySelector('.slide.is-active [data-shot]').getBoundingClientRect();
+    const cs = getComputedStyle(document.querySelector('.d-stage'), '::before');
+    return {
+      stX: st.x, stY: st.y, stW: st.width, stH: st.height, shX: sh.x, shW: sh.width,
+      borde: parseFloat(cs.borderLeftWidth) || 0,
+      fuente: cs.borderImageSource || '',
+      corte: cs.borderImageSlice || ''
+    };
+  });
+  const barra = Math.round(geo.shX - geo.stX);
+  if (barra < 40) {
+    fails.push(`en 1276x640 el lienzo dejó ${barra}px de franja: se esperaban ~118 y sin franja este ` +
+      'test no prueba nada. Cambió el umbral del lienzo fijo y hay que rehacer la medición.');
+  } else {
+    if (Math.abs(geo.borde - barra) > 1.5) {
+      fails.push(`la franja mide ${barra}px pero el borde de \`.d-stage::before\` quedó en ` +
+        `${geo.borde}px. El grosor lo mide \`curso.js\` (\`--franja-x\`) contra el render: si no ` +
+        'coinciden, el estirado del borde no cae donde está la franja.');
+    }
+    if (!/portada\.webp/.test(geo.fuente)) {
+      fails.push(`la franja no está tomando la captura de la diapositiva activa (\`${geo.fuente.slice(0, 60)}\`).`);
+    }
+    if (!/\bfill\b/.test(geo.corte)) {
+      fails.push('a `border-image-slice` le falta `fill`: sin eso el hueco central queda vacío y ' +
+        'aparece un salto de color justo en la costura.');
+    }
+    /* Los píxeles. Se recorre la COLUMNA DE BORDE del lienzo (la
+       primera columna de arte, nítida) y, en cada fila donde hay tinta
+       de verdad, se le pide a la franja el mismo color. Si la línea
+       sigue, coinciden; si la franja es un bloque —o un desenfoque, que
+       es lo mismo a estos efectos— no.
+
+       Muestrear unos píxeles ADENTRO del lienzo no sirve y ya dio un
+       falso rojo: el arte se curva rápido (la línea entra horizontal y
+       arranca el codo enseguida), así que a 3px de la costura ya se
+       está comparando otra altura de la misma curva.
+
+       Y el umbral de "coincide" se mide en varias filas y no en una: la
+       versión desenfocada de este arreglo pasaba un chequeo de una sola
+       fila por casualidad (la fila de más tinta de una franja borrosa
+       es pálida, y contra un arte pálido daba parecido). */
+    const png = PNG.sync.read(await f.screenshot());
+    const px = (x, y) => {
+      const i = (png.width * y + x) << 2;
+      return [png.data[i], png.data[i + 1], png.data[i + 2]];
+    };
+    const tinta = (c) => Math.abs(255 - c[0]) + Math.abs(255 - c[1]) + Math.abs(255 - c[2]);
+    const dif = (a, b) => Math.max(...[0, 1, 2].map((k) => Math.abs(a[k] - b[k])));
+    const costura = Math.round(geo.shX);
+    const xJunto = costura - 2;             // franja, pegada a la costura
+    const xLejos = Math.round(geo.stX) + 4; // franja, contra el borde de la ventana
+    const y0 = Math.round(geo.stY) + 10;
+    const y1 = Math.round(geo.stY + geo.stH) - 10;
+    const filas = [];
+    for (let y = y0; y < y1; y++) {
+      if (tinta(px(costura, y)) > 90) filas.push(y);
+    }
+    if (filas.length < 4) {
+      fails.push(`la columna de borde del lienzo tiene ${filas.length} filas con tinta en la ` +
+        'portada: sin líneas que lleguen al borde este test no comprueba nada, hay que elegir otra ' +
+        'diapositiva.');
+    } else {
+      /* Lo que se compara es la TINTA, no el color exacto. La franja
+         estira la columna 0 de la imagen y el lienzo muestra la columna
+         que cae en x=118 — no son exactamente la misma columna fuente,
+         así que en el borde antialiaseado de un trazo los dos degradés
+         difieren bastante en rgb aunque la línea sea la misma. Lo que
+         no puede pasar es que donde el arte tiene un trazo la franja
+         esté vacía: eso es la línea cortada. ±1 fila, por el mismo
+         motivo del antialias. */
+      const enFranja = (y) => Math.max(
+        tinta(px(xJunto, y - 1)), tinta(px(xJunto, y)), tinta(px(xJunto, y + 1))
+      );
+      const cortadas = filas.filter((y) => enFranja(y) < tinta(px(costura, y)) * 0.5);
+      if (cortadas.length > filas.length * 0.2) {
+        const y = cortadas[0];
+        fails.push(`${cortadas.length} de ${filas.length} filas con tinta se cortan en la costura ` +
+          `(en y=${y} el arte es rgb(${px(costura, y)}) y la franja rgb(${px(xJunto, y)})). La ` +
+          'franja tiene que ESTIRAR la columna de borde de la imagen: ni taparla con un color, ni ' +
+          'desenfocarla —el desenfoque disuelve la línea igual que el bloque.');
+      }
+      const apagadas = filas.filter((y) => dif(px(xJunto, y), px(xLejos, y)) > 12);
+      if (apagadas.length) {
+        const y = apagadas[0];
+        fails.push(`la línea no llega al borde de la ventana: a y=${y} la franja vale ` +
+          `rgb(${px(xJunto, y)}) pegada al lienzo y rgb(${px(xLejos, y)}) contra el borde. Estirar ` +
+          'una columna da color constante en horizontal; cualquier otra cosa, no.');
+      }
+    }
+  }
+  await f.close();
+}
+
+/* ---- 26 · "los 7 conceptos" del resumen son 7 ------------------ */
+{
+  await irASlide(page, 'cierre');
+  await page.waitForTimeout(400);
+  /* Se cuenta por el TÍTULO visible y no por un selector propio: la
+     afirmación que el cliente leyó es la del encabezado, y el resumen
+     tiene otras columnas (pasos, consejos) que también son `li`. */
+  const n = await page.evaluate(() =>
+    Array.from(document.querySelectorAll('.d-cierre-recap-col'))
+      .filter((c) => /^Los 7 conceptos/.test((c.querySelector('h4').textContent || '').trim()))
+      .reduce((t, c) => t + c.querySelectorAll('li').length, 0));
+  if (n !== 7) {
+    fails.push(`el resumen anuncia "los 7 conceptos" y lista ${n}. PLU y EAN son los dos códigos ` +
+      'del mismo producto y van en un solo ítem — es lo que dice el curso en "Algunos conceptos ' +
+      'importantes", donde la píldora también es una sola ("PLU/EAN").');
+  }
+}
+
+/* ---- 27 · las fichas entran sin scroll en un iPad acostado -----
+   El punto 8 ya mide esto en una ventana de escritorio. Lo que reportó
+   el cliente esta vuelta es otro caso: el iPad ACOSTADO, donde la
+   ventana es ancha pero BAJA (1180x820 deja ~578px de alto útil para la
+   tarjeta) — y ahí "¿Cómo mejorar la venta?", que es la más larga,
+   pedía 610px. Se prueban las cuatro fichas y las dos orientaciones. */
+{
+  const FICHAS = [
+    ['repaso-reporte', 'rep-para-que'], ['repaso-reporte', 'rep-como'],
+    ['repaso-acciones', 'rep-acciones'], ['repaso-acciones', 'rep-mejorar']
+  ];
+  for (const [w, h, nom] of [[1180, 820, 'iPad acostado'], [820, 1180, 'iPad parado'], [1024, 1366, 'iPad Pro parado']]) {
+    const t = await browser.newPage({ viewport: { width: w, height: h } });
+    await t.goto(url);
+    await t.waitForFunction(() => window.motor);
+    for (const [slide, popup] of FICHAS) {
+      await t.evaluate((s) => {
+        const i = Array.from(document.querySelectorAll('.slide')).findIndex((e) => e.dataset.slide === s);
+        window.motor.go(i, true);
+      }, slide);
+      await t.waitForTimeout(350);
+      await t.evaluate((k) => document.querySelector(`[data-popup-trigger="${k}"]`).click(), popup);
+      await t.waitForTimeout(500);
+      const m = await t.evaluate((k) => {
+        const c = document.querySelector(`[data-popup="${k}"] .modal-card.d-ficha`);
+        const bd = c.querySelector('.modal-bd');
+        const r = c.getBoundingClientRect();
+        return { falta: bd.scrollHeight - bd.clientHeight, abajo: r.bottom - window.innerHeight };
+      }, popup);
+      if (m.falta > 1) {
+        fails.push(`en ${nom} (${w}x${h}) la ficha "${popup}" necesita ${Math.round(m.falta)}px de ` +
+          'scroll. El contenido es corto: lo que sobra es tipografía y padding para ese alto de ventana.');
+      }
+      if (m.abajo > 1) {
+        fails.push(`en ${nom} (${w}x${h}) la ficha "${popup}" se sale ${Math.round(m.abajo)}px por ` +
+          'abajo de la ventana.');
+      }
+      await t.keyboard.press('Escape');
+      await t.waitForTimeout(250);
+    }
+    await t.close();
+  }
+}
+
+/* ---- 28 · velocidad de locución por default en táctil ----------
+   Pedido del cliente: en iPad la locución se escucha demasiado rápida;
+   que arranque en 0.85x. Se toca SOLO el default y solo si el alumno
+   todavía no eligió velocidad — el kit guarda la elección en
+   `localStorage` bajo `coto-diapos-rate` y esa elección manda siempre.
+   El caso "ya eligió" se prueba explícitamente porque es el que un
+   default mal puesto pisa sin que se note. */
+{
+  const dedo = await browser.newContext({
+    viewport: { width: 1180, height: 820 }, hasTouch: true, isMobile: true
+  });
+  const td = await dedo.newPage();
+  await td.goto(url);
+  await td.waitForFunction(() => window.Narrador && window.motor);
+  await td.waitForTimeout(400);
+  const rDedo = await td.evaluate(() => window.Narrador.getRateFactor());
+  if (Math.abs(rDedo - 0.85) > 0.001) {
+    fails.push(`en un dispositivo táctil la locución arranca en ${rDedo}x y tiene que arrancar en 0.85x.`);
+  }
+  /* Ya eligió: se escribe la preferencia y se recarga. */
+  await td.evaluate(() => window.localStorage.setItem('coto-diapos-rate', '1.2'));
+  await td.reload();
+  await td.waitForFunction(() => window.Narrador && window.motor);
+  await td.waitForTimeout(400);
+  const rElegido = await td.evaluate(() => window.Narrador.getRateFactor());
+  if (Math.abs(rElegido - 1.2) > 0.001) {
+    fails.push(`el alumno había elegido 1.2x y al reabrir el curso quedó en ${rElegido}x: el default ` +
+      'táctil está pisando la elección guardada en vez de ceder ante ella.');
+  }
+  await dedo.close();
+
+  const raton = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  await raton.goto(url);
+  await raton.waitForFunction(() => window.Narrador && window.motor);
+  await raton.waitForTimeout(400);
+  const rRaton = await raton.evaluate(() => window.Narrador.getRateFactor());
+  await raton.close();
+  if (Math.abs(rRaton - 1) > 0.001) {
+    fails.push(`en escritorio la locución arranca en ${rRaton}x: el ajuste es para el dedo (puntero ` +
+      'grueso), no para todo el mundo.');
   }
 }
 

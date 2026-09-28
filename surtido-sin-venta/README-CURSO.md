@@ -1101,6 +1101,87 @@ la única divergencia del curso respecto de un test del kit y está
 marcada como tal en el archivo.
 
 
+### K27 · `build-zip.py` rompe el flag UTF-8 que dice arreglar, y su propia verificación no lo ve — PROBADO
+
+**Síntoma.** Todo zip que arma el kit sale con un aviso de `unzip`, una
+vez por entrada, y termina con *"At least one warning-error was detected"*:
+
+```
+file #40 (hallazgos/K26-....md):
+         mismatch between local and central GPF bit 11 ("UTF-8"),
+         continuing with central flag (IsUTF8 = 1)
+```
+
+El archivo está bien —todo descomprime, el CRC da— pero un
+descompresor que trate el warning como error lo va a reportar como zip
+dañado, y a un cliente que abre el paquete del curso eso le dice
+"llegó roto".
+
+**Diagnóstico contra el código real.** `build-zip.py` escribe todas las
+entradas y después hace:
+
+```python
+for zi in z.filelist:
+    zi.flag_bits |= 0x800
+```
+
+con el comentario de que poner el flag ANTES de `writestr()` "no sirve
+porque `_open_to_write()` lo pisa". El problema es que a esa altura los
+**headers locales ya están escritos**: el bucle solo alcanza al
+directorio central, que se escribe al cerrar. Resultado: local dice 0,
+central dice 1, y eso es exactamente lo que `unzip` reporta como
+*mismatch*.
+
+Y hay algo peor: **el bucle no hacía falta**. `zipfile` ya pone el flag
+solo, y bien —en los dos headers— para cualquier nombre que lo
+necesite. Medido:
+
+| nombre | local | central |
+|---|---|---|
+| `a.txt` | 0 | 0 |
+| `Cómo recorrer.md` | **1** | **1** |
+| `ñandú/año.txt` | **1** | **1** |
+
+Que un nombre ASCII salga con el flag en 0 es lo **correcto**: no hay
+ambigüedad posible de code page. El bug que el script dice prevenir
+("Cómo" → "C#U00f3mo") no se reproduce sin el bucle.
+
+Y la razón de que esto viviera tanto tiempo sin que nadie lo notara es
+la verificación del propio script:
+
+```python
+sin_flag = [zi.filename for zi in z.filelist if not (zi.flag_bits & 0x800)]
+assert not sin_flag
+```
+
+`z.filelist` es **el directorio central**. O sea que el script verifica
+justo la mitad que él mismo acaba de parchear, y nunca mira la que
+rompió. Pasa siempre, por construcción.
+
+**Cómo se verificó.** Se armaron los cuatro casos y se leyeron los
+headers locales a mano (con `struct`, porque `zipfile` solo expone el
+central), más `unzip -t` en cada uno:
+
+| cómo se pone el flag | local | central | `unzip -t` |
+|---|---|---|---|
+| antes de `writestr` | 0,1 | 0,1 | ok |
+| **después, sobre `filelist`** (lo que hace el kit) | 0,1 | 1,1 | **WARNING** |
+| antes y después | 0,1 | 1,1 | **WARNING** |
+| **sin tocar nada** | 0,1 | 0,1 | **ok** |
+
+Y se confirmó en los zips reales: tanto `surtido-sin-venta.zip` como el
+paquete de este relay salen con el warning en las 40 entradas.
+
+**Propuesta.** Borrar el bucle de re-flag y el `assert` que lo
+acompaña, y dejar que `zipfile` haga lo suyo. Si se quiere conservar
+una verificación, que lea los **headers locales** además del central —
+si no, vuelve a ser un test que solo puede dar verde.
+
+Mientras tanto, el paquete de relay de este curso se armó con un
+script local de tres líneas que no hace nada especial, justamente
+porque no hace falta.
+
+
 ---
 
 ## 7. Segunda vuelta — 3 puntos reportados por el cliente
@@ -2532,7 +2613,7 @@ mismo número que había antes.
 
 ---
 
-## 22. Pendiente / próximo paso
+## 25. Pendiente / próximo paso
 
 - **Videos — especificación para el editor.** Los **cuatro** `.mp4` de
   `video/` son placeholders de 0 bytes con su nombre final:
@@ -2583,8 +2664,9 @@ mismo número que había antes.
   franja lo va a repetir como un rayado horizontal. Se mira en el
   render, como el resto.
 
-- Los **26 hallazgos de kit (K1 a K26)** se llevan en un prompt al chat
+- Los **27 hallazgos de kit (K1 a K27)** se llevan en un prompt al chat
   de `kit-base/`. Desde acá no se editó `kit-base/`. La única
   divergencia respecto del kit es el opt-out `data-sin-poster` en la
   copia del curso de `tools/tests/video-fondo.mjs`, marcada en el
-  archivo y relayada como K26.
+  archivo y relayada como K26. `tools/build-zip.py` **no** se tocó, a
+  pesar de K27: el paquete de relay se arma con un script local aparte.

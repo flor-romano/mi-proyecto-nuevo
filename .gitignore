@@ -7,3 +7,8 @@ _work/
 verify-hitboxes-out/
 verify-places-out/
 tools/visual-diff-out/
+
+# Carpeta de trabajo del paquete de relay al kit: el zip SÍ se versiona
+# (es lo que se sube al otro chat), el árbol intermedio no — se
+# regenera entero desde README-CURSO.md.
+_parche/

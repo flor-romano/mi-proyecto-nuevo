@@ -129,3 +129,112 @@ export const ChemicalHazardIcon: React.FC<IconProps> = (p) => (
     <path d="M68 74 C68 78 70 80 74 81" />
   </LineIcon>
 );
+
+// Producción: fábrica.
+export const FactoryIcon: React.FC<IconProps> = (p) => (
+  <LineIcon {...p}>
+    <path d="M10 88 L10 46 L30 58 L30 46 L50 58 L50 46 L70 58 L70 20 L86 20 L86 88 Z" />
+    <path d="M22 72 L30 72 M42 72 L50 72 M62 72 L70 72" />
+    <path d="M74 12 C74 8 80 8 80 4" />
+  </LineIcon>
+);
+
+// Traslado: camión.
+export const TruckIcon: React.FC<IconProps> = (p) => (
+  <LineIcon {...p}>
+    <rect x={6} y={28} width={54} height={40} rx={4} />
+    <path d="M60 40 L78 40 L92 56 L92 68 L60 68" />
+    <circle cx={24} cy={74} r={8} />
+    <circle cx={76} cy={74} r={8} />
+  </LineIcon>
+);
+
+// Almacenamiento: cajas apiladas.
+export const BoxesIcon: React.FC<IconProps> = (p) => (
+  <LineIcon {...p}>
+    <rect x={10} y={52} width={38} height={36} rx={3} />
+    <rect x={52} y={52} width={38} height={36} rx={3} />
+    <rect x={31} y={14} width={38} height={36} rx={3} />
+    <path d="M24 52 L24 62 L34 62 L34 52 M66 52 L66 62 L76 62 L76 52 M45 14 L45 24 L55 24 L55 14" />
+  </LineIcon>
+);
+
+// Exhibición: góndola con productos.
+export const StoreIcon: React.FC<IconProps> = (p) => (
+  <LineIcon {...p}>
+    <path d="M14 10 L14 90 M86 10 L86 90 M14 38 L86 38 M14 66 L86 66 M10 90 L90 90" />
+    <rect x={22} y={20} width={14} height={18} rx={2} />
+    <rect x={42} y={24} width={14} height={14} rx={2} />
+    <circle cx={70} cy={30} r={8} />
+    <rect x={24} y={50} width={18} height={16} rx={2} />
+    <path d="M54 66 L54 52 C54 46 66 46 66 52 L66 66" />
+  </LineIcon>
+);
+
+// Personas: manos.
+export const HandsIcon: React.FC<IconProps> = (p) => (
+  <LineIcon {...p} strokeWidth={4.5}>
+    <path d="M44 90 L44 70 C44 60 30 54 26 44 L18 26 C16 20 24 17 27 23 L34 38" />
+    <path d="M34 38 L28 14 C27 8 35 6 37 12 L42 34 M42 34 L42 10 C42 4 50 4 50 10 L50 50" />
+    <path d="M56 90 L56 70 C56 60 70 54 74 44 L82 26 C84 20 76 17 73 23 L66 38" />
+    <path d="M66 38 L72 14 C73 8 65 6 63 12 L58 34 M58 34 L58 10 C58 4 50 4 50 10" />
+  </LineIcon>
+);
+
+// Limpieza y desinfección: gota con destello.
+export const DropSparkleIcon: React.FC<IconProps> = (p) => (
+  <LineIcon {...p}>
+    <path d="M42 14 C42 14 18 44 18 62 C18 76 29 88 42 88 C55 88 66 76 66 62 C66 44 42 14 42 14 Z" />
+    <path d="M32 64 C32 70 36 76 42 77" />
+    <path d="M78 12 L78 32 M68 22 L88 22" />
+    <path d="M84 44 L84 54 M79 49 L89 49" />
+  </LineIcon>
+);
+
+// Control del frío: copo de nieve.
+export const SnowflakeIcon: React.FC<IconProps> = (p) => (
+  <LineIcon {...p}>
+    <path d="M50 8 L50 92 M14 29 L86 71 M14 71 L86 29" />
+    <path d="M40 14 L50 24 L60 14 M40 86 L50 76 L60 86" />
+    <path d="M14 42 L27 36 L23 22 M86 58 L73 64 L77 78" />
+    <path d="M14 58 L27 64 L23 78 M86 42 L73 36 L77 22" />
+  </LineIcon>
+);
+
+// Plagas: hormiga con señal de alerta.
+export const AntAlertIcon: React.FC<IconProps> = (p) => (
+  <LineIcon {...p} strokeWidth={4.5}>
+    <ellipse cx={22} cy={62} rx={9} ry={8} />
+    <ellipse cx={40} cy={62} rx={8} ry={6} />
+    <ellipse cx={60} cy={62} rx={13} ry={10} />
+    <path d="M16 55 L8 44 M24 55 L26 42" />
+    <path d="M36 66 L28 80 M40 68 L40 82 M44 66 L52 80 M36 58 L28 48 M44 58 L50 48" />
+    <path d="M78 10 L96 42 L60 42 Z" />
+    <path d="M78 22 L78 32" />
+    <circle cx={78} cy={37} r={1.5} fill={p.color ?? colors.white} />
+  </LineIcon>
+);
+
+// Contaminación cruzada: dos alimentos unidos por una flecha.
+export const CrossContaminationIcon: React.FC<IconProps> = (p) => (
+  <LineIcon {...p}>
+    <path d="M10 56 C8 40 22 32 30 40 C38 32 52 40 50 56 C48 70 38 78 30 74 C22 78 12 70 10 56 Z" />
+    <path d="M30 40 C30 32 34 28 38 26" />
+    <circle cx={22} cy={54} r={2.5} fill={p.color ?? colors.white} />
+    <circle cx={34} cy={60} r={2.5} fill={p.color ?? colors.white} />
+    <path d="M60 70 L90 70 C92 58 84 50 75 50 C66 50 58 58 60 70 Z" />
+    <path d="M56 70 L94 70" />
+    <path d="M44 24 C56 12 72 14 80 28 M80 28 L80 16 M80 28 L68 28" />
+  </LineIcon>
+);
+
+// Lista de control: portapapeles.
+export const ClipboardIcon: React.FC<IconProps> = (p) => (
+  <LineIcon {...p}>
+    <rect x={20} y={14} width={60} height={78} rx={6} />
+    <rect x={36} y={8} width={28} height={14} rx={4} />
+    <path d="M32 40 L38 46 L48 34 M56 40 L70 40" />
+    <path d="M32 60 L38 66 L48 54 M56 60 L70 60" />
+    <path d="M32 80 L70 80" />
+  </LineIcon>
+);

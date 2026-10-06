@@ -1,14 +1,15 @@
 import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion';
 import { Pill } from '../components/Pill';
 import { WordReveal } from '../components/WordReveal';
-import { Shield } from '../components/Shield';
-import { Apple, Broccoli, Lettuce, Orange, Pear, Tomato } from '../components/Produce';
+import { FRUITS, SHIELD_CENTER, ShieldArt } from '../components/ShieldArt';
 import { colors, type } from '../theme';
 import { voice } from '../voice';
 import { useAt } from './timing';
 
-const SHIELD_SIZE = 420;
+const SCALE = 0.72;
 const CENTER = { x: 1380, y: 560 };
+// Orden de aparición de las frutas (índices de FRUITS): pera, naranja, manzana, brócoli.
+const FRUIT_ORDER = [1, 0, 2, 3];
 
 // "Repasemos juntos los puntos clave del curso de seguridad alimentaria."
 const v = voice('escena-1');
@@ -19,16 +20,6 @@ export const CUES = {
   title: [v.w('seguridad'), v.w('alimentaria')],
 };
 export const POPS = [CUES.shield];
-
-// Posiciones relativas al centro del escudo; aparecen en este orden.
-export const PRODUCE = [
-  { C: Lettuce, x: -190, y: -150, size: 220, rot: -12 },
-  { C: Pear, x: 40, y: -255, size: 175, rot: 8 },
-  { C: Tomato, x: 225, y: -60, size: 185, rot: 10 },
-  { C: Orange, x: -235, y: 30, size: 170, rot: -6 },
-  { C: Broccoli, x: 215, y: 130, size: 175, rot: 14 },
-  { C: Apple, x: 110, y: 225, size: 190, rot: -8 },
-];
 
 export const Scene1Apertura: React.FC = () => {
   const frame = useCurrentFrame();
@@ -62,37 +53,26 @@ export const Scene1Apertura: React.FC = () => {
         />
       </div>
 
-      {/* Frutas y verduras detrás del escudo, de a una */}
-      {PRODUCE.map(({ C, x, y, size, rot }, i) => {
-        const s = spring({ frame: frame - at(CUES.shield) - 20 - i * 7, fps, config: { damping: 11, stiffness: 120 } });
-        const bob = Math.sin(frame / 26 + i) * 4;
-        return (
-          <div
-            key={i}
-            style={{
-              position: 'absolute',
-              left: CENTER.x + x * (0.55 + 0.45 * s) - size / 2,
-              top: CENTER.y + y * (0.55 + 0.45 * s) - size / 2 + bob,
-              transform: `scale(${s}) rotate(${rot * s}deg)`,
-              opacity: Math.min(1, s * 2),
-            }}
-          >
-            <C size={size} />
-          </div>
-        );
-      })}
-
-      {/* Escudo con check */}
+      {/* Escudo con check y frutas y verduras, que aparecen detrás de a una */}
       <div
         style={{
           position: 'absolute',
-          left: CENTER.x - SHIELD_SIZE / 2,
-          top: CENTER.y - (SHIELD_SIZE * 1.13) / 2 + float,
-          transform: `scale(${shieldIn})`,
+          left: CENTER.x - SHIELD_CENTER.x * SCALE,
+          top: CENTER.y - SHIELD_CENTER.y * SCALE + float,
           filter: 'drop-shadow(0 18px 30px rgba(0, 110, 234, 0.15))',
         }}
       >
-        <Shield size={SHIELD_SIZE} checkProgress={1} />
+        <ShieldArt
+          scale={SCALE}
+          shieldIn={shieldIn}
+          fruitsIn={FRUITS.map((_, i) =>
+            spring({
+              frame: frame - at(CUES.shield) - 20 - FRUIT_ORDER.indexOf(i) * 8,
+              fps,
+              config: { damping: 11, stiffness: 120 },
+            }),
+          )}
+        />
       </div>
     </AbsoluteFill>
   );

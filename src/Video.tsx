@@ -9,6 +9,9 @@ import * as S3 from './scenes/Scene3Riesgo';
 import * as S4 from './scenes/Scene4Alteracion';
 import * as S5 from './scenes/Scene5Contaminacion';
 import * as S6 from './scenes/Scene6Peligros';
+import * as S7 from './scenes/Scene7Vias';
+import * as S8 from './scenes/Scene8Practica';
+import * as S9 from './scenes/Scene9Cierre';
 import { HALF, LEAD_IN, TAIL, TRANSITION, VoiceStart } from './scenes/timing';
 import { sec } from './theme';
 import { SceneKey, voice } from './voice';
@@ -21,6 +24,9 @@ const SCENE_DEFS: { key: SceneKey; C: React.FC; pops: number[] }[] = [
   { key: 'escena-4', C: S4.Scene4Alteracion, pops: S4.POPS },
   { key: 'escena-5', C: S5.Scene5Contaminacion, pops: S5.POPS },
   { key: 'escena-6', C: S6.Scene6Peligros, pops: S6.POPS },
+  { key: 'escena-7', C: S7.Scene7Vias, pops: S7.POPS },
+  { key: 'escena-8', C: S8.Scene8Practica, pops: S8.POPS },
+  { key: 'escena-9', C: S9.Scene9Cierre, pops: S9.POPS },
 ];
 
 const SCENES = SCENE_DEFS.reduce<(typeof SCENE_DEFS[number] & { start: number; length: number })[]>((acc, def) => {

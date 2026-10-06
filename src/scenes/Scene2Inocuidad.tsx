@@ -1,7 +1,7 @@
 import { AbsoluteFill, Easing, interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion';
 import { Pill } from '../components/Pill';
 import { WordReveal } from '../components/WordReveal';
-import { Shield } from '../components/Shield';
+import { SHIELD_CENTER, ShieldArt } from '../components/ShieldArt';
 import { CheckBadge } from '../components/CheckBadge';
 import { colors, type } from '../theme';
 import { voice } from '../voice';
@@ -22,7 +22,7 @@ export const CUES = {
 };
 export const POPS = [CUES.check, CUES.normas, CUES.practicas, CUES.procedimientos];
 
-const SHIELD_SIZE = 380;
+const SCALE = 0.65;
 const CENTER = { x: 1560, y: 580 };
 
 // Columna de etiquetas a la izquierda del escudo, sincronizada con "normas, prácticas y procedimientos".
@@ -66,12 +66,12 @@ export const Scene2Inocuidad: React.FC = () => {
       <div
         style={{
           position: 'absolute',
-          left: CENTER.x - SHIELD_SIZE / 2,
-          top: CENTER.y - (SHIELD_SIZE * 1.13) / 2 + float,
+          left: CENTER.x - SHIELD_CENTER.x * SCALE,
+          top: CENTER.y - SHIELD_CENTER.y * SCALE + float,
           filter: 'drop-shadow(0 18px 30px rgba(0, 110, 234, 0.15))',
         }}
       >
-        <Shield size={SHIELD_SIZE} checkProgress={check} />
+        <ShieldArt scale={SCALE} checkProgress={check} />
       </div>
 
       {TAGS.map(({ label, time }, i) => {

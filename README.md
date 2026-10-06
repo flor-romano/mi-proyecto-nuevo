@@ -1,13 +1,13 @@
 # Video de repaso – Seguridad alimentaria
 
-Video en Remotion (1920×1080, 30 fps, con locución y efectos). Por ahora incluye las escenas 1 a 6.
+Video en Remotion (1920×1080, 30 fps, con locución y efectos). Incluye las 9 escenas del guion.
 
 ## Uso
 
 ```bash
 npm install
 npm run studio   # vista previa interactiva
-npm run render   # genera videos/seguridad-alimentaria-escenas-1-6.mp4
+npm run render   # genera videos/seguridad-alimentaria-completo.mp4
 ```
 
 ## Estructura
@@ -46,6 +46,10 @@ Los pops de cada escena son su lista `POPS`.
 - `scripts/separar-personaje.py` la divide en el personaje solo (`personaje-pensativo.png`, mismo
   lienzo y proporción) y cada burbuja por separado en `public/ilustraciones/burbujas/`,
   recoloreadas a #78D2F0, para animarlas de a una.
+
+- `public/ilustraciones/escudo/`: escudo sin check, check, pera, naranja, manzana y brócoli, exportados
+  por separado. `src/components/ShieldArt.tsx` los ubica como en `escudo-frutas-original.png`
+  (posiciones encontradas comparando cada pieza con esa ilustración). Se usan en las escenas 1, 2 y 9.
 
 ## Espacios reservados para Premiere
 

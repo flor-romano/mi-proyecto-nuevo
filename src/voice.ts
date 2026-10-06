@@ -21,6 +21,13 @@ export const voice = (key: SceneKey) => {
       if (hits.length < n) throw new Error(`"${word}" (${n}) no aparece en la locución de ${key}`);
       return hits[n - 1].s;
     },
+    // Primera aparición de la palabra después del segundo `t`.
+    after(word: string, t: number): number {
+      const target = normalize(word);
+      const hit = words.find((x) => x.s > t && normalize(x.w) === target);
+      if (!hit) throw new Error(`"${word}" no aparece después de ${t} s en la locución de ${key}`);
+      return hit.s;
+    },
     words,
   };
 };

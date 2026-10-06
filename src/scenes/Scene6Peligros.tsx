@@ -2,8 +2,21 @@ import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } fr
 import { Pill } from '../components/Pill';
 import { WordReveal } from '../components/WordReveal';
 import { ChemicalHazardIcon, MicrobeIcon, PhysicalHazardIcon } from '../components/Icons';
-import { colors, fonts } from '../theme';
-import { at } from './timing';
+import { colors, type } from '../theme';
+import { voice } from '../voice';
+import { useAt } from './timing';
+
+const v = voice('escena-6');
+export const CUES = {
+  biologico: v.w('peligro', 1),
+  microorganismos: v.w('microorganismos'),
+  etas: v.w('causa'),
+  fisico: v.w('peligro', 2),
+  elementos: v.w('elementos'),
+  quimico: v.w('peligro', 3),
+  sustancias: v.w('sustancias'),
+};
+export const POPS = [CUES.biologico, CUES.fisico, CUES.quimico];
 
 const CIRCLE_D = 220;
 const ROW_Y = 450;
@@ -17,37 +30,38 @@ const HAZARDS = [
     note: 'Causa más frecuente de las Enfermedades Transmitidas por Alimentos (ETAs).',
     Icon: MicrobeIcon,
     x: 480,
-    enter: 2.2,
-    keywordAt: 4.0,
-    noteAt: 8.6,
+    enter: CUES.biologico,
+    keywordAt: CUES.microorganismos,
+    noteAt: CUES.etas,
   },
   {
     label: 'Peligro físico',
     keyword: 'Elementos ajenos al alimento',
     Icon: PhysicalHazardIcon,
     x: 960,
-    enter: 12.3,
-    keywordAt: 14.6,
+    enter: CUES.fisico,
+    keywordAt: CUES.elementos,
   },
   {
     label: 'Peligro químico',
     keyword: 'Sustancias químicas',
     Icon: ChemicalHazardIcon,
     x: 1440,
-    enter: 19.2,
-    keywordAt: 21.2,
+    enter: CUES.quimico,
+    keywordAt: CUES.sustancias,
   },
 ];
 
 export const Scene6Peligros: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const at = useAt();
 
   return (
     <AbsoluteFill>
       {/* El título ya está en pantalla mientras la escena entra deslizándose. */}
       <div style={{ position: 'absolute', top: 110, width: '100%', display: 'flex', justifyContent: 'center' }}>
-        <Pill delay={-30} fontSize={68} style={{ transformOrigin: 'center' }}>
+        <Pill delay={-30} style={{ transformOrigin: 'center' }}>
           Existen 3 tipos de peligros
         </Pill>
       </div>
@@ -98,9 +112,7 @@ export const Scene6Peligros: React.FC = () => {
             >
               <div
                 style={{
-                  fontFamily: fonts.body,
-                  fontWeight: 700,
-                  fontSize: 42,
+                  ...type.subtitle,
                   color: colors.accent,
                   opacity: labelIn,
                   transform: `translateY(${(1 - labelIn) * 12}px)`,
@@ -112,14 +124,14 @@ export const Scene6Peligros: React.FC = () => {
                 text={`**${keyword}**`}
                 delay={at(keywordAt)}
                 stagger={4}
-                style={{ marginTop: 18, fontFamily: fonts.body, fontSize: 46, lineHeight: 1.2, color: colors.accentDeep }}
+                style={{ marginTop: 14, ...type.subtitle, color: colors.accentDeep }}
               />
               {note && noteAt !== undefined && (
                 <WordReveal
                   text={note}
                   delay={at(noteAt)}
                   stagger={2}
-                  style={{ marginTop: 16, fontFamily: fonts.body, fontSize: 30, lineHeight: 1.35, color: colors.text }}
+                  style={{ marginTop: 14, ...type.body, color: colors.text }}
                 />
               )}
             </div>

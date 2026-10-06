@@ -3,18 +3,39 @@ import { Pill } from '../components/Pill';
 import { WordReveal } from '../components/WordReveal';
 import { IconCircle } from '../components/IconCircle';
 import { ColorIcon, EyeIcon, FridgeIcon, SmellIcon, TasteIcon, TextureIcon } from '../components/Icons';
-import { colors, fonts } from '../theme';
-import { at } from './timing';
+import { colors, type } from '../theme';
+import { voice } from '../voice';
+import { useAt } from './timing';
+
+const v = voice('escena-4');
+export const CUES = {
+  olor: v.w('olor'),
+  textura: v.w('textura'),
+  color: v.w('color'),
+  sabor: v.w('sabor'),
+  // "A simple vista se nota que no está apto..."
+  simpleVista: v.w('a'),
+  mala: v.w('mala'),
+  temperaturas: v.w('temperaturas'),
+  altas: v.w('altas'),
+  bajas: v.w('bajas'),
+  vidaUtil: v.w('vida'),
+  vencimiento: v.w('fecha'),
+};
+export const POPS = [
+  CUES.olor, CUES.textura, CUES.color, CUES.sabor, CUES.simpleVista,
+  CUES.mala, CUES.temperaturas, CUES.vidaUtil, CUES.vencimiento,
+];
 
 // Espacio reservado para el corte de carne (fresco → alterado), que se agrega en Premiere.
 // No se dibuja nada en este rectángulo.
 export const MEAT_AREA = { x: 1100, y: 140, w: 700, h: 500 };
 
 const SENSES = [
-  { label: 'Olor', Icon: SmellIcon, time: 2.0 },
-  { label: 'Textura', Icon: TextureIcon, time: 2.6 },
-  { label: 'Color', Icon: ColorIcon, time: 3.2 },
-  { label: 'Sabor', Icon: TasteIcon, time: 3.8 },
+  { label: 'Olor', Icon: SmellIcon, time: CUES.olor },
+  { label: 'Textura', Icon: TextureIcon, time: CUES.textura },
+  { label: 'Color', Icon: ColorIcon, time: CUES.color },
+  { label: 'Sabor', Icon: TasteIcon, time: CUES.sabor },
 ];
 const SENSE_D = 150;
 const SENSE_STEP = 215;
@@ -23,20 +44,21 @@ const CAUSE_W = 520;
 const CAUSE_GAP = 30;
 const CAUSES_TOP = 700;
 const CAUSES = [
-  { label: 'Mala conservación', time: 9.6 },
-  { label: 'Temperaturas muy altas o muy bajas', time: 11.6 },
-  { label: 'Fin de la vida útil', time: 15.0 },
+  { label: 'Mala conservación', time: CUES.mala },
+  { label: 'Temperaturas muy altas o muy bajas', time: CUES.temperaturas },
+  { label: 'Fin de la vida útil', time: CUES.vidaUtil },
 ];
 
 export const Scene4Alteracion: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const at = useAt();
 
   return (
     <AbsoluteFill>
       {/* El título ya está en pantalla mientras la escena entra deslizándose. */}
       <div style={{ position: 'absolute', left: 150, top: 130 }}>
-        <Pill delay={-30} fontSize={68}>
+        <Pill delay={-30}>
           Alteración
         </Pill>
       </div>
@@ -66,9 +88,7 @@ export const Scene4Alteracion: React.FC = () => {
             <span
               style={{
                 marginTop: 16,
-                fontFamily: fonts.body,
-                fontWeight: 700,
-                fontSize: 38,
+                ...type.subtitle,
                 color: colors.accent,
                 opacity: labelIn,
                 transform: `translateY(${(1 - labelIn) * 12}px)`,
@@ -82,14 +102,14 @@ export const Scene4Alteracion: React.FC = () => {
 
       {/* Se nota a simple vista */}
       <div style={{ position: 'absolute', left: 150, top: 540, display: 'flex', alignItems: 'center', gap: 22 }}>
-        <IconCircle size={76} delay={at(4.8)} color={colors.accentDeep}>
+        <IconCircle size={76} delay={at(CUES.simpleVista)} color={colors.accentDeep}>
           <EyeIcon size={48} />
         </IconCircle>
         <WordReveal
           text="Se nota a simple vista."
-          delay={at(5.0)}
+          delay={at(CUES.simpleVista) + 4}
           stagger={4}
-          style={{ fontFamily: fonts.body, fontWeight: 700, fontSize: 48, color: colors.text }}
+          style={{ ...type.subtitle, color: colors.text }}
         />
       </div>
 
@@ -120,10 +140,10 @@ export const Scene4Alteracion: React.FC = () => {
           >
             <IconCircle size={140} delay={at(time) + 4}>
               {i === 0 && <FridgeIcon size={86} />}
-              {i === 1 && <Thermometer start={at(time) + 10} />}
-              {i === 2 && <Calendar crossAt={at(16.4)} />}
+              {i === 1 && <Thermometer upAt={at(CUES.altas)} downAt={at(CUES.bajas)} />}
+              {i === 2 && <Calendar crossAt={at(CUES.vencimiento)} />}
             </IconCircle>
-            <span style={{ fontFamily: fonts.body, fontWeight: 700, fontSize: 38, lineHeight: 1.2, color: colors.accent }}>
+            <span style={{ ...type.subtitle, color: colors.accent }}>
               {label}
             </span>
           </div>
@@ -133,12 +153,13 @@ export const Scene4Alteracion: React.FC = () => {
   );
 };
 
-// Termómetro que sube (rojo) y baja (azul).
-const Thermometer: React.FC<{ start: number }> = ({ start }) => {
+// Termómetro que sube (rojo) cuando se dice "altas" y baja (azul) cuando se dice "bajas".
+const Thermometer: React.FC<{ upAt: number; downAt: number }> = ({ upAt, downAt }) => {
   const frame = useCurrentFrame();
-  const t = Math.max(0, frame - start);
-  // Sube, baja y sigue oscilando suave.
-  const level = 0.5 - 0.42 * Math.cos((t / 75) * Math.PI) * Math.min(1, t / 20);
+  const { fps } = useVideoConfig();
+  const up = spring({ frame: frame - upAt, fps, config: { damping: 14 } });
+  const down = spring({ frame: frame - downAt, fps, config: { damping: 14 } });
+  const level = 0.45 + 0.45 * up - 0.75 * down;
   const fill = interpolateColors(level, [0.15, 0.85], [colors.accentDeep, '#F0503C']);
   const top = 70 - level * 56;
   return (

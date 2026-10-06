@@ -1,0 +1,19 @@
+# Texto de la locución por escena (tal como figura en el guion).
+[1]
+Repasemos juntos los puntos clave del curso de seguridad alimentaria.
+[2]
+Un alimento inocuo es aquel que, al ser ingerido, no causa ningún daño a la salud del consumidor. Nuestro compromiso es respetar las normas, prácticas y procedimientos que evitan la alteración y la contaminación de los alimentos. Si no lo hacemos, nuestros clientes o incluso nosotros mismos podríamos enfermarnos.
+[3]
+Todo alimento que no se maneja adecuadamente está expuesto a dos riesgos: la alteración y la contaminación.
+[4]
+Un alimento alterado no tiene buen olor, textura, color o sabor. A simple vista se nota que no está apto para el consumo. Puede alterarse por una mala conservación, por estar expuesto a temperaturas muy altas o muy bajas, o porque terminó su vida útil, es decir, su fecha de vencimiento.
+[5]
+En cambio, un alimento contaminado puede parecer apto para consumir, pero internamente presenta un peligro para la salud de quien lo ingiere.
+[6]
+Existen tres tipos de peligros. El peligro biológico es la presencia de microorganismos, como bacterias, virus, hongos o parásitos, y es la causa más frecuente de las Enfermedades Transmitidas por Alimentos. El peligro físico es la presencia de elementos ajenos al alimento, como pelos, vidrio, astillas de madera o virutas de metal. Y el peligro químico es la presencia de sustancias químicas, por el contacto del alimento con productos de limpieza, insecticidas o pesticidas.
+[7]
+La contaminación puede ocurrir en la producción, el traslado, el almacenamiento y la exhibición de los alimentos. Y llega a ellos por cuatro vías. Las personas: somos la principal fuente de contaminación, por eso es muy importante higienizarnos las manos cada vez que estamos en contacto con alimentos. El medio ambiente: un lugar mal higienizado favorece a los microorganismos. Por eso limpiamos y desinfectamos depósitos, cámaras y góndolas, y controlamos el frío, porque las bajas temperaturas impiden que se reproduzcan. Las plagas: si encontrás evidencia de moscas, hormigas, cucarachas o ratas, avisá a los responsables de la sucursal. Y la contaminación cruzada: el paso de microorganismos o alérgenos de un alimento contaminado a uno seguro, en forma directa, por contacto, o indirecta, a través de cuchillos, manos o tablas.
+[8]
+Antes de vender o entregar un alimento, preguntate: ¿está en buen estado, bien conservado y bien manipulado? Si tenés dudas, no lo entregues y consultá a tu responsable.
+[9]
+Cuidar la inocuidad de los alimentos es cuidar la salud de nuestros clientes y la nuestra. ¡Gracias por tu compromiso!

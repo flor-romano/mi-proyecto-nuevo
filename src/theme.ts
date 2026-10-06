@@ -1,30 +1,32 @@
-import { loadFont as loadNunito } from '@remotion/google-fonts/Nunito';
-import { loadFont as loadRoboto } from '@remotion/google-fonts/Roboto';
-import { loadFont as loadLocalFont } from '@remotion/fonts';
+import { loadFont } from '@remotion/fonts';
 import { staticFile } from 'remotion';
-import localFonts from '../public/fonts/manifest.json';
 
-// Por defecto las fuentes se cargan de Google Fonts con @remotion/google-fonts.
-// Con REMOTION_LOCAL_FONTS=1 se usan las copias de public/fonts (para renders
-// detrás de un proxy que no deja al navegador llegar a fonts.gstatic.com).
-const useLocal = process.env.REMOTION_LOCAL_FONTS === '1';
-
-if (useLocal) {
-  localFonts.forEach(({ family, weight, file, unicodeRange }) =>
-    loadLocalFont({ family, url: staticFile(`fonts/${file}`), weight, unicodeRange }),
-  );
-} else {
-  loadNunito('normal', { weights: ['900'], subsets: ['latin', 'latin-ext'] });
-  loadRoboto('normal', { weights: ['400', '700'], subsets: ['latin', 'latin-ext'] });
-}
+// Tipografías del proyecto, desde los archivos de public/fonts/propias.
+loadFont({ family: 'Faible Black', url: staticFile('fonts/propias/Faible-Black.ttf'), weight: '900' });
+loadFont({ family: 'Roboto', url: staticFile('fonts/propias/Roboto-Regular.ttf'), weight: '400' });
+loadFont({ family: 'Roboto', url: staticFile('fonts/propias/Roboto-Bold.ttf'), weight: '700' });
 
 export const FPS = 30;
 export const sec = (s: number) => Math.round(s * FPS);
 
 export const fonts = {
-  title: "'Nunito', sans-serif",
+  title: "'Faible Black', sans-serif",
   body: "'Roboto', sans-serif",
 };
+
+// Escala tipográfica (pt del diseño = px en 1920×1080).
+export const type = {
+  // Título de portada: Faible Black 80 / 80.
+  cover: { fontFamily: fonts.title, fontWeight: 900, fontSize: 80, lineHeight: '80px' },
+  // Título sin contenedor: Faible Black 70 / 70.
+  title: { fontFamily: fonts.title, fontWeight: 900, fontSize: 70, lineHeight: '70px' },
+  // Título en pastilla: Faible Black 50 / 50.
+  pill: { fontFamily: fonts.title, fontWeight: 900, fontSize: 50, lineHeight: '50px' },
+  // Subtítulos: Roboto Bold 40 / 45.
+  subtitle: { fontFamily: fonts.body, fontWeight: 700, fontSize: 40, lineHeight: '45px' },
+  // Textos: Roboto Regular 30 / 35.
+  body: { fontFamily: fonts.body, fontWeight: 400, fontSize: 30, lineHeight: '35px' },
+} satisfies Record<string, React.CSSProperties>;
 
 export const colors = {
   white: '#FFFFFF',

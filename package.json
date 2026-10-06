@@ -4,12 +4,12 @@
   "private": true,
   "scripts": {
     "studio": "remotion studio",
-    "render": "remotion render src/index.ts SeguridadAlimentaria videos/seguridad-alimentaria-escenas-1-6.mp4 --codec=h264 --muted --crf=18 --overwrite"
+    "render": "remotion render src/index.ts SeguridadAlimentaria videos/seguridad-alimentaria-escenas-1-6.mp4 --codec=h264 --audio-codec=aac --crf=18 --overwrite",
+    "render:sincronizacion": "remotion render src/index.ts SeguridadAlimentaria-Sincronizacion videos/control-sincronizacion-escenas-1-6.mp4 --codec=h264 --audio-codec=aac --crf=28 --overwrite"
   },
   "dependencies": {
     "@remotion/cli": "^4.0.533",
     "@remotion/fonts": "^4.0.533",
-    "@remotion/google-fonts": "^4.0.533",
     "@remotion/transitions": "^4.0.533",
     "@types/react": "^19.3.0",
     "react": "^19.3.0",

@@ -3,10 +3,22 @@ import { Pill } from '../components/Pill';
 import { WordReveal } from '../components/WordReveal';
 import { Shield } from '../components/Shield';
 import { Apple, Broccoli, Lettuce, Orange, Pear, Tomato } from '../components/Produce';
-import { colors, fonts, sec } from '../theme';
+import { colors, type } from '../theme';
+import { voice } from '../voice';
+import { useAt } from './timing';
 
 const SHIELD_SIZE = 420;
 const CENTER = { x: 1380, y: 560 };
+
+// "Repasemos juntos los puntos clave del curso de seguridad alimentaria."
+const v = voice('escena-1');
+export const CUES = {
+  shield: -0.3,
+  repaso: v.w('repasemos'),
+  subtitle: [v.w('los'), v.w('puntos'), v.w('clave'), v.w('del'), v.w('curso')],
+  title: [v.w('seguridad'), v.w('alimentaria')],
+};
+export const POPS = [CUES.shield];
 
 // Posiciones relativas al centro del escudo; aparecen en este orden.
 export const PRODUCE = [
@@ -21,52 +33,38 @@ export const PRODUCE = [
 export const Scene1Apertura: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const at = useAt();
 
-  const shieldIn = spring({ frame: frame - sec(0.4), fps, config: { damping: 9, stiffness: 110, mass: 0.9 } });
+  const shieldIn = spring({ frame: frame - at(CUES.shield), fps, config: { damping: 9, stiffness: 110, mass: 0.9 } });
   const float = Math.sin(frame / 22) * 6;
-  const barIn = interpolate(frame, [sec(1.6), sec(2.3)], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const barIn = interpolate(frame, [at(CUES.title[0]), at(CUES.title[0]) + 20], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
 
   return (
     <AbsoluteFill>
       {/* Bloque de texto */}
-      <div style={{ position: 'absolute', left: 170, top: 300, width: 860 }}>
-        <Pill delay={sec(0.2)} fontSize={52}>
-          Repaso
-        </Pill>
+      <div style={{ position: 'absolute', left: 170, top: 330, width: 860 }}>
+        <Pill delay={at(CUES.repaso)}>Repaso</Pill>
         <WordReveal
           text="Seguridad alimentaria"
-          delay={sec(0.6)}
-          stagger={6}
-          style={{
-            marginTop: 36,
-            fontFamily: fonts.title,
-            fontWeight: 900,
-            fontSize: 118,
-            lineHeight: 1.02,
-            color: colors.accent,
-            width: 700,
-          }}
+          times={CUES.title.map(at)}
+          style={{ marginTop: 32, ...type.cover, color: colors.accent, width: 700 }}
         />
         <div
-          style={{
-            marginTop: 28,
-            height: 8,
-            width: 160 * barIn,
-            borderRadius: 4,
-            backgroundColor: colors.accentDeep,
-          }}
+          style={{ marginTop: 28, height: 8, width: 160 * barIn, borderRadius: 4, backgroundColor: colors.accentDeep }}
         />
         <WordReveal
           text="Los puntos clave del curso"
-          delay={sec(1.8)}
-          stagger={4}
-          style={{ marginTop: 28, fontFamily: fonts.body, fontWeight: 700, fontSize: 46, color: colors.textSoft }}
+          times={CUES.subtitle.map(at)}
+          style={{ marginTop: 28, ...type.subtitle, color: colors.textSoft }}
         />
       </div>
 
       {/* Frutas y verduras detrás del escudo, de a una */}
       {PRODUCE.map(({ C, x, y, size, rot }, i) => {
-        const s = spring({ frame: frame - sec(1.3) - i * 7, fps, config: { damping: 11, stiffness: 120 } });
+        const s = spring({ frame: frame - at(CUES.shield) - 20 - i * 7, fps, config: { damping: 11, stiffness: 120 } });
         const bob = Math.sin(frame / 26 + i) * 4;
         return (
           <div

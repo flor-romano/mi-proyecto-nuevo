@@ -2,8 +2,23 @@ import { AbsoluteFill, Easing, interpolate, spring, useCurrentFrame, useVideoCon
 import { Pill } from '../components/Pill';
 import { WordReveal } from '../components/WordReveal';
 import { Apple } from '../components/Produce';
-import { colors, fonts } from '../theme';
-import { at } from './timing';
+import { colors, type } from '../theme';
+import { voice } from '../voice';
+import { useAt } from './timing';
+
+// "En cambio, un alimento contaminado puede parecer apto para consumir, pero internamente
+// presenta un peligro para la salud de quien lo ingiere."
+const v = voice('escena-5');
+export const CUES = {
+  apple: v.w('un'),
+  line1: [v.w('puede'), v.w('parecer'), v.w('apto')],
+  sparkle: v.w('apto'),
+  zoom: v.w('internamente') - 0.3,
+  lens: v.w('internamente'),
+  line2: [v.w('pero'), v.w('presenta'), v.w('un', 2), v.w('peligro'), v.w('para', 2), v.w('la'), v.w('salud')],
+  germs: v.w('peligro'),
+};
+export const POPS = [CUES.apple, CUES.germs];
 
 const APPLE_CENTER = { x: 960, y: 700 };
 const APPLE_SIZE = 400;
@@ -29,22 +44,23 @@ const GERMS = [
 export const Scene5Contaminacion: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const at = useAt();
 
-  const appleIn = spring({ frame: frame - at(0.6), fps, config: { damping: 11, stiffness: 120 } });
-  const zoom = spring({ frame: frame - at(3.6), fps, config: { damping: 200 }, durationInFrames: 30 });
+  const appleIn = spring({ frame: frame - at(CUES.apple), fps, config: { damping: 11, stiffness: 120 } });
+  const zoom = spring({ frame: frame - at(CUES.zoom), fps, config: { damping: 200 }, durationInFrames: 30 });
   const size = APPLE_SIZE * (1 + 0.25 * zoom) * appleIn;
   const appleLeft = APPLE_CENTER.x - size / 2;
   const appleTop = APPLE_CENTER.y - size / 2;
 
   // Destello que indica que el alimento "parece perfecto".
-  const sparkle = interpolate(frame, [at(1.4), at(1.9), at(2.6)], [0, 1, 0], {
+  const sparkle = interpolate(frame, [at(CUES.sparkle), at(CUES.sparkle) + 15, at(CUES.sparkle) + 36], [0, 1, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
 
   // La lupa entra desde abajo a la derecha y recorre la manzana despacio.
-  const lensIn = spring({ frame: frame - at(4.2), fps, config: { damping: 200 }, durationInFrames: 26 });
-  const drift = Math.max(0, frame - at(5.1));
+  const lensIn = spring({ frame: frame - at(CUES.lens), fps, config: { damping: 200 }, durationInFrames: 26 });
+  const drift = Math.max(0, frame - at(CUES.lens) - 27);
   const lens = {
     x: interpolate(lensIn, [0, 1], [1650, 900]) + Math.sin(drift / 40) * 60,
     y: interpolate(lensIn, [0, 1], [1050, 650]) + Math.sin(drift / 55) * 25,
@@ -59,7 +75,7 @@ export const Scene5Contaminacion: React.FC = () => {
     <AbsoluteFill>
       {/* El título ya está en pantalla mientras la escena entra deslizándose. */}
       <div style={{ position: 'absolute', top: 110, width: '100%', display: 'flex', justifyContent: 'center' }}>
-        <Pill delay={-30} fontSize={68} style={{ transformOrigin: 'center' }}>
+        <Pill delay={-30} style={{ transformOrigin: 'center' }}>
           Contaminación
         </Pill>
       </div>
@@ -70,17 +86,14 @@ export const Scene5Contaminacion: React.FC = () => {
           left: 260,
           width: 1400,
           textAlign: 'center',
-          fontFamily: fonts.body,
-          fontSize: 52,
-          lineHeight: 1.3,
+          ...type.body,
           color: colors.text,
         }}
       >
-        <WordReveal text="Puede parecer apto," delay={at(0.4)} stagger={4} />
+        <WordReveal text="Puede parecer apto," times={CUES.line1.map(at)} />
         <WordReveal
           text="pero presenta un **peligro para la salud.**"
-          delay={at(4.4)}
-          stagger={4}
+          times={CUES.line2.map(at)}
           boldStyle={{ color: colors.accent }}
         />
       </div>
@@ -110,7 +123,7 @@ export const Scene5Contaminacion: React.FC = () => {
               <Apple size={size * MAGNIFY} />
             </div>
             {GERMS.map((g, i) => {
-              const p = spring({ frame: frame - at(5.4) - i * 3, fps, config: { damping: 10, stiffness: 140 } });
+              const p = spring({ frame: frame - at(CUES.germs) - i * 3, fps, config: { damping: 10, stiffness: 140 } });
               const pos = toLens(appleLeft + g.u * size, appleTop + g.v * size);
               const isRod = g.kind === 'rod';
               const w = isRod ? 54 : 24;

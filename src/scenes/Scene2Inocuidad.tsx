@@ -3,8 +3,24 @@ import { Pill } from '../components/Pill';
 import { WordReveal } from '../components/WordReveal';
 import { Shield } from '../components/Shield';
 import { CheckBadge } from '../components/CheckBadge';
-import { colors, fonts } from '../theme';
-import { at } from './timing';
+import { colors, type } from '../theme';
+import { voice } from '../voice';
+import { useAt } from './timing';
+
+const v = voice('escena-2');
+export const CUES = {
+  // Placa: "Un alimento inocuo no causa daño a la salud de quien lo consume."
+  // Cada palabra aparece con su equivalente en la locución.
+  sentence: [
+    v.w('un'), v.w('alimento'), v.w('inocuo'), v.w('no'), v.w('causa'), v.w('daño'),
+    v.w('a'), v.w('la'), v.w('salud'), v.w('del'), undefined, undefined, v.w('consumidor'),
+  ],
+  check: v.w('inocuo'),
+  normas: v.w('normas'),
+  practicas: v.w('prácticas'),
+  procedimientos: v.w('procedimientos'),
+};
+export const POPS = [CUES.check, CUES.normas, CUES.practicas, CUES.procedimientos];
 
 const SHIELD_SIZE = 380;
 const CENTER = { x: 1560, y: 580 };
@@ -14,17 +30,18 @@ const TAGS_LEFT = 870;
 const TAG_HEIGHT = 88;
 const TAG_GAP = 44;
 const TAGS = [
-  { label: 'Normas', time: 8.4 },
-  { label: 'Prácticas', time: 9.1 },
-  { label: 'Procedimientos', time: 9.9 },
+  { label: 'Normas', time: CUES.normas },
+  { label: 'Prácticas', time: CUES.practicas },
+  { label: 'Procedimientos', time: CUES.procedimientos },
 ];
 const COLUMN_TOP = CENTER.y - (TAGS.length * TAG_HEIGHT + (TAGS.length - 1) * TAG_GAP) / 2;
 
 export const Scene2Inocuidad: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const at = useAt();
 
-  const check = interpolate(frame, [at(1.4), at(2.4)], [0, 1], {
+  const check = interpolate(frame, [at(CUES.check), at(CUES.check) + 24], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: Easing.inOut(Easing.cubic),
@@ -35,25 +52,14 @@ export const Scene2Inocuidad: React.FC = () => {
     <AbsoluteFill>
       {/* El título y el escudo ya están en pantalla mientras la escena entra deslizándose. */}
       <div style={{ position: 'absolute', left: 150, top: 170 }}>
-        <Pill delay={-30} fontSize={68}>
+        <Pill delay={-30}>
           Inocuidad
         </Pill>
       </div>
       <WordReveal
         text="Un alimento **inocuo** no causa daño a la salud de quien lo consume."
-        delay={at(0.3)}
-        stagger={4}
-        style={{
-          position: 'absolute',
-          left: 150,
-          top: 380,
-          width: 640,
-          fontFamily: fonts.body,
-          fontWeight: 400,
-          fontSize: 62,
-          lineHeight: 1.3,
-          color: colors.text,
-        }}
+        times={CUES.sentence.map((t) => (t === undefined ? undefined : at(t)))}
+        style={{ position: 'absolute', left: 150, top: 300, width: 640, ...type.body, color: colors.text }}
         boldStyle={{ color: colors.accent }}
       />
 
@@ -93,7 +99,7 @@ export const Scene2Inocuidad: React.FC = () => {
             }}
           >
             <CheckBadge />
-            <span style={{ fontFamily: fonts.body, fontWeight: 700, fontSize: 44, color: colors.accent }}>{label}</span>
+            <span style={{ ...type.subtitle, color: colors.accent }}>{label}</span>
           </div>
         );
       })}

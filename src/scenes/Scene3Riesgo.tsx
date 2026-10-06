@@ -3,8 +3,22 @@ import { Pill } from '../components/Pill';
 import { WordReveal } from '../components/WordReveal';
 import { MicrobeIcon, SpoiledMeatIcon } from '../components/Icons';
 import bubblesMeta from '../../public/ilustraciones/burbujas/burbujas.json';
-import { colors, fonts } from '../theme';
-import { at } from './timing';
+import { colors, type } from '../theme';
+import { voice } from '../voice';
+import { useAt } from './timing';
+
+// "Todo alimento que no se maneja adecuadamente está expuesto a dos riesgos: la alteración y la contaminación."
+const v = voice('escena-3');
+// La transformación arranca un poco antes para que la tarjeta quede armada cuando se dice la palabra.
+const MORPH_LEAD = 0.35;
+export const CUES = {
+  // Placa: "Todo alimento mal manejado está expuesto a 2 riesgos:"
+  sentence: [v.w('todo'), v.w('alimento'), v.w('no'), v.w('maneja'), v.w('está'), v.w('expuesto'), v.w('a'), v.w('dos'), v.w('riesgos')],
+  bubbles: 0.1,
+  alteracion: v.w('alteración'),
+  contaminacion: v.w('contaminación'),
+};
+const BUBBLE_STAGGER = 0.2;
 
 // Ilustración original del personaje (sin burbujas), escalada sin deformar y apoyada en el borde inferior.
 const SCALE = 0.82;
@@ -22,8 +36,13 @@ const POP_ORDER = [2, 1, 0, 3, 4, 5];
 // en píxeles de la ilustración original (sin el piquito).
 const CARD = { x: 150, w: 780, h: 200 };
 const CARDS = [
-  { bubble: 2, circle: { x: 0, y: 103, d: 258 }, label: 'Alteración', Icon: SpoiledMeatIcon, y: 460, time: 4.2 },
-  { bubble: 3, circle: { x: 734, y: 165, d: 246 }, label: 'Contaminación', Icon: MicrobeIcon, y: 700, time: 5.4 },
+  { bubble: 2, circle: { x: 0, y: 103, d: 258 }, label: 'Alteración', Icon: SpoiledMeatIcon, y: 440, time: CUES.alteracion - MORPH_LEAD },
+  { bubble: 3, circle: { x: 734, y: 165, d: 246 }, label: 'Contaminación', Icon: MicrobeIcon, y: 680, time: CUES.contaminacion - MORPH_LEAD },
+];
+export const POPS = [
+  ...POP_ORDER.map((_, k) => CUES.bubbles + k * BUBBLE_STAGGER),
+  CUES.alteracion,
+  CUES.contaminacion,
 ];
 
 const toScene = (x: number, y: number) => ({ x: ART_LEFT + x * SCALE, y: ART_TOP + y * SCALE });
@@ -31,6 +50,7 @@ const toScene = (x: number, y: number) => ({ x: ART_LEFT + x * SCALE, y: ART_TOP
 export const Scene3Riesgo: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const at = useAt();
 
   // El personaje entra subiendo con un fundido.
   const charIn = spring({ frame, fps, config: { damping: 200 }, durationInFrames: 30 });
@@ -39,24 +59,14 @@ export const Scene3Riesgo: React.FC = () => {
     <AbsoluteFill>
       {/* El título ya está en pantalla mientras la escena entra deslizándose. */}
       <div style={{ position: 'absolute', left: 150, top: 150 }}>
-        <Pill delay={-30} fontSize={60}>
+        <Pill delay={-30}>
           ¿Qué es el riesgo alimentario?
         </Pill>
       </div>
       <WordReveal
         text="Todo alimento mal manejado está expuesto a **2 riesgos:**"
-        delay={at(0.3)}
-        stagger={4}
-        style={{
-          position: 'absolute',
-          left: 150,
-          top: 300,
-          width: 820,
-          fontFamily: fonts.body,
-          fontSize: 44,
-          lineHeight: 1.3,
-          color: colors.text,
-        }}
+        times={CUES.sentence.map(at)}
+        style={{ position: 'absolute', left: 150, top: 290, width: 820, ...type.body, color: colors.text }}
         boldStyle={{ color: colors.accent }}
       />
 
@@ -75,7 +85,7 @@ export const Scene3Riesgo: React.FC = () => {
       {/* Burbujas de diálogo, de a una con escala y rebote suave */}
       {bubblesMeta.bubbles.map((b, i) => {
         const order = POP_ORDER.indexOf(i);
-        const pop = spring({ frame: frame - at(0.9) - order * 6, fps, config: { damping: 10, stiffness: 140 } });
+        const pop = spring({ frame: frame - at(CUES.bubbles + order * BUBBLE_STAGGER), fps, config: { damping: 10, stiffness: 140 } });
         const bob = Math.sin(frame / 20 + i * 1.7) * 5;
         const card = CARDS.find((c) => c.bubble === i);
         // La burbuja que se transforma desaparece apenas arranca la transformación.
@@ -162,9 +172,7 @@ export const Scene3Riesgo: React.FC = () => {
               </div>
               <span
                 style={{
-                  fontFamily: fonts.title,
-                  fontWeight: 900,
-                  fontSize: 72,
+                  ...type.title,
                   color: colors.accent,
                   transform: `translateX(${(1 - labelIn) * 30}px)`,
                   opacity: labelIn,

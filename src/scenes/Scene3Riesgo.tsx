@@ -1,52 +1,43 @@
-import { AbsoluteFill, interpolate, interpolateColors, spring, useCurrentFrame, useVideoConfig } from 'remotion';
+import { AbsoluteFill, Img, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
 import { Pill } from '../components/Pill';
 import { WordReveal } from '../components/WordReveal';
-import { Character } from '../components/Character';
 import { MicrobeIcon, SpoiledMeatIcon } from '../components/Icons';
+import bubblesMeta from '../../public/ilustraciones/burbujas/burbujas.json';
 import { colors, fonts } from '../theme';
 import { at } from './timing';
 
-type Bubble = { x: number; y: number; d: number; glyph: '?' | '...'; tail: number };
+// Ilustración original del personaje (sin burbujas), escalada sin deformar y apoyada en el borde inferior.
+const SCALE = 0.82;
+const ART = {
+  w: bubblesMeta.width * SCALE,
+  h: bubblesMeta.height * SCALE,
+};
+const ART_LEFT = 1920 - ART.w - 40;
+const ART_TOP = 1080 - ART.h;
 
-// Burbujas alrededor de la cabeza del personaje. Las marcadas en CARDS se transforman en tarjetas.
-const BUBBLES: Bubble[] = [
-  { x: 1215, y: 470, d: 190, glyph: '...', tail: 30 },
-  { x: 1370, y: 270, d: 110, glyph: '...', tail: 60 },
-  { x: 1620, y: 215, d: 140, glyph: '?', tail: 120 },
-  { x: 1800, y: 440, d: 180, glyph: '?', tail: 150 },
-  { x: 1150, y: 720, d: 110, glyph: '?', tail: 0 },
-];
+// Orden en que aparecen las burbujas (índices de burbujas.json).
+const POP_ORDER = [2, 1, 0, 3, 4, 5];
 
+// Burbujas que se transforman en tarjetas. `circle` es la parte redonda de la burbuja,
+// en píxeles de la ilustración original (sin el piquito).
 const CARD = { x: 150, w: 780, h: 200 };
 const CARDS = [
-  { bubble: 0, label: 'Alteración', Icon: SpoiledMeatIcon, y: 430, time: 3.6 },
-  { bubble: 3, label: 'Contaminación', Icon: MicrobeIcon, y: 680, time: 4.6 },
+  { bubble: 2, circle: { x: 0, y: 103, d: 258 }, label: 'Alteración', Icon: SpoiledMeatIcon, y: 460, time: 4.2 },
+  { bubble: 3, circle: { x: 734, y: 165, d: 246 }, label: 'Contaminación', Icon: MicrobeIcon, y: 700, time: 5.4 },
 ];
-const MORPHING = new Set(CARDS.map((c) => c.bubble));
 
-const Glyph: React.FC<{ glyph: Bubble['glyph']; d: number }> = ({ glyph, d }) =>
-  glyph === '?' ? (
-    <span style={{ fontFamily: fonts.title, fontWeight: 900, fontSize: d * 0.6, color: colors.white, lineHeight: 1 }}>?</span>
-  ) : (
-    <div style={{ display: 'flex', gap: d * 0.09 }}>
-      {[0, 1, 2].map((i) => (
-        <div key={i} style={{ width: d * 0.11, height: d * 0.11, borderRadius: '50%', backgroundColor: colors.white }} />
-      ))}
-    </div>
-  );
+const toScene = (x: number, y: number) => ({ x: ART_LEFT + x * SCALE, y: ART_TOP + y * SCALE });
 
 export const Scene3Riesgo: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const blink = [at(2.2), at(5.8), at(7.4)].some((t) => frame >= t && frame < t + 4);
-  const headTilt = Math.sin(frame / 30) * 1.2;
-  // Las burbujas que no se transforman se retiran justo antes de la primera transformación.
-  const othersOut = spring({ frame: frame - at(3.3), fps, config: { damping: 200 } });
+  // El personaje entra subiendo con un fundido.
+  const charIn = spring({ frame, fps, config: { damping: 200 }, durationInFrames: 30 });
 
   return (
     <AbsoluteFill>
-      {/* El título y el personaje ya están en pantalla mientras la escena entra deslizándose. */}
+      {/* El título ya está en pantalla mientras la escena entra deslizándose. */}
       <div style={{ position: 'absolute', left: 150, top: 150 }}>
         <Pill delay={-30} fontSize={60}>
           ¿Qué es el riesgo alimentario?
@@ -60,7 +51,7 @@ export const Scene3Riesgo: React.FC = () => {
           position: 'absolute',
           left: 150,
           top: 300,
-          width: 1300,
+          width: 820,
           fontFamily: fonts.body,
           fontSize: 44,
           lineHeight: 1.3,
@@ -69,62 +60,63 @@ export const Scene3Riesgo: React.FC = () => {
         boldStyle={{ color: colors.accent }}
       />
 
-      {/* Personaje pensativo */}
-      <div
+      <Img
+        src={staticFile('ilustraciones/personaje-pensativo.png')}
         style={{
           position: 'absolute',
-          left: 1250,
-          top: 352,
-          transform: `rotate(${headTilt}deg)`,
-          transformOrigin: '50% 100%',
+          left: ART_LEFT,
+          top: ART_TOP + (1 - charIn) * 80,
+          width: ART.w,
+          height: ART.h,
+          opacity: charIn,
         }}
-      >
-        <Character width={520} blink={blink} />
-      </div>
+      />
 
-      {/* Burbujas de pensamiento */}
-      {BUBBLES.map((b, i) => {
-        const pop = spring({ frame: frame - at(0.8) - i * 7, fps, config: { damping: 10, stiffness: 130 } });
-        const bob = Math.sin(frame / 20 + i * 1.7) * 6;
+      {/* Burbujas de diálogo, de a una con escala y rebote suave */}
+      {bubblesMeta.bubbles.map((b, i) => {
+        const order = POP_ORDER.indexOf(i);
+        const pop = spring({ frame: frame - at(0.9) - order * 6, fps, config: { damping: 10, stiffness: 140 } });
+        const bob = Math.sin(frame / 20 + i * 1.7) * 5;
         const card = CARDS.find((c) => c.bubble === i);
+        // La burbuja que se transforma desaparece apenas arranca la transformación.
+        const morphStart = card ? spring({ frame: frame - at(card.time), fps, config: { damping: 200 }, durationInFrames: 6 }) : 0;
+        const pos = toScene(b.x, b.y);
+        return (
+          <Img
+            key={b.file}
+            src={staticFile(`ilustraciones/burbujas/${b.file}`)}
+            style={{
+              position: 'absolute',
+              left: pos.x,
+              top: pos.y + bob,
+              width: b.w * SCALE,
+              height: b.h * SCALE,
+              transform: `scale(${pop})`,
+              opacity: Math.min(1, pop * 2) * (1 - morphStart),
+            }}
+          />
+        );
+      })}
 
-        if (!card) {
-          const s = pop * (1 - othersOut);
-          if (s <= 0.001) return null;
-          return (
-            <div
-              key={i}
-              style={{
-                position: 'absolute',
-                left: b.x - b.d / 2,
-                top: b.y - b.d / 2 + bob,
-                width: b.d,
-                height: b.d,
-                transform: `scale(${s})`,
-                opacity: Math.min(1, s * 2),
-              }}
-            >
-              <BubbleShape b={b} />
-            </div>
-          );
-        }
-
-        // Burbuja → tarjeta
-        const m = spring({ frame: frame - at(card.time), fps, config: { damping: 18, stiffness: 80 } });
-        const left = interpolate(m, [0, 1], [b.x - b.d / 2, CARD.x]);
-        const top = interpolate(m, [0, 1], [b.y - b.d / 2 + bob, card.y]);
-        const width = interpolate(m, [0, 1], [b.d, CARD.w]);
-        const height = interpolate(m, [0, 1], [b.d, CARD.h]);
-        const radius = interpolate(m, [0, 1], [b.d / 2, 32]);
-        const bg = interpolateColors(m, [0, 0.6], [colors.sky, colors.white]);
-        const glyphOut = interpolate(m, [0, 0.25], [1, 0], { extrapolateRight: 'clamp' });
+      {/* Burbuja → tarjeta */}
+      {CARDS.map(({ bubble, circle, label, Icon, y, time }) => {
+        const m = spring({ frame: frame - at(time), fps, config: { damping: 18, stiffness: 80 } });
+        if (m <= 0.001) return null;
+        const bob = Math.sin(frame / 20 + bubble * 1.7) * 5 * (1 - m);
+        const start = toScene(circle.x, circle.y);
+        const d = circle.d * SCALE;
+        const left = interpolate(m, [0, 1], [start.x, CARD.x]);
+        const top = interpolate(m, [0, 1], [start.y + bob, y]);
+        const width = interpolate(m, [0, 1], [d, CARD.w]);
+        const height = interpolate(m, [0, 1], [d, CARD.h]);
+        const radius = interpolate(m, [0, 1], [d / 2, 32]);
+        const fill = interpolate(m, [0, 0.6], [1, 0], { extrapolateRight: 'clamp' });
         const contentIn = interpolate(m, [0.55, 0.95], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-        const labelIn = spring({ frame: frame - at(card.time) - 14, fps, config: { damping: 14 } });
-        const { Icon } = card;
+        const labelIn = spring({ frame: frame - at(time) - 14, fps, config: { damping: 14 } });
 
         return (
           <div
-            key={i}
+            key={label}
             style={{
               position: 'absolute',
               left,
@@ -132,26 +124,13 @@ export const Scene3Riesgo: React.FC = () => {
               width,
               height,
               borderRadius: radius,
-              backgroundColor: bg,
+              backgroundColor: colors.white,
               border: `3px solid rgba(150, 220, 240, ${m})`,
               boxShadow: `0 14px 32px rgba(0, 150, 210, ${0.16 * m})`,
-              transform: `scale(${pop})`,
               overflow: 'hidden',
             }}
           >
-            {m < 0.05 && <BubbleTail b={b} />}
-            <div
-              style={{
-                position: 'absolute',
-                inset: 0,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                opacity: glyphOut,
-              }}
-            >
-              <Glyph glyph={b.glyph} d={b.d} />
-            </div>
+            <div style={{ position: 'absolute', inset: 0, backgroundColor: colors.pill, opacity: fill }} />
             <div
               style={{
                 position: 'absolute',
@@ -191,53 +170,12 @@ export const Scene3Riesgo: React.FC = () => {
                   opacity: labelIn,
                 }}
               >
-                {card.label}
+                {label}
               </span>
             </div>
           </div>
         );
       })}
     </AbsoluteFill>
-  );
-};
-
-const BubbleShape: React.FC<{ b: Bubble }> = ({ b }) => (
-  <div
-    style={{
-      position: 'relative',
-      width: b.d,
-      height: b.d,
-      borderRadius: '50%',
-      backgroundColor: colors.sky,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-    }}
-  >
-    <BubbleTail b={b} />
-    <Glyph glyph={b.glyph} d={b.d} />
-  </div>
-);
-
-// Pequeño piquito de la burbuja de diálogo, orientado según `tail` (grados).
-const BubbleTail: React.FC<{ b: Bubble }> = ({ b }) => {
-  const r = b.d / 2;
-  const rad = (b.tail * Math.PI) / 180;
-  const cx = r + Math.cos(rad) * r * 0.86;
-  const cy = r + Math.sin(rad) * r * 0.86;
-  const size = b.d * 0.26;
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        left: cx - size / 2,
-        top: cy - size / 2,
-        width: size,
-        height: size,
-        backgroundColor: colors.sky,
-        transform: `rotate(${b.tail + 45}deg)`,
-        borderRadius: 4,
-      }}
-    />
   );
 };

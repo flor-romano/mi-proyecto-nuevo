@@ -5,6 +5,9 @@ import { Background } from './components/Background';
 import { Scene1Apertura } from './scenes/Scene1Apertura';
 import { Scene2Inocuidad } from './scenes/Scene2Inocuidad';
 import { Scene3Riesgo } from './scenes/Scene3Riesgo';
+import { Scene4Alteracion } from './scenes/Scene4Alteracion';
+import { Scene5Contaminacion } from './scenes/Scene5Contaminacion';
+import { Scene6Peligros } from './scenes/Scene6Peligros';
 import { HALF, TRANSITION } from './scenes/timing';
 import { sec } from './theme';
 
@@ -13,6 +16,9 @@ const SCENES = [
   { C: Scene1Apertura, start: 0, end: 7 },
   { C: Scene2Inocuidad, start: 7, end: 27 },
   { C: Scene3Riesgo, start: 27, end: 36 },
+  { C: Scene4Alteracion, start: 36, end: 60 },
+  { C: Scene5Contaminacion, start: 60, end: 70 },
+  { C: Scene6Peligros, start: 70, end: 96 },
 ];
 
 export const TOTAL_FRAMES = sec(SCENES[SCENES.length - 1].end);

@@ -12,5 +12,5 @@
     "types": ["node"],
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src", "public/fonts/manifest.json"]
+  "include": ["src", "public/**/*.json"]
 }

@@ -3,7 +3,9 @@
   "private": true,
   "scripts": {
     "studio": "remotion studio",
-    "render": "remotion render PlacaIntro videos/placa-intro.mp4"
+    "render": "npm run render:placa1 && npm run render:placa2",
+    "render:placa1": "remotion render PlacaIntro videos/placa-intro.mp4",
+    "render:placa2": "remotion render Placa2 videos/placa-2.mp4"
   },
   "dependencies": {
     "@remotion/cli": "^4.0.533",
